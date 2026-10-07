@@ -21,7 +21,7 @@ lenses:
     updated: '2026-10-07'
   scope:
     status: complete
-    updated: '2026-10-06'
+    updated: '2026-10-07'
   success-metrics:
     status: complete
     updated: '2026-10-06'
@@ -45,11 +45,11 @@ jag is a general tool, like grep, and agents are the primary use case. The prima
 
 ## Capabilities
 
-jag has 12 capabilities: six must-be, three performance, and three delighters. See [CAPABILITY-01](capabilities/CAPABILITY-01.md) to [CAPABILITY-12](capabilities/CAPABILITY-12.md). [DECISION-01](decisions/DECISION-01.md) records that jag fails clearly when the model is not available. Simulations of CAPABILITY-01 to CAPABILITY-07 added [DECISION-03](decisions/DECISION-03.md) to [DECISION-45](decisions/DECISION-45.md), [QUESTION-03](questions/QUESTION-03.md), and [CONSTRAINT-04](constraints/CONSTRAINT-04.md) to [CONSTRAINT-06](constraints/CONSTRAINT-06.md).
+jag has 12 capabilities: six must-be, three performance, and three delighters. See [CAPABILITY-01](capabilities/CAPABILITY-01.md) to [CAPABILITY-12](capabilities/CAPABILITY-12.md). [DECISION-01](decisions/DECISION-01.md) records that jag fails clearly when the model is not available. Simulations of CAPABILITY-01 to CAPABILITY-08 added [DECISION-03](decisions/DECISION-03.md) to [DECISION-46](decisions/DECISION-46.md), [QUESTION-03](questions/QUESTION-03.md), and [CONSTRAINT-04](constraints/CONSTRAINT-04.md) to [CONSTRAINT-06](constraints/CONSTRAINT-06.md).
 
 ## Scope
 
-[SCOPE-01](scope/SCOPE-01.md) is release 1, the first public release. It must include the six must-be capabilities, should include a free repeated search and agent instructions to copy, and could include the cost, the data flow, and the measure on your own questions. Release 2 adds trust and cost, release 3 adds a question without a term, and two later releases add a local model option and a run with no package install. jag builds no index, writes no answers, has no GUI, and has no hosted service. Release 1 goes public only after the held-out score confirms the gain over grep. [DECISION-02](decisions/DECISION-02.md) records that release 1 does not serve users whose text must stay on the machine.
+[SCOPE-01](scope/SCOPE-01.md) is release 1, the first public release. It must include the six must-be capabilities, should include agent instructions to copy, and could include the cost, the data flow, and the measure on your own questions. jag scores each search again, so a free repeated search is not in release 1. Release 2 adds trust and cost, release 3 adds a question without a term, and two later releases add a local model option and a run with no package install. jag builds no index, writes no answers, has no GUI, and has no hosted service. Release 1 goes public only after the held-out score confirms the gain over grep. [DECISION-02](decisions/DECISION-02.md) records that release 1 does not serve users whose text must stay on the machine.
 
 ## Success metrics
 

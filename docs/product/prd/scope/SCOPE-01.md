@@ -18,8 +18,6 @@ includes:
   priority: must
 - to: /capabilities/CAPABILITY-06.md
   priority: must
-- to: /capabilities/CAPABILITY-08.md
-  priority: should
 - to: /capabilities/CAPABILITY-11.md
   priority: should
 - to: /capabilities/CAPABILITY-07.md
@@ -28,6 +26,8 @@ includes:
   priority: could
 - to: /capabilities/CAPABILITY-12.md
   priority: could
+- to: /capabilities/CAPABILITY-08.md
+  priority: wont
 - to: /capabilities/CAPABILITY-10.md
   priority: wont
 ---
@@ -48,10 +48,11 @@ Release 1 does not serve users whose text must not leave the machine. This is a 
 - includes: [CAPABILITY-04: Limit on the text that jag returns](../capabilities/CAPABILITY-04.md) (must)
 - includes: [CAPABILITY-05: Text output for people and structured output for agents](../capabilities/CAPABILITY-05.md) (must)
 - includes: [CAPABILITY-06: Feels like grep](../capabilities/CAPABILITY-06.md) (must)
-- includes: [CAPABILITY-08: A repeated search costs nothing](../capabilities/CAPABILITY-08.md) (should)
 - includes: [CAPABILITY-11: Agent instructions to copy](../capabilities/CAPABILITY-11.md) (should)
 - includes: [CAPABILITY-07: Show the cost of a search](../capabilities/CAPABILITY-07.md) (could)
 - includes: [CAPABILITY-09: Say which text leaves the machine](../capabilities/CAPABILITY-09.md) (could)
 - includes: [CAPABILITY-12: Measure jag on your own questions](../capabilities/CAPABILITY-12.md) (could)
+- includes: [CAPABILITY-08: A repeated search costs nothing](../capabilities/CAPABILITY-08.md) (wont)
 - includes: [CAPABILITY-10: Question without a term](../capabilities/CAPABILITY-10.md) (wont)
+- subject of: [DECISION-46: jag scores each search again and does not reuse scores](../decisions/DECISION-46.md)
 <!-- LINKS:END -->

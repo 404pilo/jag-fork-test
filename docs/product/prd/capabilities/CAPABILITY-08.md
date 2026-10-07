@@ -23,6 +23,6 @@ When the user asks the same question of the same text again, jag gives the same 
 - addresses: [NEED-02: Search output fills the agent context with noise](../needs/NEED-02.md)
 - addresses: [PERSONA-01: Agent builder](../personas/PERSONA-01.md)
 - depends on: [CAPABILITY-02: Term and question search](CAPABILITY-02.md)
-- subject of: [DECISION-43: A search with no model call reports a cost of zero and the reason](../decisions/DECISION-43.md)
-- included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (should)
+- subject of: [DECISION-46: jag scores each search again and does not reuse scores](../decisions/DECISION-46.md)
+- included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (wont)
 <!-- LINKS:END -->

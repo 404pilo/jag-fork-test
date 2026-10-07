@@ -42,6 +42,7 @@
 * [DECISION-40: The cost is the billed amount in US dollars](DECISION-40.md) - jag shows the amount that the service billed, in US dollars; with no billed figure, it shows a labeled estimate.
 * [DECISION-41: In text mode, the cost line goes to the error stream after each search](DECISION-41.md) - Text mode writes a cost line to the error stream after each search, also in a pipe; structured mode has a cost field.
 * [DECISION-42: The report counts results scored and results skipped](DECISION-42.md) - jag shows the results it scored and the results that the cost limit skipped; together they are all results found.
-* [DECISION-43: A search with no model call reports a cost of zero and the reason](DECISION-43.md) - With no question, or with reused scores, jag reports a cost of zero and says why.
+* [DECISION-43: A search with no model call reports a cost of zero and the reason](DECISION-43.md) - With no question, jag makes no model call, reports a cost of zero, and says why.
 * [DECISION-44: A failed or stopped search reports the cost up to that point](DECISION-44.md) - The error message gives the cost that jag paid before the failure or the stop.
 * [DECISION-45: A missing cost figure never fails the search](DECISION-45.md) - When the service gives no cost figure, jag shows the count and marks the cost as not available.
+* [DECISION-46: jag scores each search again and does not reuse scores](DECISION-46.md) - Release 1 keeps no scores between searches; a repeated search pays the model service again.

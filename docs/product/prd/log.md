@@ -5,6 +5,7 @@
 * **Save**: [product](product.md) capabilities (simulate CAPABILITY-05): DECISION-22, DECISION-27, DECISION-28, DECISION-29, DECISION-30, CONSTRAINT-05, by human:Pilo, at 2026-10-07T10:40:35Z
 * **Save**: [product](product.md) capabilities (simulate CAPABILITY-06): DECISION-31, DECISION-32, DECISION-33, DECISION-34, DECISION-35, DECISION-36, DECISION-37, DECISION-38, DECISION-39, CONSTRAINT-06, by human:Pilo, at 2026-10-07T10:46:16Z
 * **Save**: [product](product.md) capabilities (simulate CAPABILITY-07): CAPABILITY-07, DECISION-40, DECISION-41, DECISION-42, DECISION-43, DECISION-44, DECISION-45, by human:Pilo, at 2026-10-07T18:01:34Z
+* **Save**: [product](product.md) capabilities (simulate CAPABILITY-08): DECISION-46, DECISION-43, SCOPE-01, by human:Pilo, at 2026-10-07T19:42:10Z
 
 ## 2026-10-06
 
