@@ -45,7 +45,7 @@ jag is a general tool, like grep, and agents are the primary use case. The prima
 
 ## Capabilities
 
-jag has 12 capabilities: six must-be, three performance, and three delighters. See [CAPABILITY-01](capabilities/CAPABILITY-01.md) to [CAPABILITY-12](capabilities/CAPABILITY-12.md). [DECISION-01](decisions/DECISION-01.md) records that jag fails clearly when the model is not available. Simulations of CAPABILITY-01 to CAPABILITY-06 added [DECISION-03](decisions/DECISION-03.md) to [DECISION-39](decisions/DECISION-39.md), [QUESTION-03](questions/QUESTION-03.md), and [CONSTRAINT-04](constraints/CONSTRAINT-04.md) to [CONSTRAINT-06](constraints/CONSTRAINT-06.md).
+jag has 12 capabilities: six must-be, three performance, and three delighters. See [CAPABILITY-01](capabilities/CAPABILITY-01.md) to [CAPABILITY-12](capabilities/CAPABILITY-12.md). [DECISION-01](decisions/DECISION-01.md) records that jag fails clearly when the model is not available. Simulations of CAPABILITY-01 to CAPABILITY-07 added [DECISION-03](decisions/DECISION-03.md) to [DECISION-45](decisions/DECISION-45.md), [QUESTION-03](questions/QUESTION-03.md), and [CONSTRAINT-04](constraints/CONSTRAINT-04.md) to [CONSTRAINT-06](constraints/CONSTRAINT-06.md).
 
 ## Scope
 

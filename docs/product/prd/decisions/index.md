@@ -39,3 +39,9 @@
 * [DECISION-37: jag shows progress only in a terminal](DECISION-37.md) - While jag ranks, it shows a progress line on the error stream only when that stream is a terminal.
 * [DECISION-38: Color works as grep --color=auto](DECISION-38.md) - jag colors the matching text only in a terminal, and --color=never or always changes that.
 * [DECISION-39: When the user stops jag, it stops at once with no partial results](DECISION-39.md) - On Ctrl-C or a closed pipe, jag stops, starts no new model call, and shows no partial results.
+* [DECISION-40: The cost is the billed amount in US dollars](DECISION-40.md) - jag shows the amount that the service billed, in US dollars; with no billed figure, it shows a labeled estimate.
+* [DECISION-41: In text mode, the cost line goes to the error stream after each search](DECISION-41.md) - Text mode writes a cost line to the error stream after each search, also in a pipe; structured mode has a cost field.
+* [DECISION-42: The report counts results scored and results skipped](DECISION-42.md) - jag shows the results it scored and the results that the cost limit skipped; together they are all results found.
+* [DECISION-43: A search with no model call reports a cost of zero and the reason](DECISION-43.md) - With no question, or with reused scores, jag reports a cost of zero and says why.
+* [DECISION-44: A failed or stopped search reports the cost up to that point](DECISION-44.md) - The error message gives the cost that jag paid before the failure or the stop.
+* [DECISION-45: A missing cost figure never fails the search](DECISION-45.md) - When the service gives no cost figure, jag shows the count and marks the cost as not available.

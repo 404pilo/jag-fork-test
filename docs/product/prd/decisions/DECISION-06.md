@@ -24,4 +24,5 @@ When the credit or the service stops during a search, jag fails the full search.
 - about: [CAPABILITY-01: Guided key setup and health check](../capabilities/CAPABILITY-01.md)
 - about: [DECISION-01: jag fails clearly when the model is not available](DECISION-01.md)
 - subject of: [DECISION-39: When the user stops jag, it stops at once with no partial results](DECISION-39.md)
+- subject of: [DECISION-44: A failed or stopped search reports the cost up to that point](DECISION-44.md)
 <!-- LINKS:END -->

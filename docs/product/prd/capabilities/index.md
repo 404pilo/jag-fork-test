@@ -6,7 +6,7 @@
 * [CAPABILITY-04: Limit on the text that jag returns](CAPABILITY-04.md) - The user sets a limit on how much text jag returns to the agent; jag never goes over it and says what it left out.
 * [CAPABILITY-05: Text output for people and structured output for agents](CAPABILITY-05.md) - jag gives readable text to a person and structured output that an agent can parse.
 * [CAPABILITY-06: Feels like grep](CAPABILITY-06.md) - jag works in a pipe, uses grep-like options and exit codes, and is fast enough to replace grep.
-* [CAPABILITY-07: Show the cost of a search](CAPABILITY-07.md) - jag reports how many snippets it scored and what the search cost.
+* [CAPABILITY-07: Show the cost of a search](CAPABILITY-07.md) - jag reports how many results it scored and what the search cost.
 * [CAPABILITY-08: A repeated search costs nothing](CAPABILITY-08.md) - When the user asks the same question of the same text again, jag does not pay for it again.
 * [CAPABILITY-09: Say which text leaves the machine](CAPABILITY-09.md) - jag tells the user which text it sends to the model service, so the user can decide before a search.
 * [CAPABILITY-10: Question without a term](CAPABILITY-10.md) - The user gives only a question, and jag chooses the candidate lines itself.

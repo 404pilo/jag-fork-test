@@ -22,4 +22,5 @@ When the user stops jag, or the pipe closes, jag stops at once. It starts no new
 
 - about: [CAPABILITY-06: Feels like grep](../capabilities/CAPABILITY-06.md)
 - about: [DECISION-06: A model failure during a search fails the full search](DECISION-06.md)
+- subject of: [DECISION-44: A failed or stopped search reports the cost up to that point](DECISION-44.md)
 <!-- LINKS:END -->

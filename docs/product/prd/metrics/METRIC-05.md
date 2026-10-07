@@ -25,4 +25,5 @@ The cap of $0.02 is an assumption. The development set costs $1.13 per pass over
 - measures: [CAPABILITY-02: Term and question search](../capabilities/CAPABILITY-02.md)
 - guards: [METRIC-01: Answer quality](METRIC-01.md)
 - subject of: [DECISION-12: The cost limit has a default that the user can change](../decisions/DECISION-12.md)
+- subject of: [DECISION-40: The cost is the billed amount in US dollars](../decisions/DECISION-40.md)
 <!-- LINKS:END -->

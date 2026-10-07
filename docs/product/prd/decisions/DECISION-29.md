@@ -26,4 +26,5 @@ In text mode, jag writes the results to standard output and the notices to the e
 - about: [CAPABILITY-04: Limit on the text that jag returns](../capabilities/CAPABILITY-04.md)
 - about: [DECISION-22: All text that jag writes to standard output counts toward the size limit](DECISION-22.md)
 - subject of: [DECISION-37: jag shows progress only in a terminal](DECISION-37.md)
+- subject of: [DECISION-41: In text mode, the cost line goes to the error stream after each search](DECISION-41.md)
 <!-- LINKS:END -->
