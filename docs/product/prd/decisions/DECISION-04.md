@@ -31,4 +31,6 @@ The check makes one live call that costs nothing or almost nothing.
 
 - about: [CAPABILITY-01: Guided key setup and health check](../capabilities/CAPABILITY-01.md)
 - about: [CONSTRAINT-02: jag protects the API key of the user](../constraints/CONSTRAINT-02.md)
+- subject of: [DECISION-48: The readiness check exits 0 or with the code of the first cause](DECISION-48.md)
+- traced by: [FEATURE-02: Readiness check](../../roadmap/features/FEATURE-02.md)
 <!-- LINKS:END -->

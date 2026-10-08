@@ -31,4 +31,5 @@ jag gives readable text to a person at the shell. On request, jag gives structur
 - subject of: [DECISION-30: Structured mode always writes a complete output](../decisions/DECISION-30.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (must)
 - traced by: [EPIC-03: Output that fits an agent](../../roadmap/epics/EPIC-03.md)
+- traced by: [FEATURE-11: Text output for a person and structured output for an agent](../../roadmap/features/FEATURE-11.md)
 <!-- LINKS:END -->

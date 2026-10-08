@@ -25,4 +25,5 @@ When the credit or the service stops during a search, jag fails the full search.
 - about: [DECISION-01: jag fails clearly when the model is not available](DECISION-01.md)
 - subject of: [DECISION-39: When the user stops jag, it stops at once with no partial results](DECISION-39.md)
 - subject of: [DECISION-44: A failed or stopped search reports the cost up to that point](DECISION-44.md)
+- traced by: [FEATURE-03: Clear failure when the model is not available](../../roadmap/features/FEATURE-03.md)
 <!-- LINKS:END -->

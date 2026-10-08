@@ -21,4 +21,5 @@ The limit is a count of characters. The count is exact and the same on each mach
 ## Links
 
 - about: [CAPABILITY-04: Limit on the text that jag returns](../capabilities/CAPABILITY-04.md)
+- traced by: [FEATURE-09: Size limit on the text that jag returns](../../roadmap/features/FEATURE-09.md)
 <!-- LINKS:END -->

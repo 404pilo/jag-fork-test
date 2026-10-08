@@ -24,4 +24,5 @@ jag has a fixed default cost limit. jag states the limit as a count of results t
 - about: [CAPABILITY-02: Term and question search](../capabilities/CAPABILITY-02.md)
 - about: [METRIC-05: Cost per search](../metrics/METRIC-05.md)
 - subject of: [DECISION-42: The report counts results scored and results skipped](DECISION-42.md)
+- traced by: [FEATURE-06: Cost limit on scoring](../../roadmap/features/FEATURE-06.md)
 <!-- LINKS:END -->

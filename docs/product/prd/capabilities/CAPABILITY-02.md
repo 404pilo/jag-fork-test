@@ -55,4 +55,7 @@ The user gives a folder, a term, and a question in plain language. jag finds the
 - measured by: [METRIC-07: False confidence](../metrics/METRIC-07.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (must)
 - traced by: [EPIC-02: Ranked search with file and line](../../roadmap/epics/EPIC-02.md)
+- traced by: [FEATURE-04: Rank matching lines by a question](../../roadmap/features/FEATURE-04.md)
+- traced by: [FEATURE-05: Search a folder as grep -r does](../../roadmap/features/FEATURE-05.md)
+- traced by: [FEATURE-06: Cost limit on scoring](../../roadmap/features/FEATURE-06.md)
 <!-- LINKS:END -->

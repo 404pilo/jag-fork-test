@@ -19,4 +19,5 @@ The 5-second target of METRIC-03 applies to one search at the default cost limit
 
 - constrains: [CAPABILITY-06: Feels like grep](../capabilities/CAPABILITY-06.md)
 - constrains: [METRIC-03: Search speed](../metrics/METRIC-03.md)
+- traced by: [FEATURE-16: Fast enough to replace grep](../../roadmap/features/FEATURE-16.md)
 <!-- LINKS:END -->

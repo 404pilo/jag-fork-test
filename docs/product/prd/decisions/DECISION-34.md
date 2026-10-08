@@ -24,4 +24,6 @@ Release 1 keeps these grep options: `-i`, `-w`, `-F`, `-e`, `-A`, `-B`, `-C`, `-
 
 - about: [CAPABILITY-06: Feels like grep](../capabilities/CAPABILITY-06.md)
 - about: [DECISION-05: jag keeps grep exit codes and adds one code for each model failure](DECISION-05.md)
+- subject of: [DECISION-50: The -A, -B, and -C options set the context lines of a result](DECISION-50.md)
+- traced by: [FEATURE-13: Common grep options and exit codes](../../roadmap/features/FEATURE-13.md)
 <!-- LINKS:END -->

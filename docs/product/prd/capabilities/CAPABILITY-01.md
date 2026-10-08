@@ -32,8 +32,13 @@ When the key is missing or out of credit, or the model service is down, jag fail
 - subject of: [DECISION-07: Errors are structured in structured output mode](../decisions/DECISION-07.md)
 - subject of: [DECISION-08: Setup asks before it replaces a key, and one command removes it](../decisions/DECISION-08.md)
 - subject of: [DECISION-09: The missing-key message tells a new user where to get a key](../decisions/DECISION-09.md)
+- subject of: [DECISION-48: The readiness check exits 0 or with the code of the first cause](../decisions/DECISION-48.md)
+- subject of: [DECISION-49: Plain grep mode needs no key](../decisions/DECISION-49.md)
 - measured by: [METRIC-04: Time to first result](../metrics/METRIC-04.md)
 - measured by: [METRIC-08: Setup failures](../metrics/METRIC-08.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (must)
 - traced by: [EPIC-01: Setup and readiness](../../roadmap/epics/EPIC-01.md)
+- traced by: [FEATURE-01: Store a key one time](../../roadmap/features/FEATURE-01.md)
+- traced by: [FEATURE-02: Readiness check](../../roadmap/features/FEATURE-02.md)
+- traced by: [FEATURE-03: Clear failure when the model is not available](../../roadmap/features/FEATURE-03.md)
 <!-- LINKS:END -->

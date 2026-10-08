@@ -23,4 +23,5 @@ The user types `jag TERM "QUESTION" [PATH...]`. The term comes first, as in grep
 
 - about: [CAPABILITY-06: Feels like grep](../capabilities/CAPABILITY-06.md)
 - about: [CAPABILITY-02: Term and question search](../capabilities/CAPABILITY-02.md)
+- traced by: [FEATURE-04: Rank matching lines by a question](../../roadmap/features/FEATURE-04.md)
 <!-- LINKS:END -->

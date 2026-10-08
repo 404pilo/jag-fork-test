@@ -46,3 +46,7 @@
 * [DECISION-44: A failed or stopped search reports the cost up to that point](DECISION-44.md) - The error message gives the cost that jag paid before the failure or the stop.
 * [DECISION-45: A missing cost figure never fails the search](DECISION-45.md) - When the service gives no cost figure, jag shows the count and marks the cost as not available.
 * [DECISION-46: jag scores each search again and does not reuse scores](DECISION-46.md) - Release 1 keeps no scores between searches; a repeated search pays the model service again.
+* [DECISION-47: The cost-limit exit code wins over the left-out exit code](DECISION-47.md) - When a search reaches the cost limit and also leaves out results, jag exits with the cost-limit code.
+* [DECISION-48: The readiness check exits 0 or with the code of the first cause](DECISION-48.md) - The readiness check exits with code 0 when all five items pass, and otherwise with the code of the first cause that fails.
+* [DECISION-49: Plain grep mode needs no key](DECISION-49.md) - A term with no question makes no model call, so jag works with no stored key.
+* [DECISION-50: The -A, -B, and -C options set the context lines of a result](DECISION-50.md) - The grep context options set the lines around each match; with no option, jag uses its default.

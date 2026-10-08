@@ -17,4 +17,5 @@ In one major version, jag can add a field to structured output. It must not remo
 ## Links
 
 - constrains: [CAPABILITY-05: Text output for people and structured output for agents](../capabilities/CAPABILITY-05.md)
+- traced by: [FEATURE-11: Text output for a person and structured output for an agent](../../roadmap/features/FEATURE-11.md)
 <!-- LINKS:END -->

@@ -31,4 +31,5 @@ The code at REDACTED commit `83f5a88a` reads other names. The public release use
 ## Links
 
 - about: [CAPABILITY-01: Guided key setup and health check](../capabilities/CAPABILITY-01.md)
+- traced by: [FEATURE-01: Store a key one time](../../roadmap/features/FEATURE-01.md)
 <!-- LINKS:END -->

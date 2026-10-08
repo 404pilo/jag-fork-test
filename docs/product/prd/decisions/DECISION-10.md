@@ -27,4 +27,6 @@ A result is the matching line with a few lines of text before and after it. When
 - about: [CAPABILITY-04: Limit on the text that jag returns](../capabilities/CAPABILITY-04.md)
 - subject of: [DECISION-16: A joined result shows its line range and marks each matching line](DECISION-16.md)
 - subject of: [DECISION-17: jag cuts a very long line and marks the cut](DECISION-17.md)
+- subject of: [DECISION-50: The -A, -B, and -C options set the context lines of a result](DECISION-50.md)
+- traced by: [FEATURE-04: Rank matching lines by a question](../../roadmap/features/FEATURE-04.md)
 <!-- LINKS:END -->

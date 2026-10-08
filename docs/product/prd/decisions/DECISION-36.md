@@ -22,4 +22,5 @@ The user can give several paths. Each path can be a file or a folder, as in grep
 
 - about: [CAPABILITY-06: Feels like grep](../capabilities/CAPABILITY-06.md)
 - about: [DECISION-14: A folder search works like grep -r and skips noise files](DECISION-14.md)
+- traced by: [FEATURE-14: Files, folders, and piped text](../../roadmap/features/FEATURE-14.md)
 <!-- LINKS:END -->

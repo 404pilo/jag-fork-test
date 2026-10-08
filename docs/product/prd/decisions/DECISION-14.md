@@ -22,4 +22,5 @@ jag searches each subfolder of the folder, as `grep -r` does. It skips binary fi
 
 - about: [CAPABILITY-02: Term and question search](../capabilities/CAPABILITY-02.md)
 - subject of: [DECISION-36: The user can give any mix of files and folders](DECISION-36.md)
+- traced by: [FEATURE-05: Search a folder as grep -r does](../../roadmap/features/FEATURE-05.md)
 <!-- LINKS:END -->

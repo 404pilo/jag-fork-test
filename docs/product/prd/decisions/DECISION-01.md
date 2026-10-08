@@ -23,4 +23,5 @@ jag does not fall back to a ranking by word match. A result that ignores the que
 
 - about: [CAPABILITY-01: Guided key setup and health check](../capabilities/CAPABILITY-01.md)
 - subject of: [DECISION-06: A model failure during a search fails the full search](DECISION-06.md)
+- traced by: [FEATURE-03: Clear failure when the model is not available](../../roadmap/features/FEATURE-03.md)
 <!-- LINKS:END -->

@@ -30,4 +30,5 @@ Each result shows the file, the line number, and the snippet. The person or the 
 - subject of: [DECISION-18: Piped text has the label (standard input)](../decisions/DECISION-18.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (must)
 - traced by: [EPIC-02: Ranked search with file and line](../../roadmap/epics/EPIC-02.md)
+- traced by: [FEATURE-08: File, line, and snippet for each result](../../roadmap/features/FEATURE-08.md)
 <!-- LINKS:END -->

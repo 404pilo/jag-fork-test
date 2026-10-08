@@ -24,4 +24,6 @@ When the user gives a term and no question, jag works as plain grep. It makes no
 - about: [CAPABILITY-06: Feels like grep](../capabilities/CAPABILITY-06.md)
 - about: [CAPABILITY-02: Term and question search](../capabilities/CAPABILITY-02.md)
 - subject of: [DECISION-43: A search with no model call reports a cost of zero and the reason](DECISION-43.md)
+- subject of: [DECISION-49: Plain grep mode needs no key](DECISION-49.md)
+- traced by: [FEATURE-12: Plain grep with no question](../../roadmap/features/FEATURE-12.md)
 <!-- LINKS:END -->

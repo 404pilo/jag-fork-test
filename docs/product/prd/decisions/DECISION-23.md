@@ -23,4 +23,5 @@ When the top result alone is larger than the limit, jag shows that result cut to
 
 - about: [CAPABILITY-04: Limit on the text that jag returns](../capabilities/CAPABILITY-04.md)
 - about: [DECISION-17: jag cuts a very long line and marks the cut](DECISION-17.md)
+- traced by: [FEATURE-09: Size limit on the text that jag returns](../../roadmap/features/FEATURE-09.md)
 <!-- LINKS:END -->

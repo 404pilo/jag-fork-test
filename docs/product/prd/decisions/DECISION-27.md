@@ -22,4 +22,5 @@ Text output is the default, also when the output goes to a pipe, as in grep. Onl
 
 - about: [CAPABILITY-05: Text output for people and structured output for agents](../capabilities/CAPABILITY-05.md)
 - about: [CAPABILITY-06: Feels like grep](../capabilities/CAPABILITY-06.md)
+- traced by: [FEATURE-11: Text output for a person and structured output for an agent](../../roadmap/features/FEATURE-11.md)
 <!-- LINKS:END -->

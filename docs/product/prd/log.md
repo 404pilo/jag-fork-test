@@ -1,5 +1,9 @@
 # Log
 
+## 2026-10-08
+
+* **Save**: [product](product.md) capabilities (plan Make it work): DECISION-47, DECISION-48, DECISION-49, DECISION-50, QUESTION-03, by human:Pilo, at 2026-10-08T13:42:10Z
+
 ## 2026-10-07
 
 * **Save**: [product](product.md) capabilities (simulate CAPABILITY-05): DECISION-22, DECISION-27, DECISION-28, DECISION-29, DECISION-30, CONSTRAINT-05, by human:Pilo, at 2026-10-07T10:40:35Z
