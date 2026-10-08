@@ -25,4 +25,5 @@ Release 2 adds trust and cost control. The user sees the cost of each search, se
 - includes: [CAPABILITY-07: Show the cost of a search](../capabilities/CAPABILITY-07.md) (must)
 - includes: [CAPABILITY-09: Say which text leaves the machine](../capabilities/CAPABILITY-09.md) (must)
 - includes: [CAPABILITY-12: Measure jag on your own questions](../capabilities/CAPABILITY-12.md) (must)
+- traced by: [MILESTONE-02: Make it good](../../roadmap/milestones/MILESTONE-02.md)
 <!-- LINKS:END -->

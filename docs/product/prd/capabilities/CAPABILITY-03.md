@@ -29,4 +29,5 @@ Each result shows the file, the line number, and the snippet. The person or the 
 - subject of: [DECISION-17: jag cuts a very long line and marks the cut](../decisions/DECISION-17.md)
 - subject of: [DECISION-18: Piped text has the label (standard input)](../decisions/DECISION-18.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (must)
+- traced by: [EPIC-02: Ranked search with file and line](../../roadmap/epics/EPIC-02.md)
 <!-- LINKS:END -->

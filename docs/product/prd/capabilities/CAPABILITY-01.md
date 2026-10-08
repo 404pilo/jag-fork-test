@@ -35,4 +35,5 @@ When the key is missing or out of credit, or the model service is down, jag fail
 - measured by: [METRIC-04: Time to first result](../metrics/METRIC-04.md)
 - measured by: [METRIC-08: Setup failures](../metrics/METRIC-08.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (must)
+- traced by: [EPIC-01: Setup and readiness](../../roadmap/epics/EPIC-01.md)
 <!-- LINKS:END -->

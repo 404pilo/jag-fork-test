@@ -8,3 +8,18 @@ status: draft
 # PROJECT-01: jag roadmap
 
 One roadmap bundle is one GitHub Project. Add the `github` field when the Project exists.
+
+<!-- STATUS:START (generated, do not edit) -->
+
+## Status
+
+| Item | State | Progress | Owner | Blocked by | Drift |
+| --- | --- | --- | --- | --- | --- |
+| [EPIC-01: Setup and readiness](../epics/EPIC-01.md) | backlog | - | - | - | - |
+| [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | backlog | - | - | - | - |
+| [EPIC-03: Output that fits an agent](../epics/EPIC-03.md) | backlog | - | - | - | - |
+| [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md) | backlog | - | - | - | - |
+| [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md) | - | 0/4 (0%) | - | - | - |
+| [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md) | - | - | - | - | - |
+| [MILESTONE-03: Make it fast](../milestones/MILESTONE-03.md) | - | - | - | - | - |
+<!-- STATUS:END -->

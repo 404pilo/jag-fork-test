@@ -18,4 +18,5 @@ Release 3 lets the user give only a question. jag chooses the candidate lines it
 ## Links
 
 - includes: [CAPABILITY-10: Question without a term](../capabilities/CAPABILITY-10.md) (must)
+- traced by: [MILESTONE-02: Make it good](../../roadmap/milestones/MILESTONE-02.md)
 <!-- LINKS:END -->

@@ -10,3 +10,10 @@ kind: release-criterion
 # SCOPE-10: The held-out score confirms the gain over grep
 
 Before release 1 goes public, the held-out evaluation run must be done. It must confirm the gain over grep before the README makes any accuracy claim. The README gives the result as a summary only.
+
+<!-- LINKS:START (generated, do not edit) -->
+
+## Links
+
+- traced by: [MILESTONE-01: Make it work](../../roadmap/milestones/MILESTONE-01.md)
+<!-- LINKS:END -->

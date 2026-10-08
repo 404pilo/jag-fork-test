@@ -54,4 +54,5 @@ The user gives a folder, a term, and a question in plain language. jag finds the
 - measured by: [METRIC-05: Cost per search](../metrics/METRIC-05.md)
 - measured by: [METRIC-07: False confidence](../metrics/METRIC-07.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (must)
+- traced by: [EPIC-02: Ranked search with file and line](../../roadmap/epics/EPIC-02.md)
 <!-- LINKS:END -->

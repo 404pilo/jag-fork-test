@@ -30,4 +30,5 @@ jag gives readable text to a person at the shell. On request, jag gives structur
 - subject of: [DECISION-29: In text mode, notices go to the error stream](../decisions/DECISION-29.md)
 - subject of: [DECISION-30: Structured mode always writes a complete output](../decisions/DECISION-30.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (must)
+- traced by: [EPIC-03: Output that fits an agent](../../roadmap/epics/EPIC-03.md)
 <!-- LINKS:END -->

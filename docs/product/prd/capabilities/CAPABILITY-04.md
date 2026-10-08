@@ -39,4 +39,5 @@ The limit protects the context of the agent that reads the results. It is separa
 - measured by: [METRIC-06: Answer still found](../metrics/METRIC-06.md)
 - subject of: [QUESTION-03: Which exit code wins when both limits apply?](../questions/QUESTION-03.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (must)
+- traced by: [EPIC-03: Output that fits an agent](../../roadmap/epics/EPIC-03.md)
 <!-- LINKS:END -->

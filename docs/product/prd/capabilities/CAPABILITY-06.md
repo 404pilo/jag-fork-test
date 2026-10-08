@@ -37,4 +37,5 @@ jag works in a shell pipe, uses options and exit codes like grep, and returns fa
 - subject of: [DECISION-39: When the user stops jag, it stops at once with no partial results](../decisions/DECISION-39.md)
 - measured by: [METRIC-03: Search speed](../metrics/METRIC-03.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (must)
+- traced by: [EPIC-04: A shell user keeps their habits](../../roadmap/epics/EPIC-04.md)
 <!-- LINKS:END -->

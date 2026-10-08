@@ -25,4 +25,5 @@ When the user asks the same question of the same text again, jag gives the same 
 - depends on: [CAPABILITY-02: Term and question search](CAPABILITY-02.md)
 - subject of: [DECISION-46: jag scores each search again and does not reuse scores](../decisions/DECISION-46.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (wont)
+- traced by: [MILESTONE-03: Make it fast](../../roadmap/milestones/MILESTONE-03.md)
 <!-- LINKS:END -->

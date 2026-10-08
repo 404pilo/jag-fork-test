@@ -25,4 +25,5 @@ jag ships a short set of instructions that the agent builder copies into the ins
 - addresses: [NEED-13: Search prompt tuning fixes one case and breaks another](../needs/NEED-13.md)
 - depends on: [CAPABILITY-02: Term and question search](CAPABILITY-02.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (should)
+- traced by: [MILESTONE-02: Make it good](../../roadmap/milestones/MILESTONE-02.md)
 <!-- LINKS:END -->
