@@ -46,3 +46,4 @@
 * [STORY-42: Color the matches as grep does](STORY-42.md) - As a shell power user (PERSONA-04), I want jag to color the matching text only in a terminal, with --color=never and --color=always to change that, so that color works as grep --color=auto.
 * [STORY-43: Stop at once when stopped](STORY-43.md) - As a shell power user (PERSONA-04), I want jag to stop at once on Ctrl-C or a closed pipe, so that a stopped search wastes no more credit.
 * [STORY-44: Return a typical search in under 5 seconds](STORY-44.md) - As a shell power user (PERSONA-04), I want a typical search to return in under 5 seconds, so that I do not go back to grep.
+* [STORY-45: Run the held-out evaluation before release](STORY-45.md) - As an agent builder (PERSONA-01), I want the held-out evaluation run done before release 1, so that I can trust that jag answers better than grep.

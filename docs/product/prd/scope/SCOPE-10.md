@@ -16,4 +16,5 @@ Before release 1 goes public, the held-out evaluation run must be done. It must 
 ## Links
 
 - traced by: [MILESTONE-01: Make it work](../../roadmap/milestones/MILESTONE-01.md)
+- traced by: [STORY-45: Run the held-out evaluation before release](../../roadmap/stories/STORY-45.md)
 <!-- LINKS:END -->

@@ -24,7 +24,7 @@ The first public release holds the six must-be capabilities. It goes public only
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
 | [EPIC-01: Setup and readiness](../epics/EPIC-01.md) | ready | 0/3 (0%) | - | - | - |
-| [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | ready | 0/4 (0%) | - | - | - |
+| [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | ready | 0/5 (0%) | - | - | - |
 | [EPIC-03: Output that fits an agent](../epics/EPIC-03.md) | ready | 0/2 (0%) | - | - | - |
 | [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md) | ready | 0/5 (0%) | - | - | - |
 | [FEATURE-01: Store a key one time](../features/FEATURE-01.md) | ready | 0/5 (0%) | - | - | - |
@@ -111,4 +111,5 @@ The first public release holds the six must-be capabilities. It goes public only
 - item of: [STORY-42: Color the matches as grep does](../stories/STORY-42.md)
 - item of: [STORY-43: Stop at once when stopped](../stories/STORY-43.md)
 - item of: [STORY-44: Return a typical search in under 5 seconds](../stories/STORY-44.md)
+- item of: [STORY-45: Run the held-out evaluation before release](../stories/STORY-45.md)
 <!-- LINKS:END -->

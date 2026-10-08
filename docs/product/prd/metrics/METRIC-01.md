@@ -27,4 +27,5 @@ On the private development set, jag scores about 0.72 and blind grep scores abou
 - measures: [JOURNEY-02: A person asks a question at the shell](../journeys/JOURNEY-02.md)
 - guarded by: [METRIC-05: Cost per search](METRIC-05.md)
 - guarded by: [METRIC-07: False confidence](METRIC-07.md)
+- traced by: [STORY-45: Run the held-out evaluation before release](../../roadmap/stories/STORY-45.md)
 <!-- LINKS:END -->

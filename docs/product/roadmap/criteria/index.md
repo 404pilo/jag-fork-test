@@ -203,3 +203,7 @@
 ## STORY-44: Return a typical search in under 5 seconds
 
 * [CRITERION-65: A typical search returns in under 5 seconds](CRITERION-65.md) - One search at the default cost limit, on a medium code repository, with a working service, returns in under 5 seconds.
+
+## STORY-45: Run the held-out evaluation before release
+
+* [CRITERION-73: The held-out score meets the target and beats grep](CRITERION-73.md) - The held-out run gives jag an ndcg@10 of 0.70 or more, which is higher than blind grep. The public summary shows only the numbers and no case content.
