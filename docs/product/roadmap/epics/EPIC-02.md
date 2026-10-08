@@ -4,7 +4,7 @@ title: Ranked search with file and line
 description: The user gives a folder, a term, and a question, and gets ranked lines
   that show the file, the line number, and the snippet.
 status: draft
-state: backlog
+state: ready
 milestone: /milestones/MILESTONE-01.md
 traces:
 - to: prd:/capabilities/CAPABILITY-02.md

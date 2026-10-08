@@ -4,7 +4,7 @@ title: A default size limit always applies
 description: jag always applies a default size limit, and the user can raise it or
   turn it off.
 status: draft
-item: /features/FEATURE-09.md
+item: /stories/STORY-25.md
 ---
 
 # CRITERION-37: A default size limit always applies
@@ -15,5 +15,5 @@ jag always applies a default size limit, and the user can raise it or turn it of
 
 ## Links
 
-- item: [FEATURE-09: Size limit on the text that jag returns](../features/FEATURE-09.md)
+- item: [STORY-25: Stay inside a default size limit](../stories/STORY-25.md)
 <!-- LINKS:END -->

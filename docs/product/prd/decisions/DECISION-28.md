@@ -22,4 +22,5 @@ Each item that the text output shows is a named field in structured output: the 
 
 - about: [CAPABILITY-05: Text output for people and structured output for agents](../capabilities/CAPABILITY-05.md)
 - traced by: [FEATURE-11: Text output for a person and structured output for an agent](../../roadmap/features/FEATURE-11.md)
+- traced by: [STORY-30: Turn on structured output](../../roadmap/stories/STORY-30.md)
 <!-- LINKS:END -->

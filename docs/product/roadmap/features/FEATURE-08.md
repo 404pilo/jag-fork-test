@@ -5,7 +5,7 @@ description: Each result shows the file, the line range, and the exact source te
   with each matching line marked, so the person or the agent can open the source at
   that line.
 status: draft
-state: backlog
+state: blocked
 parent: /epics/EPIC-02.md
 blocked_by:
 - /features/FEATURE-04.md
@@ -27,6 +27,18 @@ traces:
 
 Each result shows the file, the line range, and the exact source text, with each matching line marked, so the person or the agent can open the source at that line.
 
+<!-- STATUS:START (generated, do not edit) -->
+
+## Status
+
+| Item | State | Progress | Owner | Blocked by | Drift |
+| --- | --- | --- | --- | --- | --- |
+| [STORY-21: See the file, the line, and the snippet of a result](../stories/STORY-21.md) | ready | - | - | - | - |
+| [STORY-22: See the line range of a joined result](../stories/STORY-22.md) | ready | - | - | - | - |
+| [STORY-23: Cut a very long line and mark the cut](../stories/STORY-23.md) | ready | - | - | - | - |
+| [STORY-24: Label piped text](../stories/STORY-24.md) | ready | - | - | - | - |
+<!-- STATUS:END -->
+
 <!-- LINKS:START (generated, do not edit) -->
 
 ## Links
@@ -39,11 +51,10 @@ Each result shows the file, the line range, and the exact source text, with each
 - traces: [DECISION-16: A joined result shows its line range and marks each matching line](../../prd/decisions/DECISION-16.md)
 - traces: [DECISION-17: jag cuts a very long line and marks the cut](../../prd/decisions/DECISION-17.md)
 - traces: [DECISION-18: Piped text has the label (standard input)](../../prd/decisions/DECISION-18.md)
-- criterion or run of: [CRITERION-31: Each result shows the file, the line, and the snippet](../criteria/CRITERION-31.md)
-- criterion or run of: [CRITERION-32: The path has the same form as in grep](../criteria/CRITERION-32.md)
-- criterion or run of: [CRITERION-33: A joined result shows its line range](../criteria/CRITERION-33.md)
-- criterion or run of: [CRITERION-34: jag cuts a very long line and marks the cut](../criteria/CRITERION-34.md)
-- criterion or run of: [CRITERION-35: Piped text has the label (standard input)](../criteria/CRITERION-35.md)
 - blocks: [FEATURE-09: Size limit on the text that jag returns](FEATURE-09.md)
 - blocks: [FEATURE-11: Text output for a person and structured output for an agent](FEATURE-11.md)
+- child: [STORY-21: See the file, the line, and the snippet of a result](../stories/STORY-21.md)
+- child: [STORY-22: See the line range of a joined result](../stories/STORY-22.md)
+- child: [STORY-23: Cut a very long line and mark the cut](../stories/STORY-23.md)
+- child: [STORY-24: Label piped text](../stories/STORY-24.md)
 <!-- LINKS:END -->

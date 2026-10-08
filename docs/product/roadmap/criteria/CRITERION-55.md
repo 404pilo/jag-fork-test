@@ -4,7 +4,7 @@ title: jag keeps the common grep options
 description: jag accepts `-i`, `-w`, `-F`, `-e`, `-A`, `-B`, `-C`, `-l`, `-c`, `-q`,
   `--include`, and `--exclude`, with their grep meaning.
 status: draft
-item: /features/FEATURE-13.md
+item: /stories/STORY-35.md
 ---
 
 # CRITERION-55: jag keeps the common grep options
@@ -15,5 +15,5 @@ jag accepts `-i`, `-w`, `-F`, `-e`, `-A`, `-B`, `-C`, `-l`, `-c`, `-q`, `--inclu
 
 ## Links
 
-- item: [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md)
+- item: [STORY-35: Use the common grep options](../stories/STORY-35.md)
 <!-- LINKS:END -->

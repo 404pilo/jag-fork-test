@@ -23,4 +23,5 @@ The `-A`, `-B`, and `-C` options set the number of lines around each match, as i
 - about: [DECISION-10: A result is a matching line with the lines around it](DECISION-10.md)
 - about: [DECISION-34: Release 1 keeps the grep options that people use most](DECISION-34.md)
 - traced by: [FEATURE-13: Common grep options and exit codes](../../roadmap/features/FEATURE-13.md)
+- traced by: [STORY-36: Set the lines around a match](../../roadmap/stories/STORY-36.md)
 <!-- LINKS:END -->

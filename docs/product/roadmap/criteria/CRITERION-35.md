@@ -4,7 +4,7 @@ title: Piped text has the label (standard input)
 description: A result from piped text has the label `(standard input)` and the line
   numbers of the piped text.
 status: draft
-item: /features/FEATURE-08.md
+item: /stories/STORY-24.md
 ---
 
 # CRITERION-35: Piped text has the label (standard input)
@@ -15,5 +15,5 @@ A result from piped text has the label `(standard input)` and the line numbers o
 
 ## Links
 
-- item: [FEATURE-08: File, line, and snippet for each result](../features/FEATURE-08.md)
+- item: [STORY-24: Label piped text](../stories/STORY-24.md)
 <!-- LINKS:END -->

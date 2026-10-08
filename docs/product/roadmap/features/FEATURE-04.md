@@ -6,7 +6,7 @@ description: The user runs `jag TERM "QUESTION" [PATH...]`, and jag ranks the li
 status: draft
 aliases:
 - FEATURE-07
-state: backlog
+state: blocked
 parent: /epics/EPIC-02.md
 blocked_by:
 - /features/FEATURE-01.md
@@ -30,6 +30,17 @@ The user runs `jag TERM "QUESTION" [PATH...]`, and jag ranks the lines that matc
 
 When no result answers the question well, jag shows the best results with a clear no-good-answer label and exits with code 1, so that an agent does not trust noise. This part was FEATURE-07.
 
+<!-- STATUS:START (generated, do not edit) -->
+
+## Status
+
+| Item | State | Progress | Owner | Blocked by | Drift |
+| --- | --- | --- | --- | --- | --- |
+| [STORY-13: Rank matching lines by a question](../stories/STORY-13.md) | ready | - | - | - | - |
+| [STORY-14: See the lines around a match](../stories/STORY-14.md) | ready | - | - | - | - |
+| [STORY-15: Know when no result answers well](../stories/STORY-15.md) | ready | - | - | - | - |
+<!-- STATUS:END -->
+
 <!-- LINKS:START (generated, do not edit) -->
 
 ## Links
@@ -42,14 +53,11 @@ When no result answers the question well, jag shows the best results with a clea
 - traces: [DECISION-31: The command takes the term, then the question, then the paths](../../prd/decisions/DECISION-31.md)
 - traces: [DECISION-33: The term is a regular expression, and -F makes it fixed text](../../prd/decisions/DECISION-33.md)
 - traces: [DECISION-11: When nothing answers well, jag labels the best results and exits 1](../../prd/decisions/DECISION-11.md)
-- criterion or run of: [CRITERION-18: The command takes the term, the question, and the paths](../criteria/CRITERION-18.md)
-- criterion or run of: [CRITERION-19: The best answer comes first](../criteria/CRITERION-19.md)
-- criterion or run of: [CRITERION-20: The term is a regular expression](../criteria/CRITERION-20.md)
-- criterion or run of: [CRITERION-21: A result holds the lines around the match](../criteria/CRITERION-21.md)
-- criterion or run of: [CRITERION-29: Weak results have a clear label](../criteria/CRITERION-29.md)
-- criterion or run of: [CRITERION-30: No good answer exits with code 1](../criteria/CRITERION-30.md)
 - blocks: [FEATURE-06: Cost limit on scoring](FEATURE-06.md)
 - blocks: [FEATURE-08: File, line, and snippet for each result](FEATURE-08.md)
 - blocks: [FEATURE-15: Good behavior in a terminal and in a pipe](FEATURE-15.md)
 - blocks: [FEATURE-16: Fast enough to replace grep](FEATURE-16.md)
+- child: [STORY-13: Rank matching lines by a question](../stories/STORY-13.md)
+- child: [STORY-14: See the lines around a match](../stories/STORY-14.md)
+- child: [STORY-15: Know when no result answers well](../stories/STORY-15.md)
 <!-- LINKS:END -->

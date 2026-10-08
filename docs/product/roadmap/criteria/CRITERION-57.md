@@ -4,7 +4,7 @@ title: An unknown option is a usage error
 description: Any other option gives a usage error that names the option, and jag exits
   with code 2.
 status: draft
-item: /features/FEATURE-13.md
+item: /stories/STORY-37.md
 ---
 
 # CRITERION-57: An unknown option is a usage error
@@ -15,5 +15,5 @@ Any other option gives a usage error that names the option, and jag exits with c
 
 ## Links
 
-- item: [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md)
+- item: [STORY-37: Get a usage error for an unknown option](../stories/STORY-37.md)
 <!-- LINKS:END -->

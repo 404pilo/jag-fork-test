@@ -3,7 +3,7 @@ type: AcceptanceCriterion
 title: A search with no question costs nothing
 description: With no question, jag makes no model call and the search costs nothing.
 status: draft
-item: /features/FEATURE-12.md
+item: /stories/STORY-33.md
 ---
 
 # CRITERION-54: A search with no question costs nothing
@@ -14,5 +14,5 @@ With no question, jag makes no model call and the search costs nothing.
 
 ## Links
 
-- item: [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md)
+- item: [STORY-33: Search with a term and no question](../stories/STORY-33.md)
 <!-- LINKS:END -->

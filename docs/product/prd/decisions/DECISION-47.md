@@ -27,4 +27,6 @@ When one search reaches the cost limit and also leaves out results to stay in th
 - about: [DECISION-26: Leaving out results has its own exit code](DECISION-26.md)
 - traced by: [FEATURE-06: Cost limit on scoring](../../roadmap/features/FEATURE-06.md)
 - traced by: [FEATURE-09: Size limit on the text that jag returns](../../roadmap/features/FEATURE-09.md)
+- traced by: [STORY-20: Tell a reached cost limit by its exit code](../../roadmap/stories/STORY-20.md)
+- traced by: [STORY-26: Leave out the lowest-ranked results](../../roadmap/stories/STORY-26.md)
 <!-- LINKS:END -->

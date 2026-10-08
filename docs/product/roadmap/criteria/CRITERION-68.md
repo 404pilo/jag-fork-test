@@ -4,7 +4,7 @@ title: Plain grep works with no key
 description: With no stored key, `jag TERM PATH` returns the grep matches and does
   not ask for a key.
 status: draft
-item: /features/FEATURE-12.md
+item: /stories/STORY-34.md
 ---
 
 # CRITERION-68: Plain grep works with no key
@@ -15,5 +15,5 @@ With no stored key, `jag TERM PATH` returns the grep matches and does not ask fo
 
 ## Links
 
-- item: [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md)
+- item: [STORY-34: Use plain grep with no key](../stories/STORY-34.md)
 <!-- LINKS:END -->

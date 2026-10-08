@@ -4,7 +4,7 @@ title: With no path, jag searches the current folder
 description: When the user gives no path and no text comes in through a pipe, jag
   searches the current folder.
 status: draft
-item: /features/FEATURE-14.md
+item: /stories/STORY-39.md
 ---
 
 # CRITERION-59: With no path, jag searches the current folder
@@ -15,5 +15,5 @@ When the user gives no path and no text comes in through a pipe, jag searches th
 
 ## Links
 
-- item: [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md)
+- item: [STORY-39: Search with no path](../stories/STORY-39.md)
 <!-- LINKS:END -->

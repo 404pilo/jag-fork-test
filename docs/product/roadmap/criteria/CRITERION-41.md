@@ -4,7 +4,7 @@ title: The notice gives the count and how to raise the limit
 description: When jag leaves out results, a notice gives their number and tells the
   user how to raise the limit.
 status: draft
-item: /features/FEATURE-09.md
+item: /stories/STORY-26.md
 ---
 
 # CRITERION-41: The notice gives the count and how to raise the limit
@@ -15,5 +15,5 @@ When jag leaves out results, a notice gives their number and tells the user how 
 
 ## Links
 
-- item: [FEATURE-09: Size limit on the text that jag returns](../features/FEATURE-09.md)
+- item: [STORY-26: Leave out the lowest-ranked results](../stories/STORY-26.md)
 <!-- LINKS:END -->

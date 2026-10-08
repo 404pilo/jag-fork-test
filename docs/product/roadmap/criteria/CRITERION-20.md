@@ -3,7 +3,7 @@ type: AcceptanceCriterion
 title: The term is a regular expression
 description: jag reads the term as a regular expression, as grep does.
 status: draft
-item: /features/FEATURE-04.md
+item: /stories/STORY-13.md
 ---
 
 # CRITERION-20: The term is a regular expression
@@ -14,5 +14,5 @@ jag reads the term as a regular expression, as grep does.
 
 ## Links
 
-- item: [FEATURE-04: Rank matching lines by a question](../features/FEATURE-04.md)
+- item: [STORY-13: Rank matching lines by a question](../stories/STORY-13.md)
 <!-- LINKS:END -->

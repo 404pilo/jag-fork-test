@@ -3,6 +3,7 @@
 ## 2026-10-08
 
 * **Save**: [product](product.md) capabilities (plan Make it work): DECISION-47, DECISION-48, DECISION-49, DECISION-50, QUESTION-03, by human:Pilo, at 2026-10-08T13:42:10Z
+* **Save**: [product](product.md) capabilities (plan Make it work): DECISION-43, by human:Pilo, at 2026-10-08T16:24:37Z
 
 ## 2026-10-07
 

@@ -3,7 +3,7 @@ type: AcceptanceCriterion
 title: A term with no question works as grep
 description: With a term and no question, jag returns the matching lines as grep does.
 status: draft
-item: /features/FEATURE-12.md
+item: /stories/STORY-33.md
 ---
 
 # CRITERION-53: A term with no question works as grep
@@ -14,5 +14,5 @@ With a term and no question, jag returns the matching lines as grep does.
 
 ## Links
 
-- item: [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md)
+- item: [STORY-33: Search with a term and no question](../stories/STORY-33.md)
 <!-- LINKS:END -->

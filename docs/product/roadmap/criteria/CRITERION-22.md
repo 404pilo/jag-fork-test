@@ -4,7 +4,7 @@ title: jag searches each subfolder
 description: When the user gives a folder, jag searches each file in that folder and
   in each subfolder.
 status: draft
-item: /features/FEATURE-05.md
+item: /stories/STORY-16.md
 ---
 
 # CRITERION-22: jag searches each subfolder
@@ -15,5 +15,5 @@ When the user gives a folder, jag searches each file in that folder and in each 
 
 ## Links
 
-- item: [FEATURE-05: Search a folder as grep -r does](../features/FEATURE-05.md)
+- item: [STORY-16: Search each subfolder of a folder](../stories/STORY-16.md)
 <!-- LINKS:END -->

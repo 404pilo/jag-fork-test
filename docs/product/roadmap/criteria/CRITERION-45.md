@@ -4,7 +4,7 @@ title: Notices go to the error stream
 description: In text mode, jag writes results to standard output and each notice to
   the error stream.
 status: draft
-item: /features/FEATURE-11.md
+item: /stories/STORY-29.md
 ---
 
 # CRITERION-45: Notices go to the error stream
@@ -15,5 +15,5 @@ In text mode, jag writes results to standard output and each notice to the error
 
 ## Links
 
-- item: [FEATURE-11: Text output for a person and structured output for an agent](../features/FEATURE-11.md)
+- item: [STORY-29: Read text output by default](../stories/STORY-29.md)
 <!-- LINKS:END -->

@@ -23,4 +23,5 @@ When the user gives a term and no question, jag makes no model call. It works wi
 - about: [DECISION-32: A term with no question works as plain grep](DECISION-32.md)
 - about: [CAPABILITY-01: Guided key setup and health check](../capabilities/CAPABILITY-01.md)
 - traced by: [FEATURE-12: Plain grep with no question](../../roadmap/features/FEATURE-12.md)
+- traced by: [STORY-34: Use plain grep with no key](../../roadmap/stories/STORY-34.md)
 <!-- LINKS:END -->

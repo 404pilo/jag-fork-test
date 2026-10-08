@@ -28,4 +28,5 @@ In text mode, jag writes the results to standard output and the notices to the e
 - subject of: [DECISION-37: jag shows progress only in a terminal](DECISION-37.md)
 - subject of: [DECISION-41: In text mode, the cost line goes to the error stream after each search](DECISION-41.md)
 - traced by: [FEATURE-11: Text output for a person and structured output for an agent](../../roadmap/features/FEATURE-11.md)
+- traced by: [STORY-29: Read text output by default](../../roadmap/stories/STORY-29.md)
 <!-- LINKS:END -->

@@ -4,7 +4,7 @@ title: Common grep options and exit codes
 description: jag keeps the grep options that people use most and the grep exit codes
   0, 1, and 2; any other option is a usage error that names it.
 status: draft
-state: backlog
+state: ready
 parent: /epics/EPIC-04.md
 milestone: /milestones/MILESTONE-01.md
 traces:
@@ -24,6 +24,18 @@ traces:
 
 jag keeps the grep options that people use most and the grep exit codes 0, 1, and 2; any other option is a usage error that names it.
 
+<!-- STATUS:START (generated, do not edit) -->
+
+## Status
+
+| Item | State | Progress | Owner | Blocked by | Drift |
+| --- | --- | --- | --- | --- | --- |
+| [STORY-35: Use the common grep options](../stories/STORY-35.md) | ready | - | - | - | - |
+| [STORY-36: Set the lines around a match](../stories/STORY-36.md) | ready | - | - | - | - |
+| [STORY-37: Get a usage error for an unknown option](../stories/STORY-37.md) | ready | - | - | - | - |
+| [STORY-38: Keep the grep exit codes](../stories/STORY-38.md) | ready | - | - | - | - |
+<!-- STATUS:END -->
+
 <!-- LINKS:START (generated, do not edit) -->
 
 ## Links
@@ -35,9 +47,8 @@ jag keeps the grep options that people use most and the grep exit codes 0, 1, an
 - traces: [DECISION-33: The term is a regular expression, and -F makes it fixed text](../../prd/decisions/DECISION-33.md)
 - traces: [DECISION-34: Release 1 keeps the grep options that people use most](../../prd/decisions/DECISION-34.md)
 - traces: [DECISION-50: The -A, -B, and -C options set the context lines of a result](../../prd/decisions/DECISION-50.md)
-- criterion or run of: [CRITERION-55: jag keeps the common grep options](../criteria/CRITERION-55.md)
-- criterion or run of: [CRITERION-56: The -F option makes the term fixed text](../criteria/CRITERION-56.md)
-- criterion or run of: [CRITERION-57: An unknown option is a usage error](../criteria/CRITERION-57.md)
-- criterion or run of: [CRITERION-58: jag keeps the grep exit codes](../criteria/CRITERION-58.md)
-- criterion or run of: [CRITERION-69: Context options set the lines around a match](../criteria/CRITERION-69.md)
+- child: [STORY-35: Use the common grep options](../stories/STORY-35.md)
+- child: [STORY-36: Set the lines around a match](../stories/STORY-36.md)
+- child: [STORY-37: Get a usage error for an unknown option](../stories/STORY-37.md)
+- child: [STORY-38: Keep the grep exit codes](../stories/STORY-38.md)
 <!-- LINKS:END -->

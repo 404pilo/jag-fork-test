@@ -29,4 +29,5 @@ A result is the matching line with a few lines of text before and after it. When
 - subject of: [DECISION-17: jag cuts a very long line and marks the cut](DECISION-17.md)
 - subject of: [DECISION-50: The -A, -B, and -C options set the context lines of a result](DECISION-50.md)
 - traced by: [FEATURE-04: Rank matching lines by a question](../../roadmap/features/FEATURE-04.md)
+- traced by: [STORY-14: See the lines around a match](../../roadmap/stories/STORY-14.md)
 <!-- LINKS:END -->

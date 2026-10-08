@@ -3,7 +3,7 @@ type: AcceptanceCriterion
 title: Notices are inside the structure
 description: In structured mode, jag writes each notice inside the structure.
 status: draft
-item: /features/FEATURE-11.md
+item: /stories/STORY-31.md
 ---
 
 # CRITERION-50: Notices are inside the structure
@@ -14,5 +14,5 @@ In structured mode, jag writes each notice inside the structure.
 
 ## Links
 
-- item: [FEATURE-11: Text output for a person and structured output for an agent](../features/FEATURE-11.md)
+- item: [STORY-31: Get a complete structured output with notices and errors](../stories/STORY-31.md)
 <!-- LINKS:END -->

@@ -24,4 +24,5 @@ To stay in the limit, jag removes whole results, starting with the result with t
 - about: [CAPABILITY-04: Limit on the text that jag returns](../capabilities/CAPABILITY-04.md)
 - about: [METRIC-06: Answer still found](../metrics/METRIC-06.md)
 - traced by: [FEATURE-09: Size limit on the text that jag returns](../../roadmap/features/FEATURE-09.md)
+- traced by: [STORY-26: Leave out the lowest-ranked results](../../roadmap/stories/STORY-26.md)
 <!-- LINKS:END -->

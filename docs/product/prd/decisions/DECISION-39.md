@@ -24,4 +24,5 @@ When the user stops jag, or the pipe closes, jag stops at once. It starts no new
 - about: [DECISION-06: A model failure during a search fails the full search](DECISION-06.md)
 - subject of: [DECISION-44: A failed or stopped search reports the cost up to that point](DECISION-44.md)
 - traced by: [FEATURE-15: Good behavior in a terminal and in a pipe](../../roadmap/features/FEATURE-15.md)
+- traced by: [STORY-43: Stop at once when stopped](../../roadmap/stories/STORY-43.md)
 <!-- LINKS:END -->

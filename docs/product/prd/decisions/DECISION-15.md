@@ -22,4 +22,5 @@ The path of each result has the same form as in grep. A relative folder gives re
 
 - about: [CAPABILITY-03: File and line for each result](../capabilities/CAPABILITY-03.md)
 - traced by: [FEATURE-08: File, line, and snippet for each result](../../roadmap/features/FEATURE-08.md)
+- traced by: [STORY-21: See the file, the line, and the snippet of a result](../../roadmap/stories/STORY-21.md)
 <!-- LINKS:END -->

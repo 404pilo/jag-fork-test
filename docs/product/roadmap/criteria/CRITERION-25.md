@@ -4,7 +4,7 @@ title: jag scores only the best matches
 description: When the matches are more than the cost limit, jag pre-ranks them by
   word match and scores only the best ones, up to the limit.
 status: draft
-item: /features/FEATURE-06.md
+item: /stories/STORY-18.md
 ---
 
 # CRITERION-25: jag scores only the best matches
@@ -15,5 +15,5 @@ When the matches are more than the cost limit, jag pre-ranks them by word match 
 
 ## Links
 
-- item: [FEATURE-06: Cost limit on scoring](../features/FEATURE-06.md)
+- item: [STORY-18: Score only the best matches](../stories/STORY-18.md)
 <!-- LINKS:END -->

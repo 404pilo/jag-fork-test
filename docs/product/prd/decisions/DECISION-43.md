@@ -15,7 +15,7 @@ about:
 
 # DECISION-43: A search with no model call reports a cost of zero and the reason
 
-When a search makes no model call, jag reports a cost of zero and gives the reason: "no question". jag does not reuse scores in release 1 (DECISION-46), so this is the only search with no model call.
+When a search makes no model call, jag reports a cost of zero and gives the reason, such as "no question". jag does not reuse scores in release 1 (DECISION-46).
 
 <!-- LINKS:START (generated, do not edit) -->
 

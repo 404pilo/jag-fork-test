@@ -4,7 +4,7 @@ title: Output that fits an agent
 description: jag keeps its output inside a size limit that the user sets, and gives
   readable text to a person or structured output to an agent.
 status: draft
-state: backlog
+state: ready
 milestone: /milestones/MILESTONE-01.md
 traces:
 - to: prd:/capabilities/CAPABILITY-04.md

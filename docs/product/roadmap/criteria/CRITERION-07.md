@@ -4,7 +4,7 @@ title: A missing key points to where to get one
 description: When jag finds no key, the message gives the page where the user gets
   a TypeSafe key.
 status: draft
-item: /features/FEATURE-01.md
+item: /stories/STORY-05.md
 ---
 
 # CRITERION-07: A missing key points to where to get one
@@ -15,5 +15,5 @@ When jag finds no key, the message gives the page where the user gets a TypeSafe
 
 ## Links
 
-- item: [FEATURE-01: Store a key one time](../features/FEATURE-01.md)
+- item: [STORY-05: Find where to get a key](../stories/STORY-05.md)
 <!-- LINKS:END -->

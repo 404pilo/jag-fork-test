@@ -24,4 +24,5 @@ While jag ranks, it shows a progress line on the error stream, but only when the
 - about: [CAPABILITY-06: Feels like grep](../capabilities/CAPABILITY-06.md)
 - about: [DECISION-29: In text mode, notices go to the error stream](DECISION-29.md)
 - traced by: [FEATURE-15: Good behavior in a terminal and in a pipe](../../roadmap/features/FEATURE-15.md)
+- traced by: [STORY-41: See progress only in a terminal](../../roadmap/stories/STORY-41.md)
 <!-- LINKS:END -->

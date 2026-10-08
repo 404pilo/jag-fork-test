@@ -30,4 +30,6 @@ jag keeps the grep exit codes 0, 1, and 2. Each model failure gets its own exit 
 - subject of: [DECISION-48: The readiness check exits 0 or with the code of the first cause](DECISION-48.md)
 - traced by: [FEATURE-03: Clear failure when the model is not available](../../roadmap/features/FEATURE-03.md)
 - traced by: [FEATURE-13: Common grep options and exit codes](../../roadmap/features/FEATURE-13.md)
+- traced by: [STORY-10: Tell each model failure by its exit code](../../roadmap/stories/STORY-10.md)
+- traced by: [STORY-38: Keep the grep exit codes](../../roadmap/stories/STORY-38.md)
 <!-- LINKS:END -->

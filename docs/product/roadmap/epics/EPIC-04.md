@@ -4,7 +4,7 @@ title: A shell user keeps their habits
 description: jag works in a pipe, uses grep-like options and exit codes, and is fast
   enough to replace grep.
 status: draft
-state: backlog
+state: ready
 milestone: /milestones/MILESTONE-01.md
 traces:
 - to: prd:/capabilities/CAPABILITY-06.md

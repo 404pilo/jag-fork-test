@@ -3,7 +3,7 @@ type: AcceptanceCriterion
 title: jag says how many files it skipped
 description: jag tells the user how many files it skipped.
 status: draft
-item: /features/FEATURE-05.md
+item: /stories/STORY-17.md
 ---
 
 # CRITERION-24: jag says how many files it skipped
@@ -14,5 +14,5 @@ jag tells the user how many files it skipped.
 
 ## Links
 
-- item: [FEATURE-05: Search a folder as grep -r does](../features/FEATURE-05.md)
+- item: [STORY-17: Skip noise files and count them](../stories/STORY-17.md)
 <!-- LINKS:END -->

@@ -24,4 +24,5 @@ A result that joins near matches gives its first line and its last line. It mark
 - about: [CAPABILITY-03: File and line for each result](../capabilities/CAPABILITY-03.md)
 - about: [DECISION-10: A result is a matching line with the lines around it](DECISION-10.md)
 - traced by: [FEATURE-08: File, line, and snippet for each result](../../roadmap/features/FEATURE-08.md)
+- traced by: [STORY-22: See the line range of a joined result](../../roadmap/stories/STORY-22.md)
 <!-- LINKS:END -->

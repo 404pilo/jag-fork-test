@@ -4,7 +4,7 @@ title: Store a key one time
 description: The user stores a TypeSafe key one time; jag finds it on each search,
   never shows it, and tells a new user where to get one.
 status: draft
-state: backlog
+state: ready
 parent: /epics/EPIC-01.md
 milestone: /milestones/MILESTONE-01.md
 traces:
@@ -26,6 +26,19 @@ traces:
 
 The user stores a TypeSafe key one time; jag finds it on each search, never shows it, and tells a new user where to get one.
 
+<!-- STATUS:START (generated, do not edit) -->
+
+## Status
+
+| Item | State | Progress | Owner | Blocked by | Drift |
+| --- | --- | --- | --- | --- | --- |
+| [STORY-01: Store a key with setup](../stories/STORY-01.md) | ready | - | - | - | - |
+| [STORY-02: Find the key in a fixed order](../stories/STORY-02.md) | ready | - | - | - | - |
+| [STORY-03: Replace or remove the stored key](../stories/STORY-03.md) | ready | - | - | - | - |
+| [STORY-04: Keep the key private](../stories/STORY-04.md) | ready | - | - | - | - |
+| [STORY-05: Find where to get a key](../stories/STORY-05.md) | ready | - | - | - | - |
+<!-- STATUS:END -->
+
 <!-- LINKS:START (generated, do not edit) -->
 
 ## Links
@@ -38,15 +51,12 @@ The user stores a TypeSafe key one time; jag finds it on each search, never show
 - traces: [DECISION-09: The missing-key message tells a new user where to get a key](../../prd/decisions/DECISION-09.md)
 - traces: [CONSTRAINT-02: jag protects the API key of the user](../../prd/constraints/CONSTRAINT-02.md)
 - traces: [CONSTRAINT-03: A TypeSafe key is enough to start](../../prd/constraints/CONSTRAINT-03.md)
-- criterion or run of: [CRITERION-01: Setup stores the key for later searches](../criteria/CRITERION-01.md)
-- criterion or run of: [CRITERION-02: jag finds the key in a fixed order](../criteria/CRITERION-02.md)
-- criterion or run of: [CRITERION-03: Setup asks before it replaces a key](../criteria/CRITERION-03.md)
-- criterion or run of: [CRITERION-04: One command removes the stored key](../criteria/CRITERION-04.md)
-- criterion or run of: [CRITERION-05: jag never shows the key](../criteria/CRITERION-05.md)
-- criterion or run of: [CRITERION-06: jag refuses a key file that others can read](../criteria/CRITERION-06.md)
-- criterion or run of: [CRITERION-07: A missing key points to where to get one](../criteria/CRITERION-07.md)
-- criterion or run of: [CRITERION-08: A TypeSafe key is enough to start](../criteria/CRITERION-08.md)
 - blocks: [FEATURE-02: Readiness check](FEATURE-02.md)
 - blocks: [FEATURE-03: Clear failure when the model is not available](FEATURE-03.md)
 - blocks: [FEATURE-04: Rank matching lines by a question](FEATURE-04.md)
+- child: [STORY-01: Store a key with setup](../stories/STORY-01.md)
+- child: [STORY-02: Find the key in a fixed order](../stories/STORY-02.md)
+- child: [STORY-03: Replace or remove the stored key](../stories/STORY-03.md)
+- child: [STORY-04: Keep the key private](../stories/STORY-04.md)
+- child: [STORY-05: Find where to get a key](../stories/STORY-05.md)
 <!-- LINKS:END -->

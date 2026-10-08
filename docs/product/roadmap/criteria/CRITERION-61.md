@@ -3,7 +3,7 @@ type: AcceptanceCriterion
 title: The user can give any mix of files and folders
 description: jag accepts several paths, and each path can be a file or a folder.
 status: draft
-item: /features/FEATURE-14.md
+item: /stories/STORY-40.md
 ---
 
 # CRITERION-61: The user can give any mix of files and folders
@@ -14,5 +14,5 @@ jag accepts several paths, and each path can be a file or a folder.
 
 ## Links
 
-- item: [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md)
+- item: [STORY-40: Search a mix of files and folders](../stories/STORY-40.md)
 <!-- LINKS:END -->

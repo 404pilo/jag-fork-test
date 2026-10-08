@@ -4,7 +4,7 @@ title: With no path, jag reads the pipe
 description: When the user gives no path and text comes in through a pipe, jag searches
   the piped text.
 status: draft
-item: /features/FEATURE-14.md
+item: /stories/STORY-39.md
 ---
 
 # CRITERION-60: With no path, jag reads the pipe
@@ -15,5 +15,5 @@ When the user gives no path and text comes in through a pipe, jag searches the p
 
 ## Links
 
-- item: [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md)
+- item: [STORY-39: Search with no path](../stories/STORY-39.md)
 <!-- LINKS:END -->

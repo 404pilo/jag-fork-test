@@ -21,4 +21,5 @@ When a stored key exists, setup asks the user before it replaces the key. One co
 
 - about: [CAPABILITY-01: Guided key setup and health check](../capabilities/CAPABILITY-01.md)
 - traced by: [FEATURE-01: Store a key one time](../../roadmap/features/FEATURE-01.md)
+- traced by: [STORY-03: Replace or remove the stored key](../../roadmap/stories/STORY-03.md)
 <!-- LINKS:END -->

@@ -5,7 +5,7 @@ description: When the key is missing or out of credit, or the model service is d
   jag stops with a message that names the cause and the fix, and exits with the code
   of that cause.
 status: draft
-state: backlog
+state: blocked
 parent: /epics/EPIC-01.md
 blocked_by:
 - /features/FEATURE-01.md
@@ -27,6 +27,18 @@ traces:
 
 When the key is missing or out of credit, or the model service is down, jag stops with a message that names the cause and the fix, and exits with the code of that cause.
 
+<!-- STATUS:START (generated, do not edit) -->
+
+## Status
+
+| Item | State | Progress | Owner | Blocked by | Drift |
+| --- | --- | --- | --- | --- | --- |
+| [STORY-09: Name the cause and the fix of a model failure](../stories/STORY-09.md) | ready | - | - | - | - |
+| [STORY-10: Tell each model failure by its exit code](../stories/STORY-10.md) | ready | - | - | - | - |
+| [STORY-11: Try again one time before reporting the service as down](../stories/STORY-11.md) | ready | - | - | - | - |
+| [STORY-12: Fail the full search when the model stops during it](../stories/STORY-12.md) | ready | - | - | - | - |
+<!-- STATUS:END -->
+
 <!-- LINKS:START (generated, do not edit) -->
 
 ## Links
@@ -39,9 +51,8 @@ When the key is missing or out of credit, or the model service is down, jag stop
 - traces: [DECISION-05: jag keeps grep exit codes and adds one code for each model failure](../../prd/decisions/DECISION-05.md)
 - traces: [DECISION-06: A model failure during a search fails the full search](../../prd/decisions/DECISION-06.md)
 - traces: [CONSTRAINT-04: jag tries again one time before it reports the service as down](../../prd/constraints/CONSTRAINT-04.md)
-- criterion or run of: [CRITERION-13: Each model failure names its cause and fix](../criteria/CRITERION-13.md)
-- criterion or run of: [CRITERION-14: Each model failure has its own exit code](../criteria/CRITERION-14.md)
-- criterion or run of: [CRITERION-15: jag never ranks without the model](../criteria/CRITERION-15.md)
-- criterion or run of: [CRITERION-16: jag tries again one time before it reports the service as down](../criteria/CRITERION-16.md)
-- criterion or run of: [CRITERION-17: A failure during a search fails the full search](../criteria/CRITERION-17.md)
+- child: [STORY-09: Name the cause and the fix of a model failure](../stories/STORY-09.md)
+- child: [STORY-10: Tell each model failure by its exit code](../stories/STORY-10.md)
+- child: [STORY-11: Try again one time before reporting the service as down](../stories/STORY-11.md)
+- child: [STORY-12: Fail the full search when the model stops during it](../stories/STORY-12.md)
 <!-- LINKS:END -->

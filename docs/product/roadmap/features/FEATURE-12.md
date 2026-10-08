@@ -4,7 +4,7 @@ title: Plain grep with no question
 description: With a term and no question, jag returns the matching lines as grep does,
   makes no model call, and costs nothing.
 status: draft
-state: backlog
+state: ready
 parent: /epics/EPIC-04.md
 milestone: /milestones/MILESTONE-01.md
 traces:
@@ -20,6 +20,16 @@ traces:
 
 With a term and no question, jag returns the matching lines as grep does, makes no model call, and costs nothing.
 
+<!-- STATUS:START (generated, do not edit) -->
+
+## Status
+
+| Item | State | Progress | Owner | Blocked by | Drift |
+| --- | --- | --- | --- | --- | --- |
+| [STORY-33: Search with a term and no question](../stories/STORY-33.md) | ready | - | - | - | - |
+| [STORY-34: Use plain grep with no key](../stories/STORY-34.md) | ready | - | - | - | - |
+<!-- STATUS:END -->
+
 <!-- LINKS:START (generated, do not edit) -->
 
 ## Links
@@ -29,7 +39,6 @@ With a term and no question, jag returns the matching lines as grep does, makes 
 - traces: [CAPABILITY-06: Feels like grep](../../prd/capabilities/CAPABILITY-06.md)
 - traces: [DECISION-32: A term with no question works as plain grep](../../prd/decisions/DECISION-32.md)
 - traces: [DECISION-49: Plain grep mode needs no key](../../prd/decisions/DECISION-49.md)
-- criterion or run of: [CRITERION-53: A term with no question works as grep](../criteria/CRITERION-53.md)
-- criterion or run of: [CRITERION-54: A search with no question costs nothing](../criteria/CRITERION-54.md)
-- criterion or run of: [CRITERION-68: Plain grep works with no key](../criteria/CRITERION-68.md)
+- child: [STORY-33: Search with a term and no question](../stories/STORY-33.md)
+- child: [STORY-34: Use plain grep with no key](../stories/STORY-34.md)
 <!-- LINKS:END -->

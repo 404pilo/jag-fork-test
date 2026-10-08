@@ -23,4 +23,5 @@ When jag finds no key, the message gives the page where the user gets a TypeSafe
 - about: [CAPABILITY-01: Guided key setup and health check](../capabilities/CAPABILITY-01.md)
 - about: [METRIC-04: Time to first result](../metrics/METRIC-04.md)
 - traced by: [FEATURE-01: Store a key one time](../../roadmap/features/FEATURE-01.md)
+- traced by: [STORY-05: Find where to get a key](../../roadmap/stories/STORY-05.md)
 <!-- LINKS:END -->

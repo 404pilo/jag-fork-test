@@ -27,4 +27,5 @@ A result shows the exact source text. When a line is longer than a fixed length,
 - about: [CAPABILITY-04: Limit on the text that jag returns](../capabilities/CAPABILITY-04.md)
 - subject of: [DECISION-23: jag cuts a top result that is larger than the limit](DECISION-23.md)
 - traced by: [FEATURE-08: File, line, and snippet for each result](../../roadmap/features/FEATURE-08.md)
+- traced by: [STORY-23: Cut a very long line and mark the cut](../../roadmap/stories/STORY-23.md)
 <!-- LINKS:END -->

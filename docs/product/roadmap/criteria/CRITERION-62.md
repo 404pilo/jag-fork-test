@@ -4,7 +4,7 @@ title: jag shows progress only in a terminal
 description: While jag ranks, it shows a progress line on the error stream only when
   that stream is a terminal.
 status: draft
-item: /features/FEATURE-15.md
+item: /stories/STORY-41.md
 ---
 
 # CRITERION-62: jag shows progress only in a terminal
@@ -15,5 +15,5 @@ While jag ranks, it shows a progress line on the error stream only when that str
 
 ## Links
 
-- item: [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md)
+- item: [STORY-41: See progress only in a terminal](../stories/STORY-41.md)
 <!-- LINKS:END -->

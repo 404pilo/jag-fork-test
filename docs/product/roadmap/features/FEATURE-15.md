@@ -4,7 +4,7 @@ title: Good behavior in a terminal and in a pipe
 description: jag shows progress and color only in a terminal, and it stops at once
   with no partial results when the user stops it or the pipe closes.
 status: draft
-state: backlog
+state: blocked
 parent: /epics/EPIC-04.md
 blocked_by:
 - /features/FEATURE-04.md
@@ -24,6 +24,17 @@ traces:
 
 jag shows progress and color only in a terminal, and it stops at once with no partial results when the user stops it or the pipe closes.
 
+<!-- STATUS:START (generated, do not edit) -->
+
+## Status
+
+| Item | State | Progress | Owner | Blocked by | Drift |
+| --- | --- | --- | --- | --- | --- |
+| [STORY-41: See progress only in a terminal](../stories/STORY-41.md) | ready | - | - | - | - |
+| [STORY-42: Color the matches as grep does](../stories/STORY-42.md) | ready | - | - | - | - |
+| [STORY-43: Stop at once when stopped](../stories/STORY-43.md) | ready | - | - | - | - |
+<!-- STATUS:END -->
+
 <!-- LINKS:START (generated, do not edit) -->
 
 ## Links
@@ -35,7 +46,7 @@ jag shows progress and color only in a terminal, and it stops at once with no pa
 - traces: [DECISION-37: jag shows progress only in a terminal](../../prd/decisions/DECISION-37.md)
 - traces: [DECISION-38: Color works as grep --color=auto](../../prd/decisions/DECISION-38.md)
 - traces: [DECISION-39: When the user stops jag, it stops at once with no partial results](../../prd/decisions/DECISION-39.md)
-- criterion or run of: [CRITERION-62: jag shows progress only in a terminal](../criteria/CRITERION-62.md)
-- criterion or run of: [CRITERION-63: Color works as grep --color=auto](../criteria/CRITERION-63.md)
-- criterion or run of: [CRITERION-64: jag stops at once when the user stops it](../criteria/CRITERION-64.md)
+- child: [STORY-41: See progress only in a terminal](../stories/STORY-41.md)
+- child: [STORY-42: Color the matches as grep does](../stories/STORY-42.md)
+- child: [STORY-43: Stop at once when stopped](../stories/STORY-43.md)
 <!-- LINKS:END -->

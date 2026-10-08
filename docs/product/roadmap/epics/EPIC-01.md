@@ -4,7 +4,7 @@ title: Setup and readiness
 description: The user stores a TypeSafe key one time and runs one command that says
   jag is ready or what to fix.
 status: draft
-state: backlog
+state: ready
 milestone: /milestones/MILESTONE-01.md
 traces:
 - to: prd:/capabilities/CAPABILITY-01.md

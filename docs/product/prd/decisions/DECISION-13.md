@@ -29,4 +29,5 @@ When jag reaches the limit and no result answers well, exit code 1 wins. The out
 - subject of: [DECISION-47: The cost-limit exit code wins over the left-out exit code](DECISION-47.md)
 - subject of: [QUESTION-03: Which exit code wins when both limits apply?](../questions/QUESTION-03.md)
 - traced by: [FEATURE-06: Cost limit on scoring](../../roadmap/features/FEATURE-06.md)
+- traced by: [STORY-20: Tell a reached cost limit by its exit code](../../roadmap/stories/STORY-20.md)
 <!-- LINKS:END -->

@@ -4,7 +4,7 @@ title: Each failure names its fix
 description: For each item that fails, the check names the problem and the step that
   fixes it.
 status: draft
-item: /features/FEATURE-02.md
+item: /stories/STORY-06.md
 ---
 
 # CRITERION-10: Each failure names its fix
@@ -15,5 +15,5 @@ For each item that fails, the check names the problem and the step that fixes it
 
 ## Links
 
-- item: [FEATURE-02: Readiness check](../features/FEATURE-02.md)
+- item: [STORY-06: Check the five items of readiness](../stories/STORY-06.md)
 <!-- LINKS:END -->

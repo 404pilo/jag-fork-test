@@ -23,4 +23,5 @@ Text from a pipe has no file. A result from that text uses the same label as gre
 - about: [CAPABILITY-03: File and line for each result](../capabilities/CAPABILITY-03.md)
 - subject of: [DECISION-35: With no path, jag searches the current folder or reads the pipe](DECISION-35.md)
 - traced by: [FEATURE-08: File, line, and snippet for each result](../../roadmap/features/FEATURE-08.md)
+- traced by: [STORY-24: Label piped text](../../roadmap/stories/STORY-24.md)
 <!-- LINKS:END -->

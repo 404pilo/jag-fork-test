@@ -23,4 +23,5 @@ In structured output mode, jag writes each error in the same structured form as 
 - about: [CAPABILITY-01: Guided key setup and health check](../capabilities/CAPABILITY-01.md)
 - about: [CAPABILITY-05: Text output for people and structured output for agents](../capabilities/CAPABILITY-05.md)
 - traced by: [FEATURE-11: Text output for a person and structured output for an agent](../../roadmap/features/FEATURE-11.md)
+- traced by: [STORY-31: Get a complete structured output with notices and errors](../../roadmap/stories/STORY-31.md)
 <!-- LINKS:END -->

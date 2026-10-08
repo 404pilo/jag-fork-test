@@ -4,7 +4,7 @@ title: Files, folders, and piped text
 description: With no path, jag searches the current folder or reads the pipe; the
   user can also give any mix of files and folders.
 status: draft
-state: backlog
+state: blocked
 parent: /epics/EPIC-04.md
 blocked_by:
 - /features/FEATURE-05.md
@@ -22,6 +22,16 @@ traces:
 
 With no path, jag searches the current folder or reads the pipe; the user can also give any mix of files and folders.
 
+<!-- STATUS:START (generated, do not edit) -->
+
+## Status
+
+| Item | State | Progress | Owner | Blocked by | Drift |
+| --- | --- | --- | --- | --- | --- |
+| [STORY-39: Search with no path](../stories/STORY-39.md) | ready | - | - | - | - |
+| [STORY-40: Search a mix of files and folders](../stories/STORY-40.md) | ready | - | - | - | - |
+<!-- STATUS:END -->
+
 <!-- LINKS:START (generated, do not edit) -->
 
 ## Links
@@ -32,7 +42,6 @@ With no path, jag searches the current folder or reads the pipe; the user can al
 - traces: [CAPABILITY-06: Feels like grep](../../prd/capabilities/CAPABILITY-06.md)
 - traces: [DECISION-35: With no path, jag searches the current folder or reads the pipe](../../prd/decisions/DECISION-35.md)
 - traces: [DECISION-36: The user can give any mix of files and folders](../../prd/decisions/DECISION-36.md)
-- criterion or run of: [CRITERION-59: With no path, jag searches the current folder](../criteria/CRITERION-59.md)
-- criterion or run of: [CRITERION-60: With no path, jag reads the pipe](../criteria/CRITERION-60.md)
-- criterion or run of: [CRITERION-61: The user can give any mix of files and folders](../criteria/CRITERION-61.md)
+- child: [STORY-39: Search with no path](../stories/STORY-39.md)
+- child: [STORY-40: Search a mix of files and folders](../stories/STORY-40.md)
 <!-- LINKS:END -->

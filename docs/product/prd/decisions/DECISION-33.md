@@ -25,4 +25,6 @@ The term is a regular expression, as in grep. The `-F` option makes the term fix
 - about: [CAPABILITY-02: Term and question search](../capabilities/CAPABILITY-02.md)
 - traced by: [FEATURE-04: Rank matching lines by a question](../../roadmap/features/FEATURE-04.md)
 - traced by: [FEATURE-13: Common grep options and exit codes](../../roadmap/features/FEATURE-13.md)
+- traced by: [STORY-13: Rank matching lines by a question](../../roadmap/stories/STORY-13.md)
+- traced by: [STORY-35: Use the common grep options](../../roadmap/stories/STORY-35.md)
 <!-- LINKS:END -->

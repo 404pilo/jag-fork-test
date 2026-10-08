@@ -7,7 +7,7 @@ description: An option turns on structured output that an agent can parse, with 
 status: draft
 aliases:
 - FEATURE-10
-state: backlog
+state: blocked
 parent: /epics/EPIC-03.md
 blocked_by:
 - /features/FEATURE-08.md
@@ -35,6 +35,18 @@ An option turns on structured output that an agent can parse, with the same resu
 
 Text is the default output, also in a pipe. In text mode, jag writes results to standard output and notices to the error stream, so a pipe receives results only. This part was FEATURE-10.
 
+<!-- STATUS:START (generated, do not edit) -->
+
+## Status
+
+| Item | State | Progress | Owner | Blocked by | Drift |
+| --- | --- | --- | --- | --- | --- |
+| [STORY-29: Read text output by default](../stories/STORY-29.md) | ready | - | - | - | - |
+| [STORY-30: Turn on structured output](../stories/STORY-30.md) | ready | - | - | - | - |
+| [STORY-31: Get a complete structured output with notices and errors](../stories/STORY-31.md) | ready | - | - | - | - |
+| [STORY-32: Rely on a stable structured form](../stories/STORY-32.md) | ready | - | - | - | - |
+<!-- STATUS:END -->
+
 <!-- LINKS:START (generated, do not edit) -->
 
 ## Links
@@ -49,13 +61,8 @@ Text is the default output, also in a pipe. In text mode, jag writes results to 
 - traces: [DECISION-29: In text mode, notices go to the error stream](../../prd/decisions/DECISION-29.md)
 - traces: [DECISION-30: Structured mode always writes a complete output](../../prd/decisions/DECISION-30.md)
 - traces: [CONSTRAINT-05: The structured form only adds fields in one major version](../../prd/constraints/CONSTRAINT-05.md)
-- criterion or run of: [CRITERION-44: Text is the default output](../criteria/CRITERION-44.md)
-- criterion or run of: [CRITERION-45: Notices go to the error stream](../criteria/CRITERION-45.md)
-- criterion or run of: [CRITERION-46: Only an explicit option turns on structured output](../criteria/CRITERION-46.md)
-- criterion or run of: [CRITERION-47: Each item of the text is a named field](../criteria/CRITERION-47.md)
-- criterion or run of: [CRITERION-48: Each result has its rank and no score](../criteria/CRITERION-48.md)
-- criterion or run of: [CRITERION-49: Structured mode always writes a complete output](../criteria/CRITERION-49.md)
-- criterion or run of: [CRITERION-50: Notices are inside the structure](../criteria/CRITERION-50.md)
-- criterion or run of: [CRITERION-51: Errors are structured](../criteria/CRITERION-51.md)
-- criterion or run of: [CRITERION-52: The form only adds fields in one major version](../criteria/CRITERION-52.md)
+- child: [STORY-29: Read text output by default](../stories/STORY-29.md)
+- child: [STORY-30: Turn on structured output](../stories/STORY-30.md)
+- child: [STORY-31: Get a complete structured output with notices and errors](../stories/STORY-31.md)
+- child: [STORY-32: Rely on a stable structured form](../stories/STORY-32.md)
 <!-- LINKS:END -->

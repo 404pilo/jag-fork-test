@@ -26,4 +26,5 @@ When no result answers the question well, jag shows the best results with a clea
 - about: [METRIC-07: False confidence](../metrics/METRIC-07.md)
 - about: [DECISION-05: jag keeps grep exit codes and adds one code for each model failure](DECISION-05.md)
 - traced by: [FEATURE-04: Rank matching lines by a question](../../roadmap/features/FEATURE-04.md)
+- traced by: [STORY-15: Know when no result answers well](../../roadmap/stories/STORY-15.md)
 <!-- LINKS:END -->
