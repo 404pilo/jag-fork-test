@@ -5,9 +5,9 @@ description: As a shell power user (PERSONA-04), I want jag with no path to sear
   the current folder, or to read the pipe when text comes in through one, so that
   I use jag as I use grep.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-14.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-35.md
   hash: 4b8792
@@ -32,7 +32,7 @@ As a shell power user (PERSONA-04), I want jag with no path to search the curren
 ## Links
 
 - parent: [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [DECISION-35: With no path, jag searches the current folder or reads the pipe](../../prd/decisions/DECISION-35.md)
 - criterion or run of: [CRITERION-59: With no path, jag searches the current folder](../criteria/CRITERION-59.md)
 - criterion or run of: [CRITERION-60: With no path, jag reads the pipe](../criteria/CRITERION-60.md)

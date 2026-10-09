@@ -1,5 +1,35 @@
 # Log
 
+## 2026-10-09
+* **State**: [EPIC-04](epics/EPIC-04.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z
+* **State**: [STORY-45](stories/STORY-45.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z
+* **State**: [STORY-44](stories/STORY-44.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z
+* **State**: [FEATURE-16](features/FEATURE-16.md) blocked -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z
+* **State**: [STORY-43](stories/STORY-43.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z
+* **State**: [STORY-42](stories/STORY-42.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z
+* **State**: [STORY-41](stories/STORY-41.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z
+* **State**: [FEATURE-15](features/FEATURE-15.md) blocked -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z
+* **State**: [STORY-40](stories/STORY-40.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z
+* **State**: [STORY-39](stories/STORY-39.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z
+* **State**: [FEATURE-14](features/FEATURE-14.md) blocked -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [STORY-38](stories/STORY-38.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [STORY-37](stories/STORY-37.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [STORY-36](stories/STORY-36.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [STORY-35](stories/STORY-35.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [FEATURE-13](features/FEATURE-13.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [STORY-34](stories/STORY-34.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [STORY-33](stories/STORY-33.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [FEATURE-12](features/FEATURE-12.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [STORY-12](stories/STORY-12.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [STORY-11](stories/STORY-11.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [STORY-10](stories/STORY-10.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:53Z
+* **State**: [STORY-09](stories/STORY-09.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:52Z
+* **State**: [FEATURE-03](features/FEATURE-03.md) blocked -> backlog, by human:Pilo, at 2026-10-09T11:07:52Z
+* **State**: [STORY-08](stories/STORY-08.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:52Z
+* **State**: [STORY-07](stories/STORY-07.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:52Z
+* **State**: [STORY-06](stories/STORY-06.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:52Z
+* **State**: [FEATURE-02](features/FEATURE-02.md) blocked -> backlog, by human:Pilo, at 2026-10-09T11:07:52Z
+
 ## 2026-10-08
 * **State**: [STORY-45](stories/STORY-45.md) backlog -> ready, by human:Pilo, at 2026-10-08T23:27:15Z
 * **State**: [STORY-44](stories/STORY-44.md) backlog -> ready, by human:Pilo, at 2026-10-08T16:24:29Z

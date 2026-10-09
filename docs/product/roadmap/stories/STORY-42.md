@@ -5,9 +5,9 @@ description: As a shell power user (PERSONA-04), I want jag to color the matchin
   text only in a terminal, with --color=never and --color=always to change that, so
   that color works as grep --color=auto.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-15.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-38.md
   hash: 20bf23
@@ -31,7 +31,7 @@ As a shell power user (PERSONA-04), I want jag to color the matching text only i
 ## Links
 
 - parent: [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [DECISION-38: Color works as grep --color=auto](../../prd/decisions/DECISION-38.md)
 - criterion or run of: [CRITERION-63: Color works as grep --color=auto](../criteria/CRITERION-63.md)
 <!-- LINKS:END -->

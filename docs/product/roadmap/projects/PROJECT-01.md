@@ -18,8 +18,8 @@ One roadmap bundle is one GitHub Project. Add the `github` field when the Projec
 | [EPIC-01: Setup and readiness](../epics/EPIC-01.md) | ready | 0/3 (0%) | - | - | - |
 | [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | ready | 0/5 (0%) | - | - | - |
 | [EPIC-03: Output that fits an agent](../epics/EPIC-03.md) | ready | 0/2 (0%) | - | - | - |
-| [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md) | ready | 0/5 (0%) | - | - | - |
-| [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md) | - | 0/63 (0%) | - | - | - |
-| [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md) | - | - | - | - | - |
-| [MILESTONE-03: Make it fast](../milestones/MILESTONE-03.md) | - | - | - | - | - |
+| [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md) | backlog | 0/5 (0%) | - | - | - |
+| [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md) | - | 0/35 (0%) | - | - | - |
+| [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md) | - | 0/26 (0%) | - | - | - |
+| [MILESTONE-03: Make it fast](../milestones/MILESTONE-03.md) | - | 0/2 (0%) | - | - | - |
 <!-- STATUS:END -->

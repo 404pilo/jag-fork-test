@@ -4,8 +4,8 @@ title: A shell user keeps their habits
 description: jag works in a pipe, uses grep-like options and exit codes, and is fast
   enough to replace grep.
 status: draft
-state: ready
-milestone: /milestones/MILESTONE-01.md
+state: backlog
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/capabilities/CAPABILITY-06.md
   hash: 79d5d3
@@ -19,7 +19,7 @@ jag works in a pipe, uses grep-like options and exit codes, and is fast enough t
 
 ## Links
 
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [CAPABILITY-06: Feels like grep](../../prd/capabilities/CAPABILITY-06.md)
 - child: [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md)
 - child: [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md)

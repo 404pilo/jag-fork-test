@@ -5,9 +5,9 @@ description: As a shell power user (PERSONA-04), I want jag with a term and no q
   to return the matching lines as grep does with no model call, so that a plain search
   costs nothing.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-12.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-32.md
   hash: 2d94c5
@@ -32,7 +32,7 @@ As a shell power user (PERSONA-04), I want jag with a term and no question to re
 ## Links
 
 - parent: [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [DECISION-32: A term with no question works as plain grep](../../prd/decisions/DECISION-32.md)
 - criterion or run of: [CRITERION-53: A term with no question works as grep](../criteria/CRITERION-53.md)
 - criterion or run of: [CRITERION-54: A search with no question costs nothing](../criteria/CRITERION-54.md)

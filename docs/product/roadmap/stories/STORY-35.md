@@ -5,9 +5,9 @@ description: As a shell power user (PERSONA-04), I want jag to accept the grep o
   that I use most, with their grep meaning, and -F to read the term as fixed text,
   so that I keep my habits.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-13.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-33.md
   hash: 8ed9c9
@@ -34,7 +34,7 @@ As a shell power user (PERSONA-04), I want jag to accept the grep options that I
 ## Links
 
 - parent: [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [DECISION-33: The term is a regular expression, and -F makes it fixed text](../../prd/decisions/DECISION-33.md)
 - traces: [DECISION-34: Release 1 keeps the grep options that people use most](../../prd/decisions/DECISION-34.md)
 - criterion or run of: [CRITERION-55: jag keeps the common grep options](../criteria/CRITERION-55.md)

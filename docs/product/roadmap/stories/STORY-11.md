@@ -5,9 +5,9 @@ description: As an operator (PERSONA-02), I want jag to wait a fixed time and tr
   again one time before it reports the service as down, so that a short outage does
   not stop my search.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-03.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/constraints/CONSTRAINT-04.md
   hash: e31500
@@ -31,7 +31,7 @@ As an operator (PERSONA-02), I want jag to wait a fixed time and try again one t
 ## Links
 
 - parent: [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [CONSTRAINT-04: jag tries again one time before it reports the service as down](../../prd/constraints/CONSTRAINT-04.md)
 - criterion or run of: [CRITERION-16: jag tries again one time before it reports the service as down](../criteria/CRITERION-16.md)
 <!-- LINKS:END -->

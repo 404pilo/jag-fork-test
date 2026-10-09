@@ -5,9 +5,9 @@ description: As a shell power user (PERSONA-04), I want any other option to give
   usage error that names the option and exit code 2, so that a typo does not pass
   without a notice.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-13.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-34.md
   hash: 47da48
@@ -31,7 +31,7 @@ As a shell power user (PERSONA-04), I want any other option to give a usage erro
 ## Links
 
 - parent: [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [DECISION-34: Release 1 keeps the grep options that people use most](../../prd/decisions/DECISION-34.md)
 - criterion or run of: [CRITERION-57: An unknown option is a usage error](../criteria/CRITERION-57.md)
 <!-- LINKS:END -->

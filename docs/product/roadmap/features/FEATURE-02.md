@@ -4,11 +4,11 @@ title: Readiness check
 description: One command examines five items, shows pass or fail for each one, and
   names the fix for each failure, with one call that costs almost nothing.
 status: draft
-state: blocked
+state: backlog
 parent: /epics/EPIC-01.md
 blocked_by:
 - /features/FEATURE-01.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/capabilities/CAPABILITY-01.md
   hash: 295cfa
@@ -30,9 +30,9 @@ One command examines five items, shows pass or fail for each one, and names the 
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-06: Check the five items of readiness](../stories/STORY-06.md) | ready | - | - | - | - |
-| [STORY-07: Use the check result as an exit code](../stories/STORY-07.md) | ready | - | - | - | - |
-| [STORY-08: Run the check for almost no cost](../stories/STORY-08.md) | ready | - | - | - | - |
+| [STORY-06: Check the five items of readiness](../stories/STORY-06.md) | backlog | - | - | - | - |
+| [STORY-07: Use the check result as an exit code](../stories/STORY-07.md) | backlog | - | - | - | - |
+| [STORY-08: Run the check for almost no cost](../stories/STORY-08.md) | backlog | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -41,7 +41,7 @@ One command examines five items, shows pass or fail for each one, and names the 
 
 - parent: [EPIC-01: Setup and readiness](../epics/EPIC-01.md)
 - blocked by: [FEATURE-01: Store a key one time](FEATURE-01.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [CAPABILITY-01: Guided key setup and health check](../../prd/capabilities/CAPABILITY-01.md)
 - traces: [DECISION-04: The health check examines five items with one free call](../../prd/decisions/DECISION-04.md)
 - traces: [CONSTRAINT-02: jag protects the API key of the user](../../prd/constraints/CONSTRAINT-02.md)

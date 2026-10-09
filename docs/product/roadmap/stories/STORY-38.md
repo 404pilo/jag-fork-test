@@ -4,9 +4,9 @@ title: Keep the grep exit codes
 description: As a shell power user (PERSONA-04), I want the grep exit codes 0, 1,
   and 2, so that my scripts that test grep exit codes keep working.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-13.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-05.md
   hash: 2503eb
@@ -30,7 +30,7 @@ As a shell power user (PERSONA-04), I want jag to exit with 0 when it returns a 
 ## Links
 
 - parent: [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [DECISION-05: jag keeps grep exit codes and adds one code for each model failure](../../prd/decisions/DECISION-05.md)
 - criterion or run of: [CRITERION-58: jag keeps the grep exit codes](../criteria/CRITERION-58.md)
 <!-- LINKS:END -->

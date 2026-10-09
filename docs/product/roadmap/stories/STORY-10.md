@@ -5,9 +5,9 @@ description: As an agent builder (PERSONA-01), I want each cause of a model fail
   to have its own exit code above 2, so that my agent can tell the causes apart and
   react to each one.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-03.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-05.md
   hash: 2503eb
@@ -31,7 +31,7 @@ As an agent builder (PERSONA-01), I want each cause of a model failure to have i
 ## Links
 
 - parent: [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [DECISION-05: jag keeps grep exit codes and adds one code for each model failure](../../prd/decisions/DECISION-05.md)
 - criterion or run of: [CRITERION-14: Each model failure has its own exit code](../criteria/CRITERION-14.md)
 <!-- LINKS:END -->

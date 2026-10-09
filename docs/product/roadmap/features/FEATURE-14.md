@@ -4,11 +4,11 @@ title: Files, folders, and piped text
 description: With no path, jag searches the current folder or reads the pipe; the
   user can also give any mix of files and folders.
 status: draft
-state: blocked
+state: backlog
 parent: /epics/EPIC-04.md
 blocked_by:
 - /features/FEATURE-05.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/capabilities/CAPABILITY-06.md
   hash: 79d5d3
@@ -28,8 +28,8 @@ With no path, jag searches the current folder or reads the pipe; the user can al
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-39: Search with no path](../stories/STORY-39.md) | ready | - | - | - | - |
-| [STORY-40: Search a mix of files and folders](../stories/STORY-40.md) | ready | - | - | - | - |
+| [STORY-39: Search with no path](../stories/STORY-39.md) | backlog | - | - | - | - |
+| [STORY-40: Search a mix of files and folders](../stories/STORY-40.md) | backlog | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -38,7 +38,7 @@ With no path, jag searches the current folder or reads the pipe; the user can al
 
 - parent: [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md)
 - blocked by: [FEATURE-05: Search a folder as grep -r does](FEATURE-05.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [CAPABILITY-06: Feels like grep](../../prd/capabilities/CAPABILITY-06.md)
 - traces: [DECISION-35: With no path, jag searches the current folder or reads the pipe](../../prd/decisions/DECISION-35.md)
 - traces: [DECISION-36: The user can give any mix of files and folders](../../prd/decisions/DECISION-36.md)

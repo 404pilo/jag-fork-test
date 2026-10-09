@@ -7,13 +7,6 @@
 * [STORY-03: Replace or remove the stored key](STORY-03.md) - As an operator (PERSONA-02), I want setup to ask before it replaces a key and one command to remove the key, so that I never lose a key by accident and I can clean up a machine.
 * [STORY-04: Keep the key private](STORY-04.md) - As an agent builder (PERSONA-01), I want jag to never show my key and to refuse a key file that others can read, so that my key stays secret on a shared machine.
 * [STORY-05: Find where to get a key](STORY-05.md) - As an agent builder (PERSONA-01), I want the missing-key message to give the page where I get a TypeSafe key, so that I can start without a search for the sign-up page.
-* [STORY-06: Check the five items of readiness](STORY-06.md) - As an agent builder (PERSONA-01), I want one command that shows pass or fail for five items and names the fix for each failure, so that I know what to repair before I give jag to an agent.
-* [STORY-07: Use the check result as an exit code](STORY-07.md) - As an agent builder (PERSONA-01), I want the readiness check to exit with 0 when all items pass and with the code of the first cause when one fails, so that a script or an agent can act on the result.
-* [STORY-08: Run the check for almost no cost](STORY-08.md) - As an agent builder (PERSONA-01), I want the readiness check to make one call that costs nothing or almost nothing, so that I can run the check as often as I want.
-* [STORY-09: Name the cause and the fix of a model failure](STORY-09.md) - As an agent builder (PERSONA-01), I want jag to stop with the cause and the fix when the model is not available, so that I know what to do next.
-* [STORY-10: Tell each model failure by its exit code](STORY-10.md) - As an agent builder (PERSONA-01), I want each cause of a model failure to have its own exit code above 2, so that my agent can tell the causes apart and react to each one.
-* [STORY-11: Try again one time before reporting the service as down](STORY-11.md) - As an operator (PERSONA-02), I want jag to wait a fixed time and try again one time before it reports the service as down, so that a short outage does not stop my search.
-* [STORY-12: Fail the full search when the model stops during it](STORY-12.md) - As an agent builder (PERSONA-01), I want a search to show no partial result when the credit or the service stops during it, so that my agent never trusts a half-ranked list.
 * [STORY-13: Rank matching lines by a question](STORY-13.md) - As a knowledge seeker (PERSONA-03), I want to run jag with a term, a question, and paths, and get the matching lines in order of how well they answer the question, so that the best answer comes first.
 * [STORY-14: See the lines around a match](STORY-14.md) - As a knowledge seeker (PERSONA-03), I want each result to hold the matching line with the lines around it, so that I can read the answer in its context.
 * [STORY-15: Know when no result answers well](STORY-15.md) - As an agent builder (PERSONA-01), I want jag to label the best results as weak and to exit with code 1 when no result answers the question well, so that my agent does not trust noise.
@@ -34,6 +27,16 @@
 * [STORY-30: Turn on structured output](STORY-30.md) - As an agent builder (PERSONA-01), I want an explicit option for structured output with the same results as the text, so that my agent can parse the results.
 * [STORY-31: Get a complete structured output with notices and errors](STORY-31.md) - As an agent builder (PERSONA-01), I want structured output to hold each notice and each error inside the structure, so that my agent parses every outcome in one form.
 * [STORY-32: Rely on a stable structured form](STORY-32.md) - As an agent builder (PERSONA-01), I want the structured output to show its form version and to only add fields in one major version, so that my agent keeps working when jag updates.
+
+## MILESTONE-02: Make it good
+
+* [STORY-06: Check the five items of readiness](STORY-06.md) - As an agent builder (PERSONA-01), I want one command that shows pass or fail for five items and names the fix for each failure, so that I know what to repair before I give jag to an agent.
+* [STORY-07: Use the check result as an exit code](STORY-07.md) - As an agent builder (PERSONA-01), I want the readiness check to exit with 0 when all items pass and with the code of the first cause when one fails, so that a script or an agent can act on the result.
+* [STORY-08: Run the check for almost no cost](STORY-08.md) - As an agent builder (PERSONA-01), I want the readiness check to make one call that costs nothing or almost nothing, so that I can run the check as often as I want.
+* [STORY-09: Name the cause and the fix of a model failure](STORY-09.md) - As an agent builder (PERSONA-01), I want jag to stop with the cause and the fix when the model is not available, so that I know what to do next.
+* [STORY-10: Tell each model failure by its exit code](STORY-10.md) - As an agent builder (PERSONA-01), I want each cause of a model failure to have its own exit code above 2, so that my agent can tell the causes apart and react to each one.
+* [STORY-11: Try again one time before reporting the service as down](STORY-11.md) - As an operator (PERSONA-02), I want jag to wait a fixed time and try again one time before it reports the service as down, so that a short outage does not stop my search.
+* [STORY-12: Fail the full search when the model stops during it](STORY-12.md) - As an agent builder (PERSONA-01), I want a search to show no partial result when the credit or the service stops during it, so that my agent never trusts a half-ranked list.
 * [STORY-33: Search with a term and no question](STORY-33.md) - As a shell power user (PERSONA-04), I want jag with a term and no question to return the matching lines as grep does with no model call, so that a plain search costs nothing.
 * [STORY-34: Use plain grep with no key](STORY-34.md) - As a shell power user (PERSONA-04), I want plain grep mode to work with no stored key, so that I can use jag before I set it up.
 * [STORY-35: Use the common grep options](STORY-35.md) - As a shell power user (PERSONA-04), I want jag to accept the grep options that I use most, with their grep meaning, and -F to read the term as fixed text, so that I keep my habits.
@@ -45,5 +48,8 @@
 * [STORY-41: See progress only in a terminal](STORY-41.md) - As a shell power user (PERSONA-04), I want a progress line on the error stream only when that stream is a terminal, so that a pipe or a log holds no progress noise.
 * [STORY-42: Color the matches as grep does](STORY-42.md) - As a shell power user (PERSONA-04), I want jag to color the matching text only in a terminal, with --color=never and --color=always to change that, so that color works as grep --color=auto.
 * [STORY-43: Stop at once when stopped](STORY-43.md) - As a shell power user (PERSONA-04), I want jag to stop at once on Ctrl-C or a closed pipe, so that a stopped search wastes no more credit.
-* [STORY-44: Return a typical search in under 5 seconds](STORY-44.md) - As a shell power user (PERSONA-04), I want a typical search to return in under 5 seconds, so that I do not go back to grep.
 * [STORY-45: Run the held-out evaluation before release](STORY-45.md) - As an agent builder (PERSONA-01), I want the held-out evaluation run done before release 1, so that I can trust that jag answers better than grep.
+
+## MILESTONE-03: Make it fast
+
+* [STORY-44: Return a typical search in under 5 seconds](STORY-44.md) - As a shell power user (PERSONA-04), I want a typical search to return in under 5 seconds, so that I do not go back to grep.

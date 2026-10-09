@@ -4,9 +4,9 @@ title: Name the cause and the fix of a model failure
 description: As an agent builder (PERSONA-01), I want jag to stop with the cause and
   the fix when the model is not available, so that I know what to do next.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-03.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-01.md
   hash: 303d3c
@@ -31,7 +31,7 @@ As an agent builder (PERSONA-01), I want jag to stop with a message that names t
 ## Links
 
 - parent: [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [DECISION-01: jag fails clearly when the model is not available](../../prd/decisions/DECISION-01.md)
 - criterion or run of: [CRITERION-13: Each model failure names its cause and fix](../criteria/CRITERION-13.md)
 - criterion or run of: [CRITERION-15: jag never ranks without the model](../criteria/CRITERION-15.md)

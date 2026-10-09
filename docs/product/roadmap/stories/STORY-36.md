@@ -5,9 +5,9 @@ description: As a shell power user (PERSONA-04), I want -A, -B, and -C to set th
   lines around each match in a question search, so that I choose how much context
   I read.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-13.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-50.md
   hash: a0c252
@@ -31,7 +31,7 @@ As a shell power user (PERSONA-04), I want -A, -B, and -C to set the lines aroun
 ## Links
 
 - parent: [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [DECISION-50: The -A, -B, and -C options set the context lines of a result](../../prd/decisions/DECISION-50.md)
 - criterion or run of: [CRITERION-69: Context options set the lines around a match](../criteria/CRITERION-69.md)
 <!-- LINKS:END -->

@@ -43,4 +43,5 @@ jag works in a shell pipe, uses options and exit codes like grep, and returns fa
 - traced by: [FEATURE-14: Files, folders, and piped text](../../roadmap/features/FEATURE-14.md)
 - traced by: [FEATURE-15: Good behavior in a terminal and in a pipe](../../roadmap/features/FEATURE-15.md)
 - traced by: [FEATURE-16: Fast enough to replace grep](../../roadmap/features/FEATURE-16.md)
+- traced by: [MILESTONE-02: Make it good](../../roadmap/milestones/MILESTONE-02.md)
 <!-- LINKS:END -->

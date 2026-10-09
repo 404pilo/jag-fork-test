@@ -4,9 +4,9 @@ title: Plain grep with no question
 description: With a term and no question, jag returns the matching lines as grep does,
   makes no model call, and costs nothing.
 status: draft
-state: ready
+state: backlog
 parent: /epics/EPIC-04.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/capabilities/CAPABILITY-06.md
   hash: 79d5d3
@@ -26,8 +26,8 @@ With a term and no question, jag returns the matching lines as grep does, makes 
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-33: Search with a term and no question](../stories/STORY-33.md) | ready | - | - | - | - |
-| [STORY-34: Use plain grep with no key](../stories/STORY-34.md) | ready | - | - | - | - |
+| [STORY-33: Search with a term and no question](../stories/STORY-33.md) | backlog | - | - | - | - |
+| [STORY-34: Use plain grep with no key](../stories/STORY-34.md) | backlog | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -35,7 +35,7 @@ With a term and no question, jag returns the matching lines as grep does, makes 
 ## Links
 
 - parent: [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [CAPABILITY-06: Feels like grep](../../prd/capabilities/CAPABILITY-06.md)
 - traces: [DECISION-32: A term with no question works as plain grep](../../prd/decisions/DECISION-32.md)
 - traces: [DECISION-49: Plain grep mode needs no key](../../prd/decisions/DECISION-49.md)

@@ -5,9 +5,9 @@ description: As an agent builder (PERSONA-01), I want the readiness check to mak
   one call that costs nothing or almost nothing, so that I can run the check as often
   as I want.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-02.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-04.md
   hash: 7b0f54
@@ -31,7 +31,7 @@ As an agent builder (PERSONA-01), I want the readiness check to make one call th
 ## Links
 
 - parent: [FEATURE-02: Readiness check](../features/FEATURE-02.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [DECISION-04: The health check examines five items with one free call](../../prd/decisions/DECISION-04.md)
 - criterion or run of: [CRITERION-12: The check costs almost nothing](../criteria/CRITERION-12.md)
 <!-- LINKS:END -->

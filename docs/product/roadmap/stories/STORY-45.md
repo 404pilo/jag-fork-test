@@ -4,9 +4,9 @@ title: Run the held-out evaluation before release
 description: As an agent builder (PERSONA-01), I want the held-out evaluation run
   done before release 1, so that I can trust that jag answers better than grep.
 status: draft
-state: ready
+state: backlog
 parent: /epics/EPIC-02.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/scope/SCOPE-10.md
   hash: 1a7d4e
@@ -32,7 +32,7 @@ As an agent builder (PERSONA-01), I want the held-out evaluation run done before
 ## Links
 
 - parent: [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [SCOPE-10: The held-out score confirms the gain over grep](../../prd/scope/SCOPE-10.md)
 - traces: [METRIC-01: Answer quality](../../prd/metrics/METRIC-01.md)
 - criterion or run of: [CRITERION-73: The held-out score meets the target and beats grep](../criteria/CRITERION-73.md)

@@ -5,9 +5,9 @@ description: As an agent builder (PERSONA-01), I want a search to show no partia
   result when the credit or the service stops during it, so that my agent never trusts
   a half-ranked list.
 status: draft
-state: ready
+state: backlog
 parent: /features/FEATURE-03.md
-milestone: /milestones/MILESTONE-01.md
+milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-06.md
   hash: 09aef4
@@ -31,7 +31,7 @@ As an agent builder (PERSONA-01), I want a search to show no partial result when
 ## Links
 
 - parent: [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md)
-- milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
+- milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [DECISION-06: A model failure during a search fails the full search](../../prd/decisions/DECISION-06.md)
 - criterion or run of: [CRITERION-17: A failure during a search fails the full search](../criteria/CRITERION-17.md)
 <!-- LINKS:END -->
