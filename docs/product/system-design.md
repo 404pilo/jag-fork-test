@@ -10,7 +10,7 @@ areas:
   context: decided
   strategy: decided
   building-blocks: decided
-  data: open
+  data: decided
   contracts: open
   conventions: open
   deployment: open
@@ -317,6 +317,18 @@ flowchart LR
   C-gateway -->|sync| C-typesafe
 ```
 
+## Data and ownership
+
+jag keeps no data between searches (data-2, DECISION-46) and builds no index
+(SCOPE-06). The only stored data is the key.
+
+| Entity | Owner | Store |
+|---|---|---|
+| ApiKey | C-config | The first of `JAG_TYPESAFE_API_KEY`, `TYPESAFE_API_KEY`, and `config.api-key` in `~/.config/jag/config.yml` (data-1, DECISION-03). The file has mode 600 or stricter (CV-6). |
+| Settings | C-config | Options and variables only. Other settings in the config file wait (DF-1). |
+| Result | C-search | Memory, for one search. |
+| Score, Cost | C-scorer | Memory, for one search. |
+
 ## Risks
 
 - RK-1: The term can match other lines than in grep. DECISION-33 says that
@@ -327,3 +339,12 @@ flowchart LR
   Mitigation: the README states the pattern rules of `rg`. Open acceptance:
   DECISION-33 changes to "a regular expression as in ripgrep", or jag
   translates the grep form.
+
+## Deferred
+
+- DF-1: Settings other than the key in the config file (data-3). Reason:
+  options and variables cover release 1, and no Feature needs a saved
+  default. Trigger: a user asks for a default that they can save.
+- DF-2: A debug log (conventions-8). Reason: jag has no telemetry and no log
+  file, and the error message gives the cause and the fix. Trigger: the first
+  setup-failure issue that the message does not explain.
