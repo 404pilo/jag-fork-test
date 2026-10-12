@@ -1,0 +1,24 @@
+name: ADR gate
+
+on:
+  pull_request:
+    paths:
+      - "docs/adr/**"
+
+jobs:
+  # ADR-GATE:DETERMINISTIC:BEGIN
+  deterministic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Lint ADRs changed in this pull request
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          mapfile -t CHANGED < <(git diff --name-only \
+            "origin/${{ github.base_ref }}...HEAD" | grep -E '\.md$' || true)
+          python3 scripts/adr/adr_lint.py --changed "${CHANGED[@]}"
+      - run: python3 scripts/adr/adr_index.py --check
+  # ADR-GATE:DETERMINISTIC:END

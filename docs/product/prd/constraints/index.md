@@ -6,3 +6,4 @@
 * [CONSTRAINT-04: jag tries again one time before it reports the service as down](CONSTRAINT-04.md) - Before jag reports the model service as down, it tries again one time and waits a fixed time that the user can change.
 * [CONSTRAINT-05: The structured form only adds fields in one major version](CONSTRAINT-05.md) - In one major version, jag never removes or renames a field of structured output, and the output shows its form version.
 * [CONSTRAINT-06: A typical search is one search on a medium code repository](CONSTRAINT-06.md) - The 5-second target applies to one search at the default cost limit, on a medium code repository, with a working service.
+* [CONSTRAINT-07: jag fails within 10 seconds when the model service is down](CONSTRAINT-07.md) - When the model service does not answer, jag fails the search within 10 seconds, retry included.
