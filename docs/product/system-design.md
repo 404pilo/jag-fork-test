@@ -11,7 +11,7 @@ areas:
   strategy: decided
   building-blocks: decided
   data: decided
-  contracts: open
+  contracts: decided
   conventions: open
   deployment: open
 adrs: []
@@ -328,6 +328,17 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | Settings | C-config | Options and variables only. Other settings in the config file wait (DF-1). |
 | Result | C-search | Memory, for one search. |
 | Score, Cost | C-scorer | Memory, for one search. |
+
+## Contracts
+
+| ID | Provider | Consumer | Mechanism | Versioning rule |
+|---|---|---|---|---|
+| IF-1 | C-typesafe | C-scorer | HTTPS `POST /v1/systemone` with a Bearer key. One call holds the question and 32 snippets. The response gives the probabilities and the billed usage. | Each jag release pins the Jev model version that its prompt and threshold were tuned on. A setting can name another model (contracts-5). |
+| IF-2 | C-gateway | C-scorer | The same calls as IF-1, to the base URL that a setting names. | The same as IF-1. The user sets the model name for the gateway. |
+| IF-3 | C-cli | Agent, person | The command line: `jag TERM "QUESTION" [PATH...]` (DECISION-31) with the grep options of DECISION-34. The options `--setup`, `--check`, and `--forget-key` run the setup, the readiness check, and the key removal (contracts-2). | Semantic versions of jag. A removed or changed option needs a new major version. |
+| IF-4 | C-cli | Agent, script | Exit codes: 0 results found, 1 no match or no good answer, 2 usage error, 3 key missing, 4 key not accepted, 5 no credit, 6 service down, 7 cost limit reached, 8 results left out by the size limit, 130 stopped with Ctrl-C (contracts-3). DECISION-13 and DECISION-47 give the order when two apply. | A code never changes its meaning in one major version. |
+| IF-5 | C-output | Agent | Structured output: one JSON document on standard output, with `version`, `prompt_version`, `results`, and the summary fields of DECISION-28. An error is a JSON document of the same form (DECISION-07, CV-1). An output that does not parse means that jag stopped (contracts-4, DECISION-30). | `version` is the version of the form. In one major version, fields are only added (CONSTRAINT-05). |
+| IF-6 | C-search | C-prerank, C-scorer, C-output | The `Result` record in memory: path, first and last line, the lines, the marks on matching lines and on cut lines. | Internal. It changes with the code. |
 
 ## Risks
 
