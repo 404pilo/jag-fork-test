@@ -8,7 +8,7 @@ session: 2d045b37-ac91-451e-b37b-928ac1645df2
 areas:
   quality: decided
   context: decided
-  strategy: open
+  strategy: decided
   building-blocks: open
   data: open
   contracts: open
@@ -25,12 +25,12 @@ Destination: one command-line program that finds the lines that match a term,
 ranks them by a question with the Jev model, and returns the best lines within
 a size limit and a cost limit.
 
-Frontier: strategy. Building blocks, data, contracts, conventions, and
-deployment wait for it.
+Frontier: building blocks. Data, contracts, conventions, and deployment wait
+for it.
 
 Fog:
 
-- strategy-1 (strategy, research done, now open): the default count of
+- strategy-1 (strategy, research done, settled): the default count of
   results to score, and the count of model calls in parallel. Facts:
   - One Jev call can score many snippets. More snippets in one call add
     little time (docs.typesafe.ai, api.md and patterns/fan-out.md).
@@ -148,6 +148,17 @@ flowchart LR
 - IF-3: jag to ripgrep. jag starts `rg` as a child process with the term,
   the grep options that DECISION-34 keeps, and the paths. `rg` returns each
   match with its file and line. Owner: the ripgrep project.
+
+## Solution strategy
+
+| Quality goal | Approach | ADR |
+|---|---|---|
+| QS-1 answer quality | `rg` finds the matches. BM25 on the question words pre-ranks them (strategy-5). Jev scores the top 200 (strategy-1). One built-in scoring prompt for each release carries a version id, and structured output names it (strategy-3). | strategy-1, strategy-3 |
+| QS-2 no good answer | A fixed threshold on the top Jev probability. The threshold is tuned with the prompt on the development set and changes only with a new prompt version (strategy-2). | strategy-2 |
+| QS-3 speed | `rg` searches in one pass. Jev gets 32 snippets in each call and 6 calls in parallel, so a typical search needs two rounds of calls (strategy-1). | strategy-1 |
+| QS-3 and METRIC-05 cost | The default cost limit is 200 results. 200 results cost about $0.009 in the worst case (strategy-1). | strategy-1 |
+| QS-4 fail clearly | No fallback to a word-match ranking (DECISION-01). A model failure fails the full search (DECISION-06). The retry rule is in Crosscutting conventions. | DECISION-01 |
+| QS-5 key secrecy | One component reads the key, and no other component gets the key as text (Crosscutting conventions). | |
 
 ## Risks
 
