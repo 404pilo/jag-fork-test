@@ -13,7 +13,7 @@ areas:
   data: decided
   contracts: decided
   conventions: decided
-  deployment: open
+  deployment: decided
 adrs: []
 ---
 
@@ -25,7 +25,7 @@ Destination: one command-line program that finds the lines that match a term,
 ranks them by a question with the Jev model, and returns the best lines within
 a size limit and a cost limit.
 
-Frontier: deployment.
+Frontier: none. Every area is decided.
 
 Fog:
 
@@ -372,6 +372,48 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
   (conventions-7).
 - CV-8: jag sends no telemetry and writes no log file. A debug log waits
   (DF-2).
+
+## Deployment
+
+- Runtime: one static Rust binary for each command, `jag` and `jag-bench`.
+  It needs no runtime and no other program (building-blocks-1).
+- Install: prebuilt binaries on GitHub Releases, one archive for each
+  platform, each with a checksum. Rust users can run `cargo install` from
+  crates.io. jag has no npm package (deployment-1).
+- Platforms: Linux x86_64 and arm64 (static), and macOS arm64 and x86_64
+  (deployment-2).
+- Environments: the machine of the user only. There is no server and no
+  region (SCOPE-09).
+- Where each component runs: C-cli, C-config, C-search, C-prerank,
+  C-scorer, C-output, C-check, and C-bench run in the jag process on the
+  machine of the user. C-typesafe runs at TypeSafe. C-gateway runs at the
+  gateway provider.
+- Release path: GitHub Actions runs on each pull request. It runs the
+  tests, the lint, the ADR gate, and a scan that fails on private data
+  (CONSTRAINT-01). A version tag builds the four binaries, attaches them to
+  the GitHub Release, and publishes the crate. The repository stores no
+  publish token (deployment-3).
+
+## Requirements to components
+
+| Capability | Components | Status |
+|---|---|---|
+| CAPABILITY-01 Guided key setup and health check | C-config, C-check, C-cli | OK |
+| CAPABILITY-02 Term and question search | C-search, C-prerank, C-scorer | OK |
+| CAPABILITY-03 File and line for each result | C-search, C-output | OK |
+| CAPABILITY-04 Limit on the text that jag returns | C-output | OK |
+| CAPABILITY-05 Text and structured output | C-output, C-cli | OK |
+| CAPABILITY-06 Feels like grep | C-cli, C-search | OK |
+| CAPABILITY-07 Show the cost of a search | C-scorer, C-output | OK |
+| CAPABILITY-09 Say which text leaves the machine | none | GAP |
+| CAPABILITY-11 Agent instructions to copy | none | GAP |
+| CAPABILITY-12 Measure jag on your own questions | C-bench | OK |
+
+CAPABILITY-08 is out of release 1 (DECISION-46). CAPABILITY-10 is in
+release 3. CAPABILITY-09 and CAPABILITY-11 are "could" and "should" items of
+SCOPE-01 with no component yet. CAPABILITY-11 is a text file that ships with
+the release, and CAPABILITY-09 needs a decision on where jag shows the text
+that it sends.
 
 ## Risks
 
