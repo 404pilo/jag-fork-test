@@ -126,14 +126,15 @@ scenario. They stay as guards through their pages.
 jag runs on the machine of the user, as one command. It reads the files of a
 folder or the text of a pipe. It sends snippets and the question to one
 outside service, and it writes the results to the agent or the person that
-called it. jag calls no outside search program: its own code finds the
-matches (context-3).
+called it. jag runs ripgrep (`rg`) to find the matches (context-3). The jag
+package carries the `rg` program, so the user installs one package.
 
 ```mermaid
 flowchart LR
   agent[Agent<br/>PERSONA-01] -->|command, pipe| jag
   person[Person at the shell<br/>PERSONA-02 to 04] -->|command, pipe| jag
-  jag[jag] -->|reads| files[(Files and<br/>standard input)]
+  jag[jag] -->|IF-3: term, options, paths| rg[[ripgrep]]
+  rg -->|reads| files[(Files and<br/>standard input)]
   jag -->|IF-1: snippets and question| typesafe[[TypeSafe API<br/>Jev model]]
   jag -.->|IF-2: same calls, optional| gateway[[AI gateway]]
   gateway -.-> typesafe
@@ -144,3 +145,17 @@ flowchart LR
 - IF-2: jag to an AI gateway. The same calls as IF-1, through a gateway that
   the user names with two settings: the base URL and the model name. Optional
   (CONSTRAINT-03). Owner: the gateway provider.
+- IF-3: jag to ripgrep. jag starts `rg` as a child process with the term,
+  the grep options that DECISION-34 keeps, and the paths. `rg` returns each
+  match with its file and line. Owner: the ripgrep project.
+
+## Risks
+
+- RK-1: The term can match other lines than in grep. DECISION-33 says that
+  the term is a regular expression as in grep, but `rg` uses its own pattern
+  rules. A default grep pattern treats `+`, `?`, and `|` as plain
+  characters, and `rg` does not. `rg` also has no back-references. Test: the
+  same term with `grep` and with jag on one folder gives other match lines.
+  Mitigation: the README states the pattern rules of `rg`. Open acceptance:
+  DECISION-33 changes to "a regular expression as in ripgrep", or jag
+  translates the grep form.
