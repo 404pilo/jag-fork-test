@@ -9,7 +9,7 @@ areas:
   quality: decided
   context: decided
   strategy: decided
-  building-blocks: open
+  building-blocks: decided
   data: open
   contracts: open
   conventions: open
@@ -25,8 +25,7 @@ Destination: one command-line program that finds the lines that match a term,
 ranks them by a question with the Jev model, and returns the best lines within
 a size limit and a cost limit.
 
-Frontier: building blocks. Data, contracts, conventions, and deployment wait
-for it.
+Frontier: data, contracts, and conventions. Deployment waits for them.
 
 Fog:
 
@@ -126,15 +125,15 @@ scenario. They stay as guards through their pages.
 jag runs on the machine of the user, as one command. It reads the files of a
 folder or the text of a pipe. It sends snippets and the question to one
 outside service, and it writes the results to the agent or the person that
-called it. jag runs ripgrep (`rg`) to find the matches (context-3). The jag
-package carries the `rg` program, so the user installs one package.
+called it. jag uses the ripgrep libraries to find the matches (context-3).
+They are part of the jag binary (building-blocks-1), so jag starts no other
+program and the user installs one binary.
 
 ```mermaid
 flowchart LR
   agent[Agent<br/>PERSONA-01] -->|command, pipe| jag
   person[Person at the shell<br/>PERSONA-02 to 04] -->|command, pipe| jag
-  jag[jag] -->|IF-3: term, options, paths| rg[[ripgrep]]
-  rg -->|reads| files[(Files and<br/>standard input)]
+  jag[jag] -->|reads| files[(Files and<br/>standard input)]
   jag -->|IF-1: snippets and question| typesafe[[TypeSafe API<br/>Jev model]]
   jag -.->|IF-2: same calls, optional| gateway[[AI gateway]]
   gateway -.-> typesafe
@@ -145,27 +144,185 @@ flowchart LR
 - IF-2: jag to an AI gateway. The same calls as IF-1, through a gateway that
   the user names with two settings: the base URL and the model name. Optional
   (CONSTRAINT-03). Owner: the gateway provider.
-- IF-3: jag to ripgrep. jag starts `rg` as a child process with the term,
-  the grep options that DECISION-34 keeps, and the paths. `rg` returns each
-  match with its file and line. Owner: the ripgrep project.
 
 ## Solution strategy
 
 | Quality goal | Approach | ADR |
 |---|---|---|
-| QS-1 answer quality | `rg` finds the matches. BM25 on the question words pre-ranks them (strategy-5). Jev scores the top 200 (strategy-1). One built-in scoring prompt for each release carries a version id, and structured output names it (strategy-3). | strategy-1, strategy-3 |
+| QS-1 answer quality | The ripgrep libraries find the matches. BM25 on the question words pre-ranks them (strategy-5). Jev scores the top 200 (strategy-1). One built-in scoring prompt for each release carries a version id, and structured output names it (strategy-3). | strategy-1, strategy-3 |
 | QS-2 no good answer | A fixed threshold on the top Jev probability. The threshold is tuned with the prompt on the development set and changes only with a new prompt version (strategy-2). | strategy-2 |
-| QS-3 speed | `rg` searches in one pass. Jev gets 32 snippets in each call and 6 calls in parallel, so a typical search needs two rounds of calls (strategy-1). | strategy-1 |
+| QS-3 speed | The ripgrep libraries search in one pass, in the jag process. Jev gets 32 snippets in each call and 6 calls in parallel, so a typical search needs two rounds of calls (strategy-1). | strategy-1 |
 | QS-3 and METRIC-05 cost | The default cost limit is 200 results. 200 results cost about $0.009 in the worst case (strategy-1). | strategy-1 |
 | QS-4 fail clearly | No fallback to a word-match ranking (DECISION-01). A model failure fails the full search (DECISION-06). The retry rule is in Crosscutting conventions. | DECISION-01 |
 | QS-5 key secrecy | One component reads the key, and no other component gets the key as text (Crosscutting conventions). | |
 
+## Building blocks
+
+jag is one Rust program with two commands: `jag` and `jag-bench`
+(building-blocks-1, building-blocks-3). Each step of a search is one
+component with its own tests (building-blocks-2).
+
+```yaml
+components:
+  - id: C-cli
+    name: Command line
+    kind: cli
+    summary: Reads the command and the grep options, picks text or structured mode, runs the pipeline, and sets the exit code.
+    owns_entities: []
+    depends_on:
+      - id: C-config
+        style: sync
+      - id: C-search
+        style: sync
+      - id: C-prerank
+        style: sync
+      - id: C-scorer
+        style: sync
+      - id: C-output
+        style: sync
+      - id: C-check
+        style: sync
+    governed_by: []
+    realizes: [CAPABILITY-05, CAPABILITY-06]
+    areas: [building-blocks, contracts, conventions]
+  - id: C-config
+    name: Key and settings
+    kind: library
+    summary: Finds the key and the settings, checks the mode of the key file, and stores or removes the key. The one component that reads the key.
+    owns_entities: [ApiKey, Settings]
+    depends_on: []
+    governed_by: []
+    realizes: [CAPABILITY-01, QS-5]
+    areas: [building-blocks, data, conventions]
+  - id: C-search
+    name: Match search
+    kind: library
+    summary: Uses the ripgrep libraries to find the matches of the term in the files or the piped text, skips noise files, and joins near matches into results with their lines around them.
+    owns_entities: [Result]
+    depends_on: []
+    governed_by: []
+    realizes: [CAPABILITY-02, CAPABILITY-03, CAPABILITY-06]
+    areas: [building-blocks, contracts]
+  - id: C-prerank
+    name: Pre-rank
+    kind: library
+    summary: Orders the results by BM25 on the question words, so the scorer gets the best 200.
+    owns_entities: []
+    depends_on: []
+    governed_by: []
+    realizes: [CAPABILITY-02, QS-1, QS-3]
+    areas: [building-blocks, strategy]
+  - id: C-scorer
+    name: Jev scorer
+    kind: library
+    summary: Sends the results to Jev in calls of 32, with 6 calls in parallel, under the cost limit. Owns the scoring prompt, the retry, the no-good-answer threshold, and the cost count.
+    owns_entities: [Score, Cost]
+    depends_on:
+      - id: C-config
+        style: sync
+      - id: C-typesafe
+        style: sync
+        contract: IF-1
+      - id: C-gateway
+        style: sync
+        contract: IF-2
+    governed_by: []
+    realizes: [CAPABILITY-02, CAPABILITY-07, QS-1, QS-2, QS-3, QS-4]
+    areas: [building-blocks, strategy, contracts, conventions]
+  - id: C-output
+    name: Output
+    kind: library
+    summary: Writes the ranked results as text or as structured output, applies the size limit, and writes the notices and the cost line.
+    owns_entities: []
+    depends_on: []
+    governed_by: []
+    realizes: [CAPABILITY-03, CAPABILITY-04, CAPABILITY-05, CAPABILITY-07]
+    areas: [building-blocks, contracts, conventions]
+  - id: C-check
+    name: Readiness check
+    kind: library
+    summary: Runs the five checks of DECISION-04 with one free call, and gives the exit code of the first cause that fails.
+    owns_entities: []
+    depends_on:
+      - id: C-config
+        style: sync
+      - id: C-scorer
+        style: sync
+    governed_by: []
+    realizes: [CAPABILITY-01]
+    areas: [building-blocks, conventions]
+  - id: C-bench
+    name: jag-bench
+    kind: cli
+    summary: Runs a set of questions with their expected answers through jag and through plain grep, and reports which one finds the answer more often.
+    owns_entities: []
+    depends_on:
+      - id: C-search
+        style: sync
+      - id: C-prerank
+        style: sync
+      - id: C-scorer
+        style: sync
+    governed_by: []
+    realizes: [CAPABILITY-12, QS-1, QS-2]
+    areas: [building-blocks, deployment]
+  - id: C-typesafe
+    name: TypeSafe API
+    kind: external
+    summary: Scores snippets with the Jev model and reports the billed usage.
+    owns_entities: []
+    depends_on: []
+    governed_by: []
+    realizes: []
+    areas: [context, contracts]
+  - id: C-gateway
+    name: AI gateway
+    kind: external
+    summary: An optional route to the TypeSafe API, with the same calls.
+    owns_entities: []
+    depends_on:
+      - id: C-typesafe
+        style: sync
+    governed_by: []
+    realizes: []
+    areas: [context, contracts]
+```
+
+```mermaid
+flowchart LR
+  C-cli[C-cli<br/>Command line]
+  C-config[C-config<br/>Key and settings]
+  C-search[C-search<br/>Match search]
+  C-prerank[C-prerank<br/>Pre-rank]
+  C-scorer[C-scorer<br/>Jev scorer]
+  C-output[C-output<br/>Output]
+  C-check[C-check<br/>Readiness check]
+  C-bench[C-bench<br/>jag-bench]
+  C-typesafe[[C-typesafe<br/>TypeSafe API]]
+  C-gateway[[C-gateway<br/>AI gateway]]
+  C-cli -->|sync| C-config
+  C-cli -->|sync| C-search
+  C-cli -->|sync| C-prerank
+  C-cli -->|sync| C-scorer
+  C-cli -->|sync| C-output
+  C-cli -->|sync| C-check
+  C-scorer -->|sync| C-config
+  C-scorer -->|sync, IF-1| C-typesafe
+  C-scorer -->|sync, IF-2| C-gateway
+  C-check -->|sync| C-config
+  C-check -->|sync| C-scorer
+  C-bench -->|sync| C-search
+  C-bench -->|sync| C-prerank
+  C-bench -->|sync| C-scorer
+  C-gateway -->|sync| C-typesafe
+```
+
 ## Risks
 
 - RK-1: The term can match other lines than in grep. DECISION-33 says that
-  the term is a regular expression as in grep, but `rg` uses its own pattern
-  rules. A default grep pattern treats `+`, `?`, and `|` as plain
-  characters, and `rg` does not. `rg` also has no back-references. Test: the
+  the term is a regular expression as in grep, but the ripgrep libraries use
+  the pattern rules of `rg`. A default grep pattern treats `+`, `?`, and `|`
+  as plain characters, and `rg` does not. `rg` also has no back-references. Test: the
   same term with `grep` and with jag on one folder gives other match lines.
   Mitigation: the README states the pattern rules of `rg`. Open acceptance:
   DECISION-33 changes to "a regular expression as in ripgrep", or jag
