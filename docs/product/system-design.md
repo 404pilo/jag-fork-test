@@ -12,7 +12,7 @@ areas:
   building-blocks: decided
   data: decided
   contracts: decided
-  conventions: open
+  conventions: decided
   deployment: open
 adrs: []
 ---
@@ -25,7 +25,7 @@ Destination: one command-line program that finds the lines that match a term,
 ranks them by a question with the Jev model, and returns the best lines within
 a size limit and a cost limit.
 
-Frontier: data, contracts, and conventions. Deployment waits for them.
+Frontier: deployment.
 
 Fog:
 
@@ -339,6 +339,39 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | IF-4 | C-cli | Agent, script | Exit codes: 0 results found, 1 no match or no good answer, 2 usage error, 3 key missing, 4 key not accepted, 5 no credit, 6 service down, 7 cost limit reached, 8 results left out by the size limit, 130 stopped with Ctrl-C (contracts-3). DECISION-13 and DECISION-47 give the order when two apply. | A code never changes its meaning in one major version. |
 | IF-5 | C-output | Agent | Structured output: one JSON document on standard output, with `version`, `prompt_version`, `results`, and the summary fields of DECISION-28. An error is a JSON document of the same form (DECISION-07, CV-1). An output that does not parse means that jag stopped (contracts-4, DECISION-30). | `version` is the version of the form. In one major version, fields are only added (CONSTRAINT-05). |
 | IF-6 | C-search | C-prerank, C-scorer, C-output | The `Result` record in memory: path, first and last line, the lines, the marks on matching lines and on cut lines. | Internal. It changes with the code. |
+
+## Crosscutting conventions
+
+- CV-1: Each failure gives its cause, its fix, and its exit code of IF-4. In
+  text mode, the message goes to the error stream. In structured mode, the
+  error is a JSON document on standard output (conventions-1, DECISION-01,
+  DECISION-05, DECISION-07).
+- CV-2: A model failure fails the full search. jag writes no partial result
+  (conventions-2, DECISION-06).
+- CV-3: In text mode, results go to standard output, and notices, progress,
+  and the cost line go to the error stream. In structured mode, everything
+  goes to standard output, inside the document (conventions-3, DECISION-29,
+  DECISION-41).
+- CV-4: On Ctrl-C, jag starts no new model call, writes no partial result,
+  and exits with 130. When the reader closes the pipe, jag exits with no
+  message (conventions-4, DECISION-39).
+- CV-5: Each Jev call times out after 4 seconds. After a timeout, a failed
+  connection, HTTP 429, or HTTP 5xx, jag waits 1 second and tries one more
+  time. Then it fails with code 6. The `JAG_TIMEOUT` variable and the
+  `--timeout` option change the time of one call. With the defaults, jag
+  fails within 9 seconds (conventions-5, QS-4, CONSTRAINT-04).
+- CV-6: Only C-config reads the key. The key lives in a type that never
+  prints itself in a message, an error, or debug text. No option takes the
+  key, so it never shows in the process list. `--setup` reads it from the
+  terminal with no echo. jag refuses a key file that the group or other
+  users can read, and exits with code 3 and the fix (conventions-6, QS-5,
+  CONSTRAINT-02).
+- CV-7: A setting takes its value from the first of these sources: the
+  command option, the environment variable, the config file, and the
+  built-in default. The key has no option, and DECISION-03 gives its order
+  (conventions-7).
+- CV-8: jag sends no telemetry and writes no log file. A debug log waits
+  (DF-2).
 
 ## Risks
 
