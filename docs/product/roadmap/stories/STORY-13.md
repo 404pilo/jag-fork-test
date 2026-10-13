@@ -6,6 +6,7 @@ description: As a knowledge seeker (PERSONA-03), I want to run jag with a term, 
   the question, so that the best answer comes first.
 status: draft
 state: ready
+spec: docs/superpowers/specs/2026-10-13-STORY-13-rank-matching-lines-by-a-question-design.md
 parent: /features/FEATURE-04.md
 milestone: /milestones/MILESTONE-01.md
 traces:

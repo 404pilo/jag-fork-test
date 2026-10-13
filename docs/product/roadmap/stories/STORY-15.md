@@ -6,6 +6,7 @@ description: As an agent builder (PERSONA-01), I want jag to label the best resu
   my agent does not trust noise.
 status: draft
 state: ready
+spec: docs/superpowers/specs/2026-10-13-STORY-13-rank-matching-lines-by-a-question-design.md
 parent: /features/FEATURE-04.md
 milestone: /milestones/MILESTONE-01.md
 traces:

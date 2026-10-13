@@ -5,6 +5,7 @@ description: As a knowledge seeker (PERSONA-03), I want each result to hold the 
   line with the lines around it, so that I can read the answer in its context.
 status: draft
 state: ready
+spec: docs/superpowers/specs/2026-10-13-STORY-13-rank-matching-lines-by-a-question-design.md
 parent: /features/FEATURE-04.md
 milestone: /milestones/MILESTONE-01.md
 traces:
