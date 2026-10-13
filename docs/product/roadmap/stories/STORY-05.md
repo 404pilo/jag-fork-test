@@ -6,6 +6,7 @@ description: As an agent builder (PERSONA-01), I want the missing-key message to
   sign-up page.
 status: draft
 state: ready
+spec: docs/superpowers/specs/2026-10-13-STORY-01-store-a-key-one-time-design.md
 parent: /features/FEATURE-01.md
 milestone: /milestones/MILESTONE-01.md
 traces:

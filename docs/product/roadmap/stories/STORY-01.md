@@ -5,6 +5,7 @@ description: As an agent builder (PERSONA-01), I want to store my TypeSafe key w
   one setup run, so that each later search finds the key with no more steps.
 status: draft
 state: ready
+spec: docs/superpowers/specs/2026-10-13-STORY-01-store-a-key-one-time-design.md
 parent: /features/FEATURE-01.md
 milestone: /milestones/MILESTONE-01.md
 traces:

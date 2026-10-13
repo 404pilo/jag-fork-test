@@ -6,6 +6,7 @@ description: As an operator (PERSONA-02), I want jag to read the key from two va
   shell or one job.
 status: draft
 state: ready
+spec: docs/superpowers/specs/2026-10-13-STORY-01-store-a-key-one-time-design.md
 parent: /features/FEATURE-01.md
 milestone: /milestones/MILESTONE-01.md
 traces:
