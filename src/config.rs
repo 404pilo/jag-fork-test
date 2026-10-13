@@ -6,6 +6,7 @@
 
 mod change;
 mod fs;
+mod model;
 mod setup;
 
 use std::ffi::{OsStr, OsString};
@@ -18,6 +19,7 @@ use crate::failure::Failure;
 
 pub use change::{ChangeState, load_for_change, write_key_file};
 pub use fs::{Fs, OpenFile, RealFs};
+pub use model::{ModelSettings, model_settings};
 pub use setup::{Prompter, TtyPrompter, forget_key, setup};
 
 /// The page where a user gets a key (DECISION-09).
@@ -143,6 +145,10 @@ pub enum ConfigError {
     PromptFailed {
         kind: std::io::ErrorKind,
     },
+    /// `JAG_BASE_URL` is not an allowed address. The text never shows it.
+    BaseUrlBad,
+    /// `JAG_MODEL` is not text. The text never shows it.
+    ModelBad,
 }
 
 impl From<ConfigError> for Failure {
@@ -250,6 +256,16 @@ impl From<ConfigError> for Failure {
             ConfigError::PromptFailed { kind } => (
                 format!("jag could not read your answer ({kind})."),
                 "Run `jag --setup` again in a terminal.".to_owned(),
+                2,
+            ),
+            ConfigError::BaseUrlBad => (
+                "JAG_BASE_URL is not an https address.".to_owned(),
+                "Set JAG_BASE_URL to an https address, or unset it.".to_owned(),
+                2,
+            ),
+            ConfigError::ModelBad => (
+                "JAG_MODEL is not text.".to_owned(),
+                "Set JAG_MODEL to a model name, or unset it.".to_owned(),
                 2,
             ),
         };
