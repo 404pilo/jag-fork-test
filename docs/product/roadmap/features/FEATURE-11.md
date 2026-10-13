@@ -61,6 +61,7 @@ Text is the default output, also in a pipe. In text mode, jag writes results to 
 - traces: [DECISION-29: In text mode, notices go to the error stream](../../prd/decisions/DECISION-29.md)
 - traces: [DECISION-30: Structured mode always writes a complete output](../../prd/decisions/DECISION-30.md)
 - traces: [CONSTRAINT-05: The structured form only adds fields in one major version](../../prd/constraints/CONSTRAINT-05.md)
+- blocks: [FEATURE-20: Show the cost of a search](FEATURE-20.md)
 - child: [STORY-29: Read text output by default](../stories/STORY-29.md)
 - child: [STORY-30: Turn on structured output](../stories/STORY-30.md)
 - child: [STORY-31: Get a complete structured output with notices and errors](../stories/STORY-31.md)

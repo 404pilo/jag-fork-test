@@ -24,4 +24,5 @@ When a search fails or the user stops it, the error message gives the cost that 
 - about: [CAPABILITY-07: Show the cost of a search](../capabilities/CAPABILITY-07.md)
 - about: [DECISION-06: A model failure during a search fails the full search](DECISION-06.md)
 - about: [DECISION-39: When the user stops jag, it stops at once with no partial results](DECISION-39.md)
+- traced by: [FEATURE-20: Show the cost of a search](../../roadmap/features/FEATURE-20.md)
 <!-- LINKS:END -->

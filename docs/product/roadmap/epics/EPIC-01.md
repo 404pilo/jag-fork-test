@@ -24,4 +24,5 @@ The user stores a TypeSafe key one time and runs one command that says jag is re
 - child: [FEATURE-01: Store a key one time](../features/FEATURE-01.md)
 - child: [FEATURE-02: Readiness check](../features/FEATURE-02.md)
 - child: [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md)
+- child: [FEATURE-21: Send the model calls through an AI gateway](../features/FEATURE-21.md)
 <!-- LINKS:END -->

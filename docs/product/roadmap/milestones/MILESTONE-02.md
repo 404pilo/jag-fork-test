@@ -39,6 +39,8 @@ This milestone holds the capabilities that make jag better to use and easier to 
 | [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md) | backlog | 0/3 (0%) | - | FEATURE-04 | - |
 | [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](../features/FEATURE-18.md) | backlog | 0/4 (0%) | - | FEATURE-01, FEATURE-17, FEATURE-19 | - |
 | [FEATURE-19: Go public with a clean history](../features/FEATURE-19.md) | backlog | 0/1 (0%) | - | FEATURE-17 | - |
+| [FEATURE-20: Show the cost of a search](../features/FEATURE-20.md) | backlog | 0/4 (0%) | - | FEATURE-04, FEATURE-11 | - |
+| [FEATURE-21: Send the model calls through an AI gateway](../features/FEATURE-21.md) | backlog | 0/2 (0%) | - | FEATURE-04 | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -60,6 +62,8 @@ This milestone holds the capabilities that make jag better to use and easier to 
 - item of: [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md)
 - item of: [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](../features/FEATURE-18.md)
 - item of: [FEATURE-19: Go public with a clean history](../features/FEATURE-19.md)
+- item of: [FEATURE-20: Show the cost of a search](../features/FEATURE-20.md)
+- item of: [FEATURE-21: Send the model calls through an AI gateway](../features/FEATURE-21.md)
 - item of: [STORY-06: Check the five items of readiness](../stories/STORY-06.md)
 - item of: [STORY-07: Use the check result as an exit code](../stories/STORY-07.md)
 - item of: [STORY-08: Run the check for almost no cost](../stories/STORY-08.md)
@@ -84,4 +88,10 @@ This milestone holds the capabilities that make jag better to use and easier to 
 - item of: [STORY-49: Install jag with cargo from crates.io](../stories/STORY-49.md)
 - item of: [STORY-50: Install or run jag with npm](../stories/STORY-50.md)
 - item of: [STORY-51: Publish each channel from one tag](../stories/STORY-51.md)
+- item of: [STORY-53: See the cost after each search](../stories/STORY-53.md)
+- item of: [STORY-54: Read the cost in structured output](../stories/STORY-54.md)
+- item of: [STORY-55: Know the cost when no figure is available](../stories/STORY-55.md)
+- item of: [STORY-56: Know the cost of a failed or stopped search](../stories/STORY-56.md)
+- item of: [STORY-57: Send the model calls through an AI gateway](../stories/STORY-57.md)
+- item of: [STORY-58: Set the gateway as an option, a variable, or in the config file](../stories/STORY-58.md)
 <!-- LINKS:END -->

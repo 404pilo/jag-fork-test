@@ -59,6 +59,8 @@ When no result answers the question well, jag shows the best results with a clea
 - blocks: [FEATURE-08: File, line, and snippet for each result](FEATURE-08.md)
 - blocks: [FEATURE-15: Good behavior in a terminal and in a pipe](FEATURE-15.md)
 - blocks: [FEATURE-16: Fast enough to replace grep](FEATURE-16.md)
+- blocks: [FEATURE-20: Show the cost of a search](FEATURE-20.md)
+- blocks: [FEATURE-21: Send the model calls through an AI gateway](FEATURE-21.md)
 - child: [STORY-13: Rank matching lines by a question](../stories/STORY-13.md)
 - child: [STORY-14: See the lines around a match](../stories/STORY-14.md)
 - child: [STORY-15: Know when no result answers well](../stories/STORY-15.md)

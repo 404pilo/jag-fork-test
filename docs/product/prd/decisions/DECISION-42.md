@@ -24,4 +24,5 @@ The report counts results. It shows the results that jag scored and the results 
 - about: [CAPABILITY-07: Show the cost of a search](../capabilities/CAPABILITY-07.md)
 - about: [DECISION-12: The cost limit has a default that the user can change](DECISION-12.md)
 - about: [DECISION-13: Reaching the cost limit has its own exit code](DECISION-13.md)
+- traced by: [FEATURE-20: Show the cost of a search](../../roadmap/features/FEATURE-20.md)
 <!-- LINKS:END -->

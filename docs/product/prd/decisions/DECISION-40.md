@@ -23,4 +23,5 @@ jag shows the cost in US dollars. It uses the amount that the model service bill
 
 - about: [CAPABILITY-07: Show the cost of a search](../capabilities/CAPABILITY-07.md)
 - about: [METRIC-05: Cost per search](../metrics/METRIC-05.md)
+- traced by: [FEATURE-20: Show the cost of a search](../../roadmap/features/FEATURE-20.md)
 <!-- LINKS:END -->

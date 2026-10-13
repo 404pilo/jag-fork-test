@@ -20,4 +20,5 @@ When the model service gives no cost figure and jag cannot estimate one, jag sho
 ## Links
 
 - about: [CAPABILITY-07: Show the cost of a search](../capabilities/CAPABILITY-07.md)
+- traced by: [FEATURE-20: Show the cost of a search](../../roadmap/features/FEATURE-20.md)
 <!-- LINKS:END -->

@@ -30,4 +30,5 @@ After each search, jag reports how many results it scored and what the search co
 - subject of: [DECISION-45: A missing cost figure never fails the search](../decisions/DECISION-45.md)
 - included by: [SCOPE-01: Release 1: first public release](../scope/SCOPE-01.md) (could)
 - included by: [SCOPE-02: Release 2: trust and cost](../scope/SCOPE-02.md) (must)
+- traced by: [FEATURE-20: Show the cost of a search](../../roadmap/features/FEATURE-20.md)
 <!-- LINKS:END -->

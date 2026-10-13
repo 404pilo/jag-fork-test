@@ -26,4 +26,5 @@ jag keeps its output inside a size limit that the user sets, and gives readable 
 - traces: [CAPABILITY-05: Text output for people and structured output for agents](../../prd/capabilities/CAPABILITY-05.md)
 - child: [FEATURE-09: Size limit on the text that jag returns](../features/FEATURE-09.md)
 - child: [FEATURE-11: Text output for a person and structured output for an agent](../features/FEATURE-11.md)
+- child: [FEATURE-20: Show the cost of a search](../features/FEATURE-20.md)
 <!-- LINKS:END -->

@@ -23,4 +23,5 @@ When a search makes no model call, jag reports a cost of zero and gives the reas
 
 - about: [CAPABILITY-07: Show the cost of a search](../capabilities/CAPABILITY-07.md)
 - about: [DECISION-32: A term with no question works as plain grep](DECISION-32.md)
+- traced by: [FEATURE-20: Show the cost of a search](../../roadmap/features/FEATURE-20.md)
 <!-- LINKS:END -->

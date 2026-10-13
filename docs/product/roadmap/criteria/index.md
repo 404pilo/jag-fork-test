@@ -237,3 +237,31 @@
 * [CRITERION-82: One tag publishes each channel with the same version](CRITERION-82.md) - One version tag publishes the GitHub Release, the crate, and the npm packages, and each one has the same version.
 * [CRITERION-83: The repository stores no publish token](CRITERION-83.md) - The release publishes to crates.io and npm with trusted publishing, and the repository stores no publish token.
 * [CRITERION-84: The published packages hold no private data](CRITERION-84.md) - The archives, the crate, and the npm packages hold no key, no case content, no private evaluation data, and no internal project name.
+
+## STORY-53: See the cost after each search
+
+* [CRITERION-88: Text mode writes a cost line to the error stream](CRITERION-88.md) - In text mode, jag writes one cost line to the error stream after each search, also when the output goes to a pipe.
+* [CRITERION-89: The cost line counts the results scored and skipped](CRITERION-89.md) - The cost line shows the count of results that jag scored, the count that the cost limit skipped, and the billed amount in US dollars.
+
+## STORY-54: Read the cost in structured output
+
+* [CRITERION-90: Structured output always has a cost field](CRITERION-90.md) - In structured mode, the output always has a cost field with the same counts and amount as the text cost line.
+
+## STORY-55: Know the cost when no figure is available
+
+* [CRITERION-91: A search with no model call reports a cost of zero](CRITERION-91.md) - When jag makes no model call, it reports a cost of zero and the reason.
+* [CRITERION-92: A missing cost figure never fails the search](CRITERION-92.md) - When the service gives no cost figure and jag cannot estimate one, jag shows the count, marks the cost as not available, and the search does not fail.
+* [CRITERION-97: An estimated cost has a label](CRITERION-97.md) - When the service gives no billed amount, jag shows an estimate in US dollars and labels it as an estimate.
+
+## STORY-56: Know the cost of a failed or stopped search
+
+* [CRITERION-93: A failed or stopped search reports the cost up to that point](CRITERION-93.md) - When a search fails or the user stops it, the error gives the cost that jag paid up to that point. In structured mode, the cost is a field of the error.
+
+## STORY-57: Send the model calls through an AI gateway
+
+* [CRITERION-94: jag sends the calls to the gateway that the user names](CRITERION-94.md) - When the user sets a base URL and a model name, jag sends the same model calls to that address with that model name.
+* [CRITERION-95: A TypeSafe key alone is enough](CRITERION-95.md) - When the user sets no base URL and no model name, jag calls TypeSafe directly and needs only the TypeSafe key.
+
+## STORY-58: Set the gateway as an option, a variable, or in the config file
+
+* [CRITERION-96: An option wins over a variable, and a variable wins over the config file](CRITERION-96.md) - For the base URL and the model name, the command option wins over the variable, the variable wins over the config file, and the config file wins over the default.

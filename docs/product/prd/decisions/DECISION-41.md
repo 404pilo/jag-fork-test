@@ -23,4 +23,5 @@ In text mode, jag writes a cost line to the error stream after each search, also
 
 - about: [CAPABILITY-07: Show the cost of a search](../capabilities/CAPABILITY-07.md)
 - about: [DECISION-29: In text mode, notices go to the error stream](DECISION-29.md)
+- traced by: [FEATURE-20: Show the cost of a search](../../roadmap/features/FEATURE-20.md)
 <!-- LINKS:END -->
