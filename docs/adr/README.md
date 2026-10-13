@@ -19,7 +19,7 @@
 - [0009 — Pin the Jev model version in each release](./0009-pin-the-jev-model-version-in-each-release.md) — accepted — <!-- TODO: summary -->
 
 ### deployment — <!-- TODO: describe this area -->
-- [0010 — Ship jag as GitHub binaries and a Rust crate](./0010-ship-jag-as-github-binaries-and-a-rust-crate.md) — accepted — <!-- TODO: summary -->
+- [0010 — Ship jag on GitHub Releases, crates.io, and npm](./0010-ship-jag-on-github-releases-crates-io-and-npm.md) — accepted — <!-- TODO: summary -->
 
 ### strategy — <!-- TODO: describe this area -->
 - [0002 — Score the top 200 results in calls of 32, six calls in parallel](./0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md) — accepted — <!-- TODO: summary -->

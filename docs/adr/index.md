@@ -37,7 +37,7 @@ okf_version: "0.2"
 
 ### accepted
 
-* [0010: Ship jag as GitHub binaries and a Rust crate](./0010-ship-jag-as-github-binaries-and-a-rust-crate.md) - accepted. Open this when you change how users install jag, or when you add a package channel.
+* [0010: Ship jag on GitHub Releases, crates.io, and npm](./0010-ship-jag-on-github-releases-crates-io-and-npm.md) - accepted. Open this when you change how users install jag, or when you add or remove a package channel.
 
 ## strategy
 

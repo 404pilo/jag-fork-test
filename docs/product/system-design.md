@@ -25,7 +25,7 @@ adrs:
   - 0007-number-the-exit-codes-above-2-from-3-to-8.md
   - 0008-write-structured-output-as-one-json-document.md
   - 0009-pin-the-jev-model-version-in-each-release.md
-  - 0010-ship-jag-as-github-binaries-and-a-rust-crate.md
+  - 0010-ship-jag-on-github-releases-crates-io-and-npm.md
 ---
 
 # jag system design
@@ -58,9 +58,10 @@ Key decisions:
 - Ship one versioned prompt and pin the Jev model in each release, because
   the quality numbers then stay true for a release (0004-ship-one-scoring-prompt-with-a-version-id-in-each-release.md,
   0009-pin-the-jev-model-version-in-each-release.md).
-- Build one Rust binary, and ship it on GitHub Releases and crates.io,
-  because it starts fast and installs with no runtime (0005-build-jag-as-one-rust-binary.md,
-  0010-ship-jag-as-github-binaries-and-a-rust-crate.md).
+- Build one Rust binary, and ship it on GitHub Releases, crates.io, and
+  npm, because it starts fast, installs with no runtime, and agent setups
+  already use npm (0005-build-jag-as-one-rust-binary.md,
+  0010-ship-jag-on-github-releases-crates-io-and-npm.md).
 - Keep the command line, the exit codes, and the JSON form stable, because
   agents and scripts depend on them (0006-run-setup-the-readiness-check-and-key-removal-as-options.md, 0007-number-the-exit-codes-above-2-from-3-to-8.md,
   0008-write-structured-output-as-one-json-document.md).
@@ -228,7 +229,7 @@ components:
         style: sync
       - id: C-check
         style: sync
-    governed_by: [0005-build-jag-as-one-rust-binary.md, 0006-run-setup-the-readiness-check-and-key-removal-as-options.md, 0007-number-the-exit-codes-above-2-from-3-to-8.md, 0010-ship-jag-as-github-binaries-and-a-rust-crate.md, CV-1, CV-3, CV-4, CV-7]
+    governed_by: [0005-build-jag-as-one-rust-binary.md, 0006-run-setup-the-readiness-check-and-key-removal-as-options.md, 0007-number-the-exit-codes-above-2-from-3-to-8.md, 0010-ship-jag-on-github-releases-crates-io-and-npm.md, CV-1, CV-3, CV-4, CV-7]
     realizes: [CAPABILITY-05, CAPABILITY-06]
     areas: [building-blocks, contracts, conventions]
   - id: C-config
@@ -425,7 +426,9 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
   It needs no runtime and no other program (building-blocks-1).
 - Install: prebuilt binaries on GitHub Releases, one archive for each
   platform, each with a checksum. Rust users can run `cargo install` from
-  crates.io. jag has no npm package (deployment-1).
+  crates.io. The npm package `@ai-ready-future/jag` installs the same
+  prebuilt binary through one npm package for each platform, so `npx`
+  works. The npm route needs Node, and the binary does not (deployment-1).
 - Platforms: Linux x86_64 and arm64 (static), and macOS arm64 and x86_64
   (deployment-2).
 - Environments: the machine of the user only. There is no server and no
@@ -437,8 +440,9 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 - Release path: GitHub Actions runs on each pull request. It runs the
   tests, the lint, the ADR gate, and a scan that fails on private data
   (CONSTRAINT-01). A version tag builds the four binaries, attaches them to
-  the GitHub Release, and publishes the crate. The repository stores no
-  publish token (deployment-3).
+  the GitHub Release, and publishes the crate and the npm packages with
+  trusted publishing. The repository stores no publish token
+  (deployment-3).
 
 ## Decision index
 
@@ -471,7 +475,7 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | conventions-5 | |  | conventions | The retry wait, and how you change it | human:404pilo, 2026-10-12 |
 | conventions-6 | |  | conventions | How jag keeps the key secret | human:404pilo, 2026-10-12 |
 | conventions-7 | |  | conventions | The order in which an option, a variable, and the config file set a value | human:404pilo, 2026-10-12 |
-| deployment-1 | 0010-ship-jag-as-github-binaries-and-a-rust-crate.md | accepted | deployment | How users install jag | adr |
+| deployment-1 | 0010-ship-jag-on-github-releases-crates-io-and-npm.md | accepted | deployment | How users install jag | adr |
 | deployment-2 | |  | deployment | The operating systems and the runtime versions that jag supports | human:404pilo, 2026-10-12 |
 | deployment-3 | |  | deployment | The release path and the checks that guard it | human:404pilo, 2026-10-12 |
 
