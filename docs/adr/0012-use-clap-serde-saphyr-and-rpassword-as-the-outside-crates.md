@@ -13,8 +13,9 @@ deviates_from: null
 related: [0011-build-jag-as-one-cargo-package-with-one-module-per-component.md]
 parent_spec: docs/product/system-design.md#building-blocks
 model:
-  status: out-of-scope
-  reason: The choice of outside crates is not a runtime part
+  status: modeled
+  element: C-config
+  reason: C-config uses serde-saphyr and rpassword. C-cli uses clap, and its governed_by also lists this ADR
 ---
 
 # ADR-0012: Use clap, serde-saphyr, and rpassword as the outside crates of setup

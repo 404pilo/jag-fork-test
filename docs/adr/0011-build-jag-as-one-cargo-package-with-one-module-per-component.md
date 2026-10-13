@@ -13,8 +13,8 @@ deviates_from: null
 related: [0005-build-jag-as-one-rust-binary.md]
 parent_spec: docs/product/system-design.md#building-blocks
 model:
-  status: out-of-scope
-  reason: The package layout and the build checks are not a runtime part
+  status: modeled
+  element: C-cli
 ---
 
 # ADR-0011: Build jag as one Cargo package with one module per component
