@@ -6,6 +6,7 @@ description: As an agent builder (PERSONA-01), I want each pull request checked 
   evaluation data, or internal project names.
 status: draft
 state: ready
+spec: docs/superpowers/specs/2026-10-13-STORY-46-block-private-data-in-pull-requests-design.md
 parent: /features/FEATURE-17.md
 milestone: /milestones/MILESTONE-01.md
 ---
