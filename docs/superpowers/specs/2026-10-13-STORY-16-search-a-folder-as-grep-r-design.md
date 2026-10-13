@@ -177,9 +177,10 @@ jag makes a `WalkWarning` from an `ignore::Error` as follows.
 path is the path of the first `WithPath` that it finds. For `Error::Loop`,
 the path is the `child` path. Else the path is `None`.
 
-A `Partial` with two or more errors has no path, unless a `WithPath` holds
-the `Partial`. In that case the warning has no path. This is a rare case:
-one ignore file with two or more bad rules.
+A `Partial` with two or more errors has no path. In `ignore` 0.4.33 a
+`WithPath` never holds a `Partial`. One ignore file with two or more bad
+rules gives `Partial([WithPath, WithPath])`, so the warning has no path.
+This is a rare case.
 
 `kind`, in this order:
 
@@ -328,9 +329,14 @@ More tests:
   `ok.txt`. `.github/w.yml` and `ok.txt` are searched. `skipped` is
   `SkipCounts { binary: 0, hidden: 2, ignored: 1 }` (hidden: `.ignore` and
   `.env`; ignored: `t.tmp`).
-- Two warnings with the same path come in the order of `message()`.
-- A bad glob in `.ignore` (for example `a[`) gives one `WalkWarning` with
-  `IgnoreRule` and the path of that `.ignore`, and the walk goes on.
+- Two warnings with the same path come in the order of `message()`. No real
+  folder gives this case, so a unit test in `walk.rs` gives made-up warnings
+  to `finish()`.
+- A bad glob in `.ignore` (for example `[z-a]`) gives one `WalkWarning`
+  with `IgnoreRule` and the path of that `.ignore`, and the walk goes on.
+  Do not use `a[`: the `ignore` crate builds globs with
+  `allow_unclosed_class(true)`, so `a[` is a literal rule and not an
+  error.
 - `WalkWarning::message` gives the text of the table in "Warnings" for each
   of the six rows.
 - A symbolic link below the root to a file with `needle` is not searched and
