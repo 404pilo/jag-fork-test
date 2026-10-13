@@ -1,0 +1,521 @@
+---
+type: system-design
+title: jag system design
+status: accepted
+version: 1
+updated: 2026-10-12
+prd_tree: 104339a44fa1f15943107f1ef69c72b169083dfe
+session: 2d045b37-ac91-451e-b37b-928ac1645df2
+areas:
+  quality: decided
+  context: decided
+  strategy: decided
+  building-blocks: decided
+  data: decided
+  contracts: decided
+  conventions: decided
+  deployment: decided
+adrs:
+  - 0001-find-matches-with-the-ripgrep-libraries.md
+  - 0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md
+  - 0003-decide-no-good-answer-with-a-fixed-threshold-on-the-top.md
+  - 0004-ship-one-scoring-prompt-with-a-version-id-in-each-release.md
+  - 0005-build-jag-as-one-rust-binary.md
+  - 0006-run-setup-the-readiness-check-and-key-removal-as-options.md
+  - 0007-number-the-exit-codes-above-2-from-3-to-8.md
+  - 0008-write-structured-output-as-one-json-document.md
+  - 0009-pin-the-jev-model-version-in-each-release.md
+  - 0010-ship-jag-on-github-releases-crates-io-and-npm.md
+---
+
+# jag system design
+
+## Summary
+
+jag is one Rust binary that runs on the machine of the user. It finds the
+lines that match a term with the ripgrep libraries, pre-ranks them with BM25
+on the question words, and scores the top 200 with the Jev model of the
+TypeSafe API. It writes the best results as text or as one JSON document,
+within a size limit. jag keeps no data between searches and has no server.
+
+The quality priorities, in order:
+
+1. The top results answer the question (QS-1).
+2. jag says when nothing answers (QS-2).
+3. A typical search is fast (QS-3).
+4. jag fails clearly and fast when the model service is down (QS-4).
+5. The key stays secret (QS-5).
+
+Key decisions:
+
+- Find the matches with the ripgrep libraries, because they are fast and
+  their skip rules fit grep habits (0001-find-matches-with-the-ripgrep-libraries.md).
+- Score 200 results in calls of 32, six calls in parallel, because that keeps
+  a search near $0.009 at worst and near 1 second of model time
+  (0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md).
+- Label "no good answer" with a fixed threshold, because one value is easy to
+  tune and test (0003-decide-no-good-answer-with-a-fixed-threshold-on-the-top.md).
+- Ship one versioned prompt and pin the Jev model in each release, because
+  the quality numbers then stay true for a release (0004-ship-one-scoring-prompt-with-a-version-id-in-each-release.md,
+  0009-pin-the-jev-model-version-in-each-release.md).
+- Build one Rust binary, and ship it on GitHub Releases, crates.io, and
+  npm, because it starts fast, installs with no runtime, and agent setups
+  already use npm (0005-build-jag-as-one-rust-binary.md,
+  0010-ship-jag-on-github-releases-crates-io-and-npm.md).
+- Keep the command line, the exit codes, and the JSON form stable, because
+  agents and scripts depend on them (0006-run-setup-the-readiness-check-and-key-removal-as-options.md, 0007-number-the-exit-codes-above-2-from-3-to-8.md,
+  0008-write-structured-output-as-one-json-document.md).
+
+## Design map
+
+Destination: one command-line program that finds the lines that match a term,
+ranks them by a question with the Jev model, and returns the best lines within
+a size limit and a cost limit.
+
+Frontier: none. Every area is decided.
+
+Fog:
+
+- strategy-1 (strategy, research done, settled): the default count of
+  results to score, and the count of model calls in parallel. Facts:
+  - One Jev call can score many snippets. More snippets in one call add
+    little time (docs.typesafe.ai, api.md and patterns/fan-out.md).
+  - The price is $0.042 for each 1M input tokens. Output tokens are free.
+    One request holds at most 64k tokens (docs.typesafe.ai, models.md).
+  - The rate limits are 100K tokens and 80 requests each second. Over a
+    limit, the service gives HTTP 429 (models.md).
+  - The earlier implementation scored 200 snippets, 32 in each call, with
+    6 calls in parallel. It waited 30 s for one call and retried 4 times.
+  - For 200 snippets: about $0.009 in the worst case and $0.002 in a typical
+    case. A typical search takes about 1 s of model time. This is an
+    estimate: no source gives the time of one call with 32 snippets.
+
+Out of scope:
+
+- A search index. Each search reads the files as they are (SCOPE-06).
+- A store of scores between searches (DECISION-46).
+- A server, an account, and telemetry (SCOPE-09).
+- A local model. Release 1 needs the model service (DECISION-02).
+
+## Quality scenarios
+
+### QS-1: The top results answer the question
+
+- Source: an agent or a person.
+- Stimulus: a term and a question, on a folder that holds the answer.
+- Environment: normal operation, with the default limits.
+- Artifact: the ranking of jag.
+- Response: jag returns the matches ranked by how well they answer the
+  question.
+- Response measure: ndcg@10 of 0.70 or more on the held-out set.
+- Importance: H. Risk: H, because the held-out run is not done and the
+  scoring prompt is not final.
+- Cites: METRIC-01.
+
+### QS-2: jag says when nothing answers
+
+- Source: an agent.
+- Stimulus: a question that no line of the folder answers.
+- Environment: normal operation.
+- Artifact: the ranking and the exit code.
+- Response: jag shows the best results with the "no good answer" label and
+  exits with code 1.
+- Response measure: a decoy AUC of 0.85 or more.
+- Importance: H. Risk: M, because the earlier measure is close to the target.
+- Cites: METRIC-07.
+
+### QS-3: A typical search is fast
+
+- Source: a person at the shell.
+- Stimulus: one typical search.
+- Environment: a medium code repository, the default cost limit, and a model
+  service that works.
+- Artifact: the full search, from the start of the command to the last line.
+- Response: jag returns the ranked results.
+- Response measure: under 5 seconds.
+- Importance: H. Risk: M, because the time of one model call with 32 snippets
+  and the time of the file search are estimates, not measurements.
+- Cites: METRIC-03, CONSTRAINT-06.
+
+### QS-4: jag fails clearly and fast when the model service is down
+
+- Source: an agent.
+- Stimulus: the model service does not answer during a search.
+- Environment: a search with a question.
+- Artifact: the model client and the exit code.
+- Response: jag fails the full search with no partial result. It gives the
+  cause and the fix, and exits with the code of the cause.
+- Response measure: within 10 seconds of the first call, with the one retry
+  included.
+- Importance: H. Risk: M, because a long timeout or many retries break the
+  target.
+- Cites: CONSTRAINT-07, CONSTRAINT-04.
+
+### QS-5: The key stays secret
+
+- Source: any run of jag.
+- Stimulus: a message, an error, a notice, or structured output.
+- Environment: every mode, including a failure.
+- Artifact: the key store and every output path.
+- Response: the key never appears in the output. jag refuses a key file that
+  other users on the machine can read.
+- Response measure: zero outputs that hold the key, in a test of every error
+  path.
+- Importance: H. Risk: L, because one module owns the key.
+- Cites: CONSTRAINT-02.
+
+METRIC-02, METRIC-04, METRIC-05, METRIC-06, and CONSTRAINT-05 have no
+scenario. They stay as guards through their pages.
+
+## Context
+
+jag runs on the machine of the user, as one command. It reads the files of a
+folder or the text of a pipe. It sends snippets and the question to one
+outside service, and it writes the results to the agent or the person that
+called it. jag uses the ripgrep libraries to find the matches (context-3).
+They are part of the jag binary (building-blocks-1), so jag starts no other
+program and the user installs one binary.
+
+```mermaid
+flowchart LR
+  agent[Agent<br/>PERSONA-01] -->|command, pipe| jag
+  person[Person at the shell<br/>PERSONA-02 to 04] -->|command, pipe| jag
+  jag[jag] -->|reads| files[(Files and<br/>standard input)]
+  jag -->|IF-1: snippets and question| typesafe[[TypeSafe API<br/>Jev model]]
+  jag -.->|IF-2: same calls, optional| gateway[[AI gateway]]
+  gateway -.-> typesafe
+```
+
+- IF-1: jag to the TypeSafe API. Outbound HTTPS calls that score snippets
+  with the Jev model. The default route (context-2). Owner: TypeSafe.
+- IF-2: jag to an AI gateway. The same calls as IF-1, through a gateway that
+  the user names with two settings: the base URL and the model name. Optional
+  (CONSTRAINT-03). Owner: the gateway provider.
+
+## Solution strategy
+
+| Quality goal | Approach | ADR |
+|---|---|---|
+| QS-1 answer quality | The ripgrep libraries find the matches. BM25 on the question words pre-ranks them (strategy-5). Jev scores the top 200 (strategy-1). One built-in scoring prompt for each release carries a version id, and structured output names it (strategy-3). | 0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md, 0004-ship-one-scoring-prompt-with-a-version-id-in-each-release.md |
+| QS-2 no good answer | A fixed threshold on the top Jev probability. The threshold is tuned with the prompt on the development set and changes only with a new prompt version (strategy-2). | 0003-decide-no-good-answer-with-a-fixed-threshold-on-the-top.md |
+| QS-3 speed | The ripgrep libraries search in one pass, in the jag process. Jev gets 32 snippets in each call and 6 calls in parallel, so a typical search needs two rounds of calls (strategy-1). | 0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md |
+| QS-3 and METRIC-05 cost | The default cost limit is 200 results. 200 results cost about $0.009 in the worst case (strategy-1). | 0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md |
+| QS-4 fail clearly | No fallback to a word-match ranking (DECISION-01). A model failure fails the full search (DECISION-06). The retry rule is in Crosscutting conventions. | |
+| QS-5 key secrecy | One component reads the key, and no other component gets the key as text (Crosscutting conventions). | |
+
+## Building blocks
+
+jag is one Rust program with two commands: `jag` and `jag-bench`
+(building-blocks-1, building-blocks-3). Each step of a search is one
+component with its own tests (building-blocks-2).
+
+```yaml
+components:
+  - id: C-cli
+    name: Command line
+    kind: cli
+    summary: Reads the command and the grep options, picks text or structured mode, runs the pipeline, and sets the exit code.
+    owns_entities: []
+    depends_on:
+      - id: C-config
+        style: sync
+      - id: C-search
+        style: sync
+      - id: C-prerank
+        style: sync
+      - id: C-scorer
+        style: sync
+      - id: C-output
+        style: sync
+      - id: C-check
+        style: sync
+    governed_by: [0005-build-jag-as-one-rust-binary.md, 0006-run-setup-the-readiness-check-and-key-removal-as-options.md, 0007-number-the-exit-codes-above-2-from-3-to-8.md, 0010-ship-jag-on-github-releases-crates-io-and-npm.md, CV-1, CV-3, CV-4, CV-7]
+    realizes: [CAPABILITY-05, CAPABILITY-06]
+    areas: [building-blocks, contracts, conventions]
+  - id: C-config
+    name: Key and settings
+    kind: library
+    summary: Finds the key and the settings, checks the mode of the key file, and stores or removes the key. The one component that reads the key.
+    owns_entities: [ApiKey, Settings]
+    depends_on: []
+    governed_by: [CV-6, CV-7]
+    realizes: [CAPABILITY-01, QS-5]
+    areas: [building-blocks, data, conventions]
+  - id: C-search
+    name: Match search
+    kind: library
+    summary: Uses the ripgrep libraries to find the matches of the term in the files or the piped text, skips noise files, and joins near matches into results with their lines around them.
+    owns_entities: [Result]
+    depends_on: []
+    governed_by: [0001-find-matches-with-the-ripgrep-libraries.md]
+    realizes: [CAPABILITY-02, CAPABILITY-03, CAPABILITY-06]
+    areas: [building-blocks, contracts]
+  - id: C-prerank
+    name: Pre-rank
+    kind: library
+    summary: Orders the results by BM25 on the question words, so the scorer gets the best 200.
+    owns_entities: []
+    depends_on: []
+    governed_by: []
+    realizes: [CAPABILITY-02, QS-1, QS-3]
+    areas: [building-blocks, strategy]
+  - id: C-scorer
+    name: Jev scorer
+    kind: library
+    summary: Sends the results to Jev in calls of 32, with 6 calls in parallel, under the cost limit. Owns the scoring prompt, the retry, the no-good-answer threshold, and the cost count.
+    owns_entities: [Score, Cost]
+    depends_on:
+      - id: C-config
+        style: sync
+      - id: C-typesafe
+        style: sync
+        contract: IF-1
+      - id: C-gateway
+        style: sync
+        contract: IF-2
+    governed_by: [0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md, 0003-decide-no-good-answer-with-a-fixed-threshold-on-the-top.md, 0004-ship-one-scoring-prompt-with-a-version-id-in-each-release.md, 0009-pin-the-jev-model-version-in-each-release.md, CV-2, CV-5, CV-6]
+    realizes: [CAPABILITY-02, CAPABILITY-07, QS-1, QS-2, QS-3, QS-4]
+    areas: [building-blocks, strategy, contracts, conventions]
+  - id: C-output
+    name: Output
+    kind: library
+    summary: Writes the ranked results as text or as structured output, applies the size limit, and writes the notices and the cost line.
+    owns_entities: []
+    depends_on: []
+    governed_by: [0008-write-structured-output-as-one-json-document.md, CV-1, CV-3]
+    realizes: [CAPABILITY-03, CAPABILITY-04, CAPABILITY-05, CAPABILITY-07]
+    areas: [building-blocks, contracts, conventions]
+  - id: C-check
+    name: Readiness check
+    kind: library
+    summary: Runs the five checks of DECISION-04 with one free call, and gives the exit code of the first cause that fails.
+    owns_entities: []
+    depends_on:
+      - id: C-config
+        style: sync
+      - id: C-scorer
+        style: sync
+    governed_by: [CV-1, CV-5]
+    realizes: [CAPABILITY-01]
+    areas: [building-blocks, conventions]
+  - id: C-bench
+    name: jag-bench
+    kind: cli
+    summary: Runs a set of questions with their expected answers through jag and through plain grep, and reports which one finds the answer more often.
+    owns_entities: []
+    depends_on:
+      - id: C-search
+        style: sync
+      - id: C-prerank
+        style: sync
+      - id: C-scorer
+        style: sync
+    governed_by: [0005-build-jag-as-one-rust-binary.md]
+    realizes: [CAPABILITY-12, QS-1, QS-2]
+    areas: [building-blocks, deployment]
+  - id: C-typesafe
+    name: TypeSafe API
+    kind: external
+    summary: Scores snippets with the Jev model and reports the billed usage.
+    owns_entities: []
+    depends_on: []
+    governed_by: []
+    realizes: []
+    areas: [context, contracts]
+  - id: C-gateway
+    name: AI gateway
+    kind: external
+    summary: An optional route to the TypeSafe API, with the same calls.
+    owns_entities: []
+    depends_on:
+      - id: C-typesafe
+        style: sync
+    governed_by: []
+    realizes: []
+    areas: [context, contracts]
+```
+
+```mermaid
+flowchart LR
+  C-cli[C-cli<br/>Command line]
+  C-config[C-config<br/>Key and settings]
+  C-search[C-search<br/>Match search]
+  C-prerank[C-prerank<br/>Pre-rank]
+  C-scorer[C-scorer<br/>Jev scorer]
+  C-output[C-output<br/>Output]
+  C-check[C-check<br/>Readiness check]
+  C-bench[C-bench<br/>jag-bench]
+  C-typesafe[[C-typesafe<br/>TypeSafe API]]
+  C-gateway[[C-gateway<br/>AI gateway]]
+  C-cli -->|sync| C-config
+  C-cli -->|sync| C-search
+  C-cli -->|sync| C-prerank
+  C-cli -->|sync| C-scorer
+  C-cli -->|sync| C-output
+  C-cli -->|sync| C-check
+  C-scorer -->|sync| C-config
+  C-scorer -->|sync, IF-1| C-typesafe
+  C-scorer -->|sync, IF-2| C-gateway
+  C-check -->|sync| C-config
+  C-check -->|sync| C-scorer
+  C-bench -->|sync| C-search
+  C-bench -->|sync| C-prerank
+  C-bench -->|sync| C-scorer
+  C-gateway -->|sync| C-typesafe
+```
+
+## Data and ownership
+
+jag keeps no data between searches (data-2, DECISION-46) and builds no index
+(SCOPE-06). The only stored data is the key.
+
+| Entity | Owner | Store |
+|---|---|---|
+| ApiKey | C-config | The first of `JAG_TYPESAFE_API_KEY`, `TYPESAFE_API_KEY`, and `config.api-key` in `~/.config/jag/config.yml` (data-1, DECISION-03). The file has mode 600 or stricter (CV-6). |
+| Settings | C-config | Options and variables only. Other settings in the config file wait (DF-1). |
+| Result | C-search | Memory, for one search. |
+| Score, Cost | C-scorer | Memory, for one search. |
+
+## Contracts
+
+| ID | Provider | Consumer | Mechanism | Versioning rule |
+|---|---|---|---|---|
+| IF-1 | C-typesafe | C-scorer | HTTPS `POST /v1/systemone` with a Bearer key. One call holds the question and 32 snippets. The response gives the probabilities and the billed usage. | Each jag release pins the Jev model version that its prompt and threshold were tuned on. A setting can name another model (contracts-5). |
+| IF-2 | C-gateway | C-scorer | The same calls as IF-1, to the base URL that a setting names. | The same as IF-1. The user sets the model name for the gateway. |
+| IF-3 | C-cli | Agent, person | The command line: `jag TERM "QUESTION" [PATH...]` (DECISION-31) with the grep options of DECISION-34. The options `--setup`, `--check`, and `--forget-key` run the setup, the readiness check, and the key removal (contracts-2). | Semantic versions of jag. A removed or changed option needs a new major version. |
+| IF-4 | C-cli | Agent, script | Exit codes: 0 results found, 1 no match or no good answer, 2 usage error, 3 key missing, 4 key not accepted, 5 no credit, 6 service down, 7 cost limit reached, 8 results left out by the size limit, 130 stopped with Ctrl-C (contracts-3). DECISION-13 and DECISION-47 give the order when two apply. | A code never changes its meaning in one major version. |
+| IF-5 | C-output | Agent | Structured output: one JSON document on standard output, with `version`, `prompt_version`, `results`, and the summary fields of DECISION-28. An error is a JSON document of the same form (DECISION-07, CV-1). An output that does not parse means that jag stopped (contracts-4, DECISION-30). | `version` is the version of the form. In one major version, fields are only added (CONSTRAINT-05). |
+| IF-6 | C-search | C-prerank, C-scorer, C-output | The `Result` record in memory: path, first and last line, the lines, the marks on matching lines and on cut lines. | Internal. It changes with the code. |
+
+## Crosscutting conventions
+
+- CV-1: Each failure gives its cause, its fix, and its exit code of IF-4. In
+  text mode, the message goes to the error stream. In structured mode, the
+  error is a JSON document on standard output (conventions-1, DECISION-01,
+  DECISION-05, DECISION-07).
+- CV-2: A model failure fails the full search. jag writes no partial result
+  (conventions-2, DECISION-06).
+- CV-3: In text mode, results go to standard output, and notices, progress,
+  and the cost line go to the error stream. In structured mode, everything
+  goes to standard output, inside the document (conventions-3, DECISION-29,
+  DECISION-41).
+- CV-4: On Ctrl-C, jag starts no new model call, writes no partial result,
+  and exits with 130. When the reader closes the pipe, jag exits with no
+  message (conventions-4, DECISION-39).
+- CV-5: Each Jev call times out after 4 seconds. After a timeout, a failed
+  connection, HTTP 429, or HTTP 5xx, jag waits 1 second and tries one more
+  time. Then it fails with code 6. The `JAG_TIMEOUT` variable and the
+  `--timeout` option change the time of one call. With the defaults, jag
+  fails within 9 seconds (conventions-5, QS-4, CONSTRAINT-04).
+- CV-6: Only C-config reads the key. The key lives in a type that never
+  prints itself in a message, an error, or debug text. No option takes the
+  key, so it never shows in the process list. `--setup` reads it from the
+  terminal with no echo. jag refuses a key file that the group or other
+  users can read, and exits with code 3 and the fix (conventions-6, QS-5,
+  CONSTRAINT-02).
+- CV-7: A setting takes its value from the first of these sources: the
+  command option, the environment variable, the config file, and the
+  built-in default. The key has no option, and DECISION-03 gives its order
+  (conventions-7).
+- CV-8: jag sends no telemetry and writes no log file. A debug log waits
+  (DF-2).
+
+## Deployment
+
+- Runtime: one static Rust binary for each command, `jag` and `jag-bench`.
+  It needs no runtime and no other program (building-blocks-1).
+- Install: prebuilt binaries on GitHub Releases, one archive for each
+  platform, each with a checksum. Rust users can run `cargo install` from
+  crates.io. The npm package `@ai-ready-future/jag` installs the same
+  prebuilt binary through one npm package for each platform, so `npx`
+  works. The npm route needs Node, and the binary does not (deployment-1).
+- Platforms: Linux x86_64 and arm64 (static), and macOS arm64 and x86_64
+  (deployment-2).
+- Environments: the machine of the user only. There is no server and no
+  region (SCOPE-09).
+- Where each component runs: C-cli, C-config, C-search, C-prerank,
+  C-scorer, C-output, C-check, and C-bench run in the jag process on the
+  machine of the user. C-typesafe runs at TypeSafe. C-gateway runs at the
+  gateway provider.
+- Release path: GitHub Actions runs on each pull request. It runs the
+  tests, the lint, the ADR gate, and a scan that fails on private data
+  (CONSTRAINT-01). A version tag builds the four binaries, attaches them to
+  the GitHub Release, and publishes the crate and the npm packages with
+  trusted publishing. The repository stores no publish token
+  (deployment-3).
+
+## Decision index
+
+| Row key | File name | Status | Area | What it binds | Source |
+|---|---|---|---|---|---|
+| quality-1 | |  | quality | The quality scenarios, their ranking, and their ratings | human:404pilo, 2026-10-12 |
+| context-1 | |  | context | The outside service that scores the matches: TypeSafe API, Jev model | human:404pilo, 2026-10-12 |
+| context-2 | |  | context | The route to the model service: direct API, or an AI gateway too | human:404pilo, 2026-10-12 |
+| context-3 | 0001-find-matches-with-the-ripgrep-libraries.md | accepted | context | How jag finds the matching lines: its own search code, or an outside program such as `ag` | adr |
+| strategy-1 | 0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md | accepted | strategy | The default count of results to score, and the count of model calls in parallel | adr |
+| strategy-2 | 0003-decide-no-good-answer-with-a-fixed-threshold-on-the-top.md | accepted | strategy | How jag decides that no result answers well | adr |
+| strategy-3 | 0004-ship-one-scoring-prompt-with-a-version-id-in-each-release.md | accepted | strategy | How jag holds the scoring prompt, and how it gives a version to the prompt | adr |
+| strategy-4 | |  | strategy | No fallback when the model is not available | human:404pilo, 2026-10-12 |
+| strategy-5 | |  | strategy | How jag pre-ranks the matches before it scores them | human:404pilo, 2026-10-12 |
+| building-blocks-1 | 0005-build-jag-as-one-rust-binary.md | accepted | building-blocks | The language and the runtime of jag | adr |
+| building-blocks-2 | |  | building-blocks | The components inside the jag program | human:404pilo, 2026-10-12 |
+| building-blocks-3 | |  | building-blocks | Where the tool lives that measures jag on your own questions | human:404pilo, 2026-10-12 |
+| data-1 | |  | data | The store of the API key | human:404pilo, 2026-10-12 |
+| data-2 | |  | data | Nothing is kept between searches | human:404pilo, 2026-10-12 |
+| contracts-1 | |  | contracts | The command form of a search: `jag TERM "QUESTION" [PATH...]` | human:404pilo, 2026-10-12 |
+| contracts-2 | 0006-run-setup-the-readiness-check-and-key-removal-as-options.md | accepted | contracts | The form of the setup, readiness, and key-removal commands | adr |
+| contracts-3 | 0007-number-the-exit-codes-above-2-from-3-to-8.md | accepted | contracts | The numbers of the exit codes above 2 | adr |
+| contracts-4 | 0008-write-structured-output-as-one-json-document.md | accepted | contracts | The format of structured output and its version field | adr |
+| contracts-5 | 0009-pin-the-jev-model-version-in-each-release.md | accepted | contracts | The Jev model version that jag calls | adr |
+| contracts-6 | |  | contracts | One result is a match with the lines around it | human:404pilo, 2026-10-12 |
+| conventions-1 | |  | conventions | The error shape in each output mode | human:404pilo, 2026-10-12 |
+| conventions-2 | |  | conventions | A model failure fails the full search | human:404pilo, 2026-10-12 |
+| conventions-3 | |  | conventions | Results go to standard output, and notices go to the error stream | human:404pilo, 2026-10-12 |
+| conventions-4 | |  | conventions | Ctrl-C and a closed pipe stop jag at once | human:404pilo, 2026-10-12 |
+| conventions-5 | |  | conventions | The retry wait, and how you change it | human:404pilo, 2026-10-12 |
+| conventions-6 | |  | conventions | How jag keeps the key secret | human:404pilo, 2026-10-12 |
+| conventions-7 | |  | conventions | The order in which an option, a variable, and the config file set a value | human:404pilo, 2026-10-12 |
+| deployment-1 | 0010-ship-jag-on-github-releases-crates-io-and-npm.md | accepted | deployment | How users install jag | adr |
+| deployment-2 | |  | deployment | The operating systems and the runtime versions that jag supports | human:404pilo, 2026-10-12 |
+| deployment-3 | |  | deployment | The release path and the checks that guard it | human:404pilo, 2026-10-12 |
+
+## Requirements to components
+
+| Capability | Components | Status |
+|---|---|---|
+| CAPABILITY-01 Guided key setup and health check | C-config, C-check, C-cli | OK |
+| CAPABILITY-02 Term and question search | C-search, C-prerank, C-scorer | OK |
+| CAPABILITY-03 File and line for each result | C-search, C-output | OK |
+| CAPABILITY-04 Limit on the text that jag returns | C-output | OK |
+| CAPABILITY-05 Text and structured output | C-output, C-cli | OK |
+| CAPABILITY-06 Feels like grep | C-cli, C-search | OK |
+| CAPABILITY-07 Show the cost of a search | C-scorer, C-output | OK |
+| CAPABILITY-09 Say which text leaves the machine | none | GAP |
+| CAPABILITY-11 Agent instructions to copy | none | GAP |
+| CAPABILITY-12 Measure jag on your own questions | C-bench | OK |
+
+CAPABILITY-08 is out of release 1 (DECISION-46). CAPABILITY-10 is in
+release 3. CAPABILITY-09 and CAPABILITY-11 are "could" and "should" items of
+SCOPE-01 with no component yet. CAPABILITY-11 is a text file that ships with
+the release, and CAPABILITY-09 needs a decision on where jag shows the text
+that it sends.
+
+## Risks
+
+- RK-1: The term can match other lines than in grep. DECISION-33 says that
+  the term is a regular expression as in grep, but the ripgrep libraries use
+  the pattern rules of `rg`. A default grep pattern treats `+`, `?`, and `|`
+  as plain characters, and `rg` does not. `rg` also has no back-references. Test: the
+  same term with `grep` and with jag on one folder gives other match lines.
+  Mitigation: the README states the pattern rules of `rg`. Open acceptance:
+  DECISION-33 changes to "a regular expression as in ripgrep", or jag
+  translates the grep form.
+
+## Deferred
+
+- DF-1: Settings other than the key in the config file (data-3). Reason:
+  options and variables cover release 1, and no Feature needs a saved
+  default. Trigger: a user asks for a default that they can save.
+- DF-2: A debug log (conventions-8). Reason: jag has no telemetry and no log
+  file, and the error message gives the cause and the fix. Trigger: the first
+  setup-failure issue that the message does not explain.

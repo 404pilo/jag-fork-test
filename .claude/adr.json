@@ -1,0 +1,17 @@
+{
+  "dir": "docs/adr",
+  "register": {
+    "path": "docs/adr/README.md",
+    "exclude": []
+  },
+  "id_scheme": "sequential",
+  "gate": {
+    "deterministic": true,
+    "model": false,
+    "proposed_verdict": "error"
+  },
+  "archive_dir": "archive",
+  "schema": null,
+  "rules": null,
+  "extra_corpora": []
+}

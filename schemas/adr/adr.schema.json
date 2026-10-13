@@ -1,0 +1,170 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "amended": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "type": "string"
+    },
+    "amended_by": {
+      "anyOf": [
+        {
+          "pattern": "^(?:.*\\/)?.+\\.md$",
+          "type": "string"
+        },
+        {
+          "items": {
+            "pattern": "^(?:.*\\/)?.+\\.md$",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      ]
+    },
+    "amends": {
+      "anyOf": [
+        {
+          "pattern": "^(?:.*\\/)?.+\\.md$",
+          "type": "string"
+        },
+        {
+          "items": {
+            "pattern": "^(?:.*\\/)?.+\\.md$",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      ]
+    },
+    "area": {
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "type": "string"
+    },
+    "date": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "deviates_from": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      ]
+    },
+    "evidence": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "model": {
+      "additionalProperties": false,
+      "properties": {
+        "element": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "modeled",
+            "out-of-scope",
+            "black-box"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "type": "object"
+    },
+    "parent_spec": {
+      "pattern": "^(?:.*\\/)?.+\\.md(?:#.+)?$",
+      "type": "string"
+    },
+    "refines": {
+      "anyOf": [
+        {
+          "pattern": "^(?:.*\\/)?.+\\.md$",
+          "type": "string"
+        },
+        {
+          "items": {
+            "pattern": "^(?:.*\\/)?.+\\.md$",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      ]
+    },
+    "related": {
+      "items": {
+        "pattern": "^(?:.*\\/)?.+\\.md(?:#.+)?$",
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "accepted",
+        "deprecated",
+        "superseded"
+      ],
+      "type": "string"
+    },
+    "superseded_by": {
+      "anyOf": [
+        {
+          "pattern": "^(?:.*\\/)?.+\\.md$",
+          "type": "string"
+        },
+        {
+          "items": {
+            "pattern": "^(?:.*\\/)?.+\\.md$",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      ]
+    },
+    "supersedes": {
+      "anyOf": [
+        {
+          "pattern": "^(?:.*\\/)?.+\\.md$",
+          "type": "string"
+        },
+        {
+          "items": {
+            "pattern": "^(?:.*\\/)?.+\\.md$",
+            "type": "string"
+          },
+          "type": "array"
+        }
+      ]
+    },
+    "title": {
+      "type": "string"
+    },
+    "type": {
+      "const": "adr",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "status",
+    "date"
+  ],
+  "type": "object"
+}
