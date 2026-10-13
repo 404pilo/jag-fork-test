@@ -5,6 +5,7 @@ description: As a shell power user (PERSONA-04), I want jag to search each file 
   a folder and in each subfolder, so that a folder search works as grep -r does.
 status: draft
 state: ready
+spec: docs/superpowers/specs/2026-10-13-STORY-16-search-a-folder-as-grep-r-design.md
 parent: /features/FEATURE-05.md
 milestone: /milestones/MILESTONE-01.md
 ---
