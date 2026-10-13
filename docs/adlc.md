@@ -18,7 +18,7 @@ The `sofa` skill fills these values when it copies the template.
 | Board tool | GitHub Projects (PROJECT-01 in the roadmap) |
 | GitHub account | `404pilo` |
 | Team prefix | `jag` (session names are `jag-<role>[-n]`) |
-| Orchestrator name | `orchestrator-jag-cli` |
+| Orchestrator name | `jag-orchestrator` |
 | Product docs | `docs/product/prd`, `docs/product/roadmap` |
 | ADR folder | `docs/adr` (10 accepted ADRs on `main`) |
 | Extra context files | `/home/jazz/dev/github.com/ai-ready-future/jag/docs/handoff.md`. It is not in git, so read it from the main folder. It points to the source of the earlier prototype. |
@@ -67,6 +67,7 @@ Repository rules:
 - After a retro merge, tell every live session to read `docs/adlc.md` again.
 - After a PR that changes `docs/product` merges, send a `SYNC` to the projecter.
 - Keep a short status table in the orchestrator session. Do not write it to the repo.
+- If the orchestrator session name changes, the retro updates section 1 and the orchestrator sends `RELOAD`.
 
 **hitl**
 - The only session that asks the user for decisions.
@@ -215,3 +216,4 @@ Send a DONE message to the orchestrator when you are ready. Then wait for TASK m
 | 2026-10-13 | Created from the sofa template version 1 | Team setup for jag |
 | 2026-10-13 | Corrected the ADR folder row. Added the rule that the ADRs win over `docs/handoff.md` | The ADR folder has 10 ADRs on `main`. Sessions must know which source wins |
 | 2026-10-13 | Removed an internal project name and its worktree path from section 1. Kept the rule | CONSTRAINT-01: the public repository contains no internal names. `docs/handoff.md` is not in git, so it keeps the details |
+| 2026-10-13 | Changed the orchestrator name to `jag-orchestrator`. Added the rule for a name change to the orchestrator details | The orchestrator session name changed. Sessions send messages to this name |
