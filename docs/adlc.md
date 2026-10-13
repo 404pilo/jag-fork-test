@@ -172,26 +172,43 @@ Types:
 
 ## 7. HITL card
 
-Max 20 lines. Always this format:
+Always use this layout, in this order:
+
+1. Context line 1: `<question id> · question <n> of <total> · from <role> → <feature> spec, <spec section>`
+2. Context line 2: `Related: <linked items and how they relate>`. If nothing is related, do not write this line.
+3. One empty line.
+4. The question, in 1 sentence.
+5. The options table: 3 columns (Option, Pro, Con), with full borders.
+6. The recommendation line: `⭐ Recommended: <n>. <reason in 1 sentence>`
+
+Example:
 
 ```
-🟨 Q-<nn> · <from role> → <subject id>
-<question in 1 line>
+Q-aa · question 5 of 11 · from specifier → FEATURE-04 spec, Output section
+Related: FEATURE-09 adds the size limit later
 
-🎯 What: <what must be decided, 1 line>
-🛠️ How: <what happens after the answer, 1 line>
-🔗 Context: <links: spec, ADR, PR>
-
-| Opt | ✅ Pro | ❌ Con |
-|---|---|---|
-| 1 <name> | <pro> | <con> |
-| 2 <name> | <pro> | <con> |
-
-⭐ <recommended opt> · <reason in 1 line>
-✍️ reply 1/2/… or text
+Which results does jag show when there is a good answer?
+┌────────────────────────────────┬────────────────────┬────────────────────┐
+│ Option                         │ Pro                │ Con                │
+├────────────────────────────────┼────────────────────┼────────────────────┤
+│ 1. All scored results, in rank │ Nothing is hidden  │ Long output until  │
+│ order  [recommended]           │                    │ FEATURE-09         │
+├────────────────────────────────┼────────────────────┼────────────────────┤
+│ 2. Only results at or above    │ Short output       │ Can hide a useful  │
+│ the threshold, plus a count    │                    │ result             │
+└────────────────────────────────┴────────────────────┴────────────────────┘
+⭐ Recommended: 1. Nothing is hidden, and FEATURE-09 adds the limit later.
 ```
 
-Colors for the first emoji: 🟥 blocks work now, 🟨 blocks a later step, 🟩 information only.
+Rules:
+- Context: Always give the role that asks, the feature, the spec section and the question number. The person gets the background before they read the question.
+- Pros and cons: Give each option 1 or more pros and 1 or more cons. Keep each cell to a short phrase.
+- Borders: Draw full borders with box-drawing lines (`┌ ─ ┬ ┐ │ ├ ┼ ┤ └ ┴ ┘`). Do not use markdown tables. If the output can go to a terminal or log that is not UTF-8, use plain ASCII (`+ - |`).
+- Alignment: Wrap long text onto more lines in the cell. Pad each line with spaces to the column width, so that each border stays in line.
+- Emojis: Use only ⭐, and only on the recommendation line. Do not put an emoji in the table, because an emoji is 2 characters wide and moves the border. In the table, mark the recommended option with the text `[recommended]`.
+- Do not use 🟥 🟨 🟩 🎯 🛠️ 🔗 ✅ ❌ ✍️, or the labels What, How and Context.
+- No repeated text: Give each fact 1 time only. For example, put a note about a related feature in the Related line, not in each option.
+- Width: Keep the table at 78 characters or less. Use 2 or 3 options. If there are 4 or more options, keep this layout. Do not change to side-by-side columns.
 
 ## 8. Start commands
 
@@ -217,3 +234,4 @@ Send a DONE message to the orchestrator when you are ready. Then wait for TASK m
 | 2026-10-13 | Corrected the ADR folder row. Added the rule that the ADRs win over `docs/handoff.md` | The ADR folder has 10 ADRs on `main`. Sessions must know which source wins |
 | 2026-10-13 | Removed an internal project name and its worktree path from section 1. Kept the rule | CONSTRAINT-01: the public repository contains no internal names. `docs/handoff.md` is not in git, so it keeps the details |
 | 2026-10-13 | Changed the orchestrator name to `jag-orchestrator`. Added the rule for a name change to the orchestrator details | The orchestrator session name changed. Sessions send messages to this name |
+| 2026-10-13 | Replaced the HITL card in section 7 with the layout "Option C": 2 context lines, the question, a bordered options table, and 1 recommendation line | The user chose this layout. It gives the background first, and the table borders stay in line |
