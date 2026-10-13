@@ -3,7 +3,7 @@ type: system-design
 title: jag system design
 status: accepted
 version: 1
-updated: 2026-10-12
+updated: 2026-10-13
 prd_tree: 104339a44fa1f15943107f1ef69c72b169083dfe
 session: 2d045b37-ac91-451e-b37b-928ac1645df2
 areas:
@@ -26,6 +26,9 @@ adrs:
   - 0008-write-structured-output-as-one-json-document.md
   - 0009-pin-the-jev-model-version-in-each-release.md
   - 0010-ship-jag-on-github-releases-crates-io-and-npm.md
+  - 0011-build-jag-as-one-cargo-package-with-one-module-per-component.md
+  - 0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md
+  - 0013-exit-2-when-setup-runs-with-no-terminal.md
 ---
 
 # jag system design
@@ -229,7 +232,7 @@ components:
         style: sync
       - id: C-check
         style: sync
-    governed_by: [0005-build-jag-as-one-rust-binary.md, 0006-run-setup-the-readiness-check-and-key-removal-as-options.md, 0007-number-the-exit-codes-above-2-from-3-to-8.md, 0010-ship-jag-on-github-releases-crates-io-and-npm.md, CV-1, CV-3, CV-4, CV-7]
+    governed_by: [0005-build-jag-as-one-rust-binary.md, 0006-run-setup-the-readiness-check-and-key-removal-as-options.md, 0007-number-the-exit-codes-above-2-from-3-to-8.md, 0010-ship-jag-on-github-releases-crates-io-and-npm.md, 0011-build-jag-as-one-cargo-package-with-one-module-per-component.md, 0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md, 0013-exit-2-when-setup-runs-with-no-terminal.md, CV-1, CV-3, CV-4, CV-7]
     realizes: [CAPABILITY-05, CAPABILITY-06]
     areas: [building-blocks, contracts, conventions]
   - id: C-config
@@ -238,7 +241,7 @@ components:
     summary: Finds the key and the settings, checks the mode of the key file, and stores or removes the key. The one component that reads the key.
     owns_entities: [ApiKey, Settings]
     depends_on: []
-    governed_by: [CV-6, CV-7]
+    governed_by: [0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md, CV-6, CV-7]
     realizes: [CAPABILITY-01, QS-5]
     areas: [building-blocks, data, conventions]
   - id: C-search
@@ -425,8 +428,8 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 - Runtime: one static Rust binary for each command, `jag` and `jag-bench`.
   It needs no runtime and no other program (building-blocks-1).
 - Install: prebuilt binaries on GitHub Releases, one archive for each
-  platform, each with a checksum. Rust users can run `cargo install` from
-  crates.io. The npm package `@ai-ready-future/jag` installs the same
+  platform, each with a checksum. Rust users can run `cargo install jag-grep`
+  from crates.io. The npm package `@airf/jag` installs the same
   prebuilt binary through one npm package for each platform, so `npx`
   works. The npm route needs Node, and the binary does not (deployment-1).
 - Platforms: Linux x86_64 and arm64 (static), and macOS arm64 and x86_64
@@ -458,8 +461,9 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | strategy-4 | |  | strategy | No fallback when the model is not available | human:404pilo, 2026-10-12 |
 | strategy-5 | |  | strategy | How jag pre-ranks the matches before it scores them | human:404pilo, 2026-10-12 |
 | building-blocks-1 | 0005-build-jag-as-one-rust-binary.md | accepted | building-blocks | The language and the runtime of jag | adr |
-| building-blocks-2 | |  | building-blocks | The components inside the jag program | human:404pilo, 2026-10-12 |
+| building-blocks-2 | 0011-build-jag-as-one-cargo-package-with-one-module-per-component.md | accepted | building-blocks | The components inside the jag program | adr |
 | building-blocks-3 | |  | building-blocks | Where the tool lives that measures jag on your own questions | human:404pilo, 2026-10-12 |
+| building-blocks-4 | 0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md | accepted | building-blocks | The outside crates of setup and their test crates | adr |
 | data-1 | |  | data | The store of the API key | human:404pilo, 2026-10-12 |
 | data-2 | |  | data | Nothing is kept between searches | human:404pilo, 2026-10-12 |
 | contracts-1 | |  | contracts | The command form of a search: `jag TERM "QUESTION" [PATH...]` | human:404pilo, 2026-10-12 |
@@ -468,6 +472,7 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | contracts-4 | 0008-write-structured-output-as-one-json-document.md | accepted | contracts | The format of structured output and its version field | adr |
 | contracts-5 | 0009-pin-the-jev-model-version-in-each-release.md | accepted | contracts | The Jev model version that jag calls | adr |
 | contracts-6 | |  | contracts | One result is a match with the lines around it | human:404pilo, 2026-10-12 |
+| contracts-7 | 0013-exit-2-when-setup-runs-with-no-terminal.md | accepted | contracts | The exit code when setup runs with no terminal | adr |
 | conventions-1 | |  | conventions | The error shape in each output mode | human:404pilo, 2026-10-12 |
 | conventions-2 | |  | conventions | A model failure fails the full search | human:404pilo, 2026-10-12 |
 | conventions-3 | |  | conventions | Results go to standard output, and notices go to the error stream | human:404pilo, 2026-10-12 |
