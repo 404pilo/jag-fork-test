@@ -9,3 +9,10 @@ source	relation	target	target_state	target_status	source_area	target_area	note
 0008-write-structured-output-as-one-json-document.md	parent_spec	docs/product/system-design.md	doc	-	contracts	-	anchor=contracts
 0009-pin-the-jev-model-version-in-each-release.md	parent_spec	docs/product/system-design.md	doc	-	contracts	-	anchor=contracts
 0010-ship-jag-on-github-releases-crates-io-and-npm.md	parent_spec	docs/product/system-design.md	doc	-	deployment	-	anchor=deployment
+0011-build-jag-as-one-cargo-package-with-one-module-per-component.md	parent_spec	docs/product/system-design.md	doc	-	building-blocks	-	anchor=building-blocks
+0011-build-jag-as-one-cargo-package-with-one-module-per-component.md	related	0005-build-jag-as-one-rust-binary.md	live	accepted	building-blocks	building-blocks	-
+0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md	parent_spec	docs/product/system-design.md	doc	-	building-blocks	-	anchor=building-blocks
+0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md	related	0011-build-jag-as-one-cargo-package-with-one-module-per-component.md	live	accepted	building-blocks	building-blocks	-
+0013-exit-2-when-setup-runs-with-no-terminal.md	refines	0007-number-the-exit-codes-above-2-from-3-to-8.md	live	accepted	contracts	contracts	-
+0013-exit-2-when-setup-runs-with-no-terminal.md	parent_spec	docs/product/system-design.md	doc	-	contracts	-	anchor=contracts
+0013-exit-2-when-setup-runs-with-no-terminal.md	related	0006-run-setup-the-readiness-check-and-key-removal-as-options.md	live	accepted	contracts	contracts	-

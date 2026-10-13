@@ -8,6 +8,8 @@
 
 ### building-blocks — <!-- TODO: describe this area -->
 - [0005 — Build jag as one Rust binary](./0005-build-jag-as-one-rust-binary.md) — accepted — <!-- TODO: summary -->
+- [0011 — Build jag as one Cargo package with one module per component](./0011-build-jag-as-one-cargo-package-with-one-module-per-component.md) — accepted — <!-- TODO: summary -->
+- [0012 — Use clap, serde-saphyr, and rpassword as the outside crates of setup](./0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md) — accepted — <!-- TODO: summary -->
 
 ### context — <!-- TODO: describe this area -->
 - [0001 — Find matches with the ripgrep libraries](./0001-find-matches-with-the-ripgrep-libraries.md) — accepted — <!-- TODO: summary -->
@@ -17,6 +19,7 @@
 - [0007 — Number the exit codes above 2 from 3 to 8](./0007-number-the-exit-codes-above-2-from-3-to-8.md) — accepted — <!-- TODO: summary -->
 - [0008 — Write structured output as one JSON document](./0008-write-structured-output-as-one-json-document.md) — accepted — <!-- TODO: summary -->
 - [0009 — Pin the Jev model version in each release](./0009-pin-the-jev-model-version-in-each-release.md) — accepted — <!-- TODO: summary -->
+- [0013 — Exit 2 when setup runs with no terminal](./0013-exit-2-when-setup-runs-with-no-terminal.md) — accepted — <!-- TODO: summary -->
 
 ### deployment — <!-- TODO: describe this area -->
 - [0010 — Ship jag on GitHub Releases, crates.io, and npm](./0010-ship-jag-on-github-releases-crates-io-and-npm.md) — accepted — <!-- TODO: summary -->
