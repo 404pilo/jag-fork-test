@@ -50,6 +50,7 @@ repository has no Rust project when this check lands.
 | 14 | No gitleaks output in the log | The check checks each pattern by itself before the scans and reports a bad one by its line number only. It sends all gitleaks output to the private folder and prints only "gitleaks failed (exit N)" | This spec, from PR #14 review round 1: a bad RE2 pattern makes gitleaks panic and print the pattern |
 | 15 | Trust model | The `private-data` job runs on `pull_request_target`. The workflow, `check.sh`, and the gitleaks configs come from `main`. The PR files are data only: the job never runs, sources, or uses as config a file of the PR. The PR tree goes to a separate folder, and no PR file is in the folder that the job runs from. `permissions: contents: read`, and no step gives a token to PR files. A change to the check takes effect only after it merges | human:404pilo, 2026-10-13 (Q-v) |
 | 16 | Output for a fork pull request | When the pull request comes from a fork, the output is only "private-data: private data found": no file, no line, no rule id, and no count. This is an exception to CRITERION-75 for forks only. A fork author can make many pull requests to guess a private word, and the place of each finding helps that guess | human:404pilo, 2026-10-13 (Q-ac) |
+| 17 | Round 1 of PR #16 | The path scan also reads the names that the commits touch (a name that is added and then renamed). The check refuses `.gitleaksignore` for every git mode, and refuses a control character in a path | verifier-1, PR #16 review round 1 |
 
 ## Design
 
@@ -230,6 +231,15 @@ command and each scan of steps 5 to 8 reads `REPO_DIR`, with `git -C
      internal project name, and the other scans read only the content of a
      file. `core.quotePath=false` keeps a non-ASCII name as it is, so a
      pattern can match it.
+   - Names: the file names that the commits touch, from
+     `git log --name-only --format= -z --no-renames --diff-merges=first-parent
+     $BASE_SHA..$HEAD_SHA`, one time each, one name on each line, piped to
+     `gitleaks stdin` (only when `BASE_SHA` is set). A name that a commit adds
+     and a later commit renames is not in the final tree, so the path scan
+     does not read it. A name with a control character makes the check
+     write "private-data: a commit has a file name with a control
+     character, at name number N of git log --name-only; the check does not
+     accept it" and exit 1.
    - Links: the target of each symbolic link of step 5, one target on each
      line in `git ls-files -s` order, piped to `gitleaks stdin`. The tree
      scan does not read the target of a link.
@@ -258,6 +268,7 @@ command and each scan of steps 5 to 8 reads `REPO_DIR`, with `git -C
    - Tree: `<File>:<StartLine>: <RuleID>`. The script removes the
      `<tmp>/tree/` part from `File`.
    - Paths: `file path number <StartLine> in git ls-files order: <RuleID>`
+   - Names: `commit file name number <StartLine> in git log --name-only order: <RuleID>`
    - Links: `link number <StartLine> in git ls-files -s order: <RuleID>`
    - Commits: `<Commit 12 chars> <File>:<StartLine>: <RuleID>`
    In the tree and commit lines, the check writes "a file whose path holds
@@ -305,6 +316,13 @@ gitleaks output reaches the log (decision 14).
 gitleaks has three ways to skip a finding. A pull request must not use them
 to pass the check (decision 12):
 
+- The check refuses the name `.gitleaksignore` for each entry of
+  `git ls-files -s`, whatever its mode (a file, a symbolic link, or a
+  submodule) and at each folder level. The check also refuses a path with a
+  control character (for example a line break), because it breaks the
+  numbering of the path scan: it writes "private-data: remove the file at
+  file path number N in git ls-files order; the check does not accept a
+  control character in a path" and exits 1.
 - A `.gitleaksignore` file: gitleaks reads it from the ignore path and from
   the root of the scanned source. Before the scans, the check lists the
   tracked files with `git ls-files`. When a file named `.gitleaksignore` is
@@ -332,7 +350,7 @@ example `jagtest-private-word-[0-9]{4}`.
 
 | Criterion | Test |
 |---|---|
-| CRITERION-74 A pull request that adds private data fails the check | `test.sh`: (a) a file that holds a word that matches a test pattern: exit 1; (b) a file that holds a key-shaped value that the default gitleaks rules find, built at run time (for example `ghp_` and 36 random letters and digits): exit 1; (c) the private word only in a commit that a later commit removes: exit 1 (commit scan); (d) the private word only in `PR_TITLE`: exit 1 (text scan); (e) the word in a different case: exit 1; (f) clean change: exit 0; (g) no `PRIVATE_PATTERNS`: exit 2; (h) a test word on line 1 of `a.txt`, a line that also holds `gitleaks:allow`: exit 1, and the output holds `a.txt:1: private-pattern-1`; (i) a `.gitleaksignore` file in the tree as file path number 1: exit 1, and the output holds "remove the ignore file at file path number 1"; (j) the test word in `b.svg` and in `package-lock.json`: exit 1, with one finding for each file; (k) the test word only in a file name, as file path number 1: exit 1, and the output holds `file path number 1 in git ls-files order: private-pattern-1` and does not hold the test word (path scan); (l) a file `c.txt` that `.gitattributes` marks `export-ignore` and that holds the test word on line 1, with no `BASE_SHA`: exit 1, and the output holds `c.txt:1: private-pattern-1` (tree scan); (m) the test word in a file name and in the content of that file: exit 1, the output holds "a file whose path holds private data", and it does not hold the test word; (n) a tracked symbolic link whose target holds the test word: exit 1, and the output holds `link number 1 in git ls-files -s order: private-pattern-1`; (o) a merge commit in the PR that adds the test word, with `BASE_SHA` set and the word removed again in a later commit: exit 1 (commit scan); (p) a submodule entry: exit 1, and the output does not hold its path; (q) `HEAD_SHA` set to a commit that is not the second parent of the commit of `REPO_DIR`: exit 2; (r) all cases run with `REPO_DIR` set to a folder that is not the working folder; (s) a `.gitattributes` with `* -diff`, and the test word in a commit that a later commit removes: exit 1 (commit scan); (t) a `.gitattributes` with `*.txt working-tree-encoding=UTF-16LE`, and the test word in `d.txt`: exit 1, and the output holds `d.txt:1: private-pattern-1` (tree scan); (u) case (a) with `FORK_PR=true`: exit 1, and the output is only the line "private-data: private data found". "Cannot merge" comes from the required check of decision 8; the chores task proves it with one test PR. |
+| CRITERION-74 A pull request that adds private data fails the check | `test.sh`: (a) a file that holds a word that matches a test pattern: exit 1; (b) a file that holds a key-shaped value that the default gitleaks rules find, built at run time (for example `ghp_` and 36 random letters and digits): exit 1; (c) the private word only in a commit that a later commit removes: exit 1 (commit scan); (d) the private word only in `PR_TITLE`: exit 1 (text scan); (e) the word in a different case: exit 1; (f) clean change: exit 0; (g) no `PRIVATE_PATTERNS`: exit 2; (h) a test word on line 1 of `a.txt`, a line that also holds `gitleaks:allow`: exit 1, and the output holds `a.txt:1: private-pattern-1`; (i) a `.gitleaksignore` file in the tree as file path number 1: exit 1, and the output holds "remove the ignore file at file path number 1"; (j) the test word in `b.svg` and in `package-lock.json`: exit 1, with one finding for each file; (k) the test word only in a file name, as file path number 1: exit 1, and the output holds `file path number 1 in git ls-files order: private-pattern-1` and does not hold the test word (path scan); (l) a file `c.txt` that `.gitattributes` marks `export-ignore` and that holds the test word on line 1, with no `BASE_SHA`: exit 1, and the output holds `c.txt:1: private-pattern-1` (tree scan); (m) the test word in a file name and in the content of that file: exit 1, the output holds "a file whose path holds private data", and it does not hold the test word; (n) a tracked symbolic link whose target holds the test word: exit 1, and the output holds `link number 1 in git ls-files -s order: private-pattern-1`; (o) a merge commit in the PR that adds the test word, with `BASE_SHA` set and the word removed again in a later commit: exit 1 (commit scan); (p) a submodule entry: exit 1, and the output does not hold its path; (q) `HEAD_SHA` set to a commit that is not the second parent of the commit of `REPO_DIR`: exit 2; (r) all cases run with `REPO_DIR` set to a folder that is not the working folder; (s) a `.gitattributes` with `* -diff`, and the test word in a commit that a later commit removes: exit 1 (commit scan); (t) a `.gitattributes` with `*.txt working-tree-encoding=UTF-16LE`, and the test word in `d.txt`: exit 1, and the output holds `d.txt:1: private-pattern-1` (tree scan); (v) a `.gitleaksignore` symbolic link, and a `.gitleaksignore` file in a folder: exit 1, "remove the ignore file"; (w) a path with a line break and the test word: exit 1, the output holds "control character in a path" and does not hold the test word; (x) a file with the test word in its name, added by one commit and renamed by the next: exit 1, and the output holds `in git log --name-only order: private-pattern-1` (names scan); (u) case (a) with `FORK_PR=true`: exit 1, and the output is only the line "private-data: private data found". "Cannot merge" comes from the required check of decision 8; the chores task proves it with one test PR. |
 | CRITERION-75 The check names the place and never shows the value | `test.sh`: for cases (a) to (e), the output holds the file and the line (or the commit, or "PR text"), and the rule id, and it does not hold the test word, the key value, or the pattern text. A pattern line with `'''` gives exit 2 and the line number only. A pattern line that is not valid RE2 (for example `jagtest-word(unclosed`) gives exit 2, and the output holds the line number and does not hold the pattern text. |
 
 ## Build order
