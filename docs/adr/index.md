@@ -6,7 +6,7 @@ okf_version: "0.2"
 
 ## Areas
 
-* [building-blocks](#building-blocks) - 3 decisions: 3 accepted
+* [building-blocks](#building-blocks) - 4 decisions: 4 accepted
 * [context](#context) - 1 decision: 1 accepted
 * [contracts](#contracts) - 5 decisions: 5 accepted
 * [deployment](#deployment) - 1 decision: 1 accepted
@@ -19,6 +19,7 @@ okf_version: "0.2"
 * [0005: Build jag as one Rust binary](./0005-build-jag-as-one-rust-binary.md) - accepted. Open this when you change the language, the runtime, or the form of the jag program.
 * [0011: Build jag as one Cargo package with one module per component](./0011-build-jag-as-one-cargo-package-with-one-module-per-component.md) - accepted. Open this when you add a component, a crate, a binary, or a build check, or when you change the Rust edition or the toolchain.
 * [0012: Use clap, serde-saphyr, and rpassword as the outside crates of setup](./0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md) - accepted. Open this when you add or replace an outside crate, or change how jag reads options, YAML settings, or a hidden key prompt.
+* [0014: Call the model service with ureq and serde_json on std threads](./0014-call-the-model-service-with-ureq-and-serde-json-on-std.md) - accepted. Open this when you add or replace the HTTP or JSON crate, add an async runtime, or change how jag runs model calls in parallel.
 
 ## context
 

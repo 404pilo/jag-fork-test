@@ -10,6 +10,7 @@
 - [0005 — Build jag as one Rust binary](./0005-build-jag-as-one-rust-binary.md) — accepted — <!-- TODO: summary -->
 - [0011 — Build jag as one Cargo package with one module per component](./0011-build-jag-as-one-cargo-package-with-one-module-per-component.md) — accepted — <!-- TODO: summary -->
 - [0012 — Use clap, serde-saphyr, and rpassword as the outside crates of setup](./0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md) — accepted — <!-- TODO: summary -->
+- [0014 — Call the model service with ureq and serde_json on std threads](./0014-call-the-model-service-with-ureq-and-serde-json-on-std.md) — accepted — <!-- TODO: summary -->
 
 ### context — <!-- TODO: describe this area -->
 - [0001 — Find matches with the ripgrep libraries](./0001-find-matches-with-the-ripgrep-libraries.md) — accepted — <!-- TODO: summary -->
