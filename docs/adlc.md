@@ -20,11 +20,12 @@ The `sofa` skill fills these values when it copies the template.
 | Team prefix | `jag` (session names are `jag-<role>[-n]`) |
 | Orchestrator name | `orchestrator-jag-cli` |
 | Product docs | `docs/product/prd`, `docs/product/roadmap` |
-| ADR folder | `docs/adr` (does not exist yet) |
+| ADR folder | `docs/adr` (10 accepted ADRs on `main`) |
 | Extra context files | `/home/jazz/dev/github.com/ai-ready-future/jag/docs/handoff.md`. It is not in git, so read it from the main folder. It points to the jag source in the REDACTED repo. |
 
 Repository rules:
 - Never read, print or commit the keys in `~/.config/jag/`.
+- The ADRs in `docs/adr` win over `docs/handoff.md` where they differ (for example, ADR-0005: jag is one Rust binary, not TypeScript).
 - Do not edit files or run commands in the REDACTED worktree `REDACTED/.claude/worktrees/jag`. Read REDACTED only with `git show` or `git archive`.
 
 ## 2. Rules for all sessions
@@ -212,3 +213,4 @@ Send a DONE message to the orchestrator when you are ready. Then wait for TASK m
 | Date | Change | Why |
 |---|---|---|
 | 2026-10-13 | Created from the sofa template version 1 | Team setup for jag |
+| 2026-10-13 | Corrected the ADR folder row. Added the rule that the ADRs win over `docs/handoff.md` | The ADR folder has 10 ADRs on `main`. Sessions must know which source wins |
