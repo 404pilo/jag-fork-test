@@ -3,7 +3,7 @@ type: adr
 title: Pin the Jev model version in each release
 description: Open this when you change the Jev model that jag calls, or when scores change with no jag release.
 area: contracts
-status: proposed
+status: accepted
 date: 2026-10-12
 supersedes: null
 superseded_by: null

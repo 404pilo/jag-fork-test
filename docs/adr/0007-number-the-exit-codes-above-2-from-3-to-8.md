@@ -3,7 +3,7 @@ type: adr
 title: Number the exit codes above 2 from 3 to 8
 description: Open this when you add an exit code, or when a script or an agent acts on the exit code of jag.
 area: contracts
-status: proposed
+status: accepted
 date: 2026-10-12
 supersedes: null
 superseded_by: null

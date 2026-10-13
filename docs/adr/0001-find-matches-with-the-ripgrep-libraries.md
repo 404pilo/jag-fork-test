@@ -3,7 +3,7 @@ type: adr
 title: Find matches with the ripgrep libraries
 description: Open this when you change how jag finds the lines that match the term, or when grep and jag match different lines.
 area: context
-status: proposed
+status: accepted
 date: 2026-10-12
 supersedes: null
 superseded_by: null

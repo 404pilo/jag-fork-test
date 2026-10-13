@@ -3,7 +3,7 @@ type: adr
 title: Decide no good answer with a fixed threshold on the top probability
 description: Open this when you change how jag decides that no result answers the question, or when the decoy AUC drops.
 area: strategy
-status: proposed
+status: accepted
 date: 2026-10-12
 supersedes: null
 superseded_by: null

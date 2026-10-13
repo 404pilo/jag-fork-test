@@ -3,7 +3,7 @@ type: adr
 title: Write structured output as one JSON document
 description: Open this when you change the form of structured output, or when agent code that reads jag output breaks.
 area: contracts
-status: proposed
+status: accepted
 date: 2026-10-12
 supersedes: null
 superseded_by: null

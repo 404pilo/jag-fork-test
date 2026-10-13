@@ -3,7 +3,7 @@ type: adr
 title: Build jag as one Rust binary
 description: Open this when you change the language, the runtime, or the form of the jag program.
 area: building-blocks
-status: proposed
+status: accepted
 date: 2026-10-12
 supersedes: null
 superseded_by: null

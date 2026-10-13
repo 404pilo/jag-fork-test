@@ -447,22 +447,22 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | quality-1 | |  | quality | The quality scenarios, their ranking, and their ratings | human:404pilo, 2026-10-12 |
 | context-1 | |  | context | The outside service that scores the matches: TypeSafe API, Jev model | human:404pilo, 2026-10-12 |
 | context-2 | |  | context | The route to the model service: direct API, or an AI gateway too | human:404pilo, 2026-10-12 |
-| context-3 | 0001-find-matches-with-the-ripgrep-libraries.md | proposed | context | How jag finds the matching lines: its own search code, or an outside program such as `ag` | adr |
-| strategy-1 | 0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md | proposed | strategy | The default count of results to score, and the count of model calls in parallel | adr |
-| strategy-2 | 0003-decide-no-good-answer-with-a-fixed-threshold-on-the-top.md | proposed | strategy | How jag decides that no result answers well | adr |
-| strategy-3 | 0004-ship-one-scoring-prompt-with-a-version-id-in-each-release.md | proposed | strategy | How jag holds the scoring prompt, and how it gives a version to the prompt | adr |
+| context-3 | 0001-find-matches-with-the-ripgrep-libraries.md | accepted | context | How jag finds the matching lines: its own search code, or an outside program such as `ag` | adr |
+| strategy-1 | 0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md | accepted | strategy | The default count of results to score, and the count of model calls in parallel | adr |
+| strategy-2 | 0003-decide-no-good-answer-with-a-fixed-threshold-on-the-top.md | accepted | strategy | How jag decides that no result answers well | adr |
+| strategy-3 | 0004-ship-one-scoring-prompt-with-a-version-id-in-each-release.md | accepted | strategy | How jag holds the scoring prompt, and how it gives a version to the prompt | adr |
 | strategy-4 | |  | strategy | No fallback when the model is not available | human:404pilo, 2026-10-12 |
 | strategy-5 | |  | strategy | How jag pre-ranks the matches before it scores them | human:404pilo, 2026-10-12 |
-| building-blocks-1 | 0005-build-jag-as-one-rust-binary.md | proposed | building-blocks | The language and the runtime of jag | adr |
+| building-blocks-1 | 0005-build-jag-as-one-rust-binary.md | accepted | building-blocks | The language and the runtime of jag | adr |
 | building-blocks-2 | |  | building-blocks | The components inside the jag program | human:404pilo, 2026-10-12 |
 | building-blocks-3 | |  | building-blocks | Where the tool lives that measures jag on your own questions | human:404pilo, 2026-10-12 |
 | data-1 | |  | data | The store of the API key | human:404pilo, 2026-10-12 |
 | data-2 | |  | data | Nothing is kept between searches | human:404pilo, 2026-10-12 |
 | contracts-1 | |  | contracts | The command form of a search: `jag TERM "QUESTION" [PATH...]` | human:404pilo, 2026-10-12 |
-| contracts-2 | 0006-run-setup-the-readiness-check-and-key-removal-as-options.md | proposed | contracts | The form of the setup, readiness, and key-removal commands | adr |
-| contracts-3 | 0007-number-the-exit-codes-above-2-from-3-to-8.md | proposed | contracts | The numbers of the exit codes above 2 | adr |
-| contracts-4 | 0008-write-structured-output-as-one-json-document.md | proposed | contracts | The format of structured output and its version field | adr |
-| contracts-5 | 0009-pin-the-jev-model-version-in-each-release.md | proposed | contracts | The Jev model version that jag calls | adr |
+| contracts-2 | 0006-run-setup-the-readiness-check-and-key-removal-as-options.md | accepted | contracts | The form of the setup, readiness, and key-removal commands | adr |
+| contracts-3 | 0007-number-the-exit-codes-above-2-from-3-to-8.md | accepted | contracts | The numbers of the exit codes above 2 | adr |
+| contracts-4 | 0008-write-structured-output-as-one-json-document.md | accepted | contracts | The format of structured output and its version field | adr |
+| contracts-5 | 0009-pin-the-jev-model-version-in-each-release.md | accepted | contracts | The Jev model version that jag calls | adr |
 | contracts-6 | |  | contracts | One result is a match with the lines around it | human:404pilo, 2026-10-12 |
 | conventions-1 | |  | conventions | The error shape in each output mode | human:404pilo, 2026-10-12 |
 | conventions-2 | |  | conventions | A model failure fails the full search | human:404pilo, 2026-10-12 |
@@ -471,7 +471,7 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | conventions-5 | |  | conventions | The retry wait, and how you change it | human:404pilo, 2026-10-12 |
 | conventions-6 | |  | conventions | How jag keeps the key secret | human:404pilo, 2026-10-12 |
 | conventions-7 | |  | conventions | The order in which an option, a variable, and the config file set a value | human:404pilo, 2026-10-12 |
-| deployment-1 | 0010-ship-jag-as-github-binaries-and-a-rust-crate.md | proposed | deployment | How users install jag | adr |
+| deployment-1 | 0010-ship-jag-as-github-binaries-and-a-rust-crate.md | accepted | deployment | How users install jag | adr |
 | deployment-2 | |  | deployment | The operating systems and the runtime versions that jag supports | human:404pilo, 2026-10-12 |
 | deployment-3 | |  | deployment | The release path and the checks that guard it | human:404pilo, 2026-10-12 |
 

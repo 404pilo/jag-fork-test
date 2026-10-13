@@ -3,7 +3,7 @@ type: adr
 title: Ship jag as GitHub binaries and a Rust crate
 description: Open this when you change how users install jag, or when you add a package channel.
 area: deployment
-status: proposed
+status: accepted
 date: 2026-10-12
 supersedes: null
 superseded_by: null

@@ -3,7 +3,7 @@ type: adr
 title: Run setup, the readiness check, and key removal as options
 description: Open this when you add a command to jag that is not a search, or change the setup and check commands.
 area: contracts
-status: proposed
+status: accepted
 date: 2026-10-12
 supersedes: null
 superseded_by: null

@@ -3,7 +3,7 @@ type: adr
 title: Score the top 200 results in calls of 32, six calls in parallel
 description: Open this when you change the default cost limit, the batch size, or the count of parallel Jev calls.
 area: strategy
-status: proposed
+status: accepted
 date: 2026-10-12
 supersedes: null
 superseded_by: null

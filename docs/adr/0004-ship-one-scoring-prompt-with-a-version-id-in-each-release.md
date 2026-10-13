@@ -3,7 +3,7 @@ type: adr
 title: Ship one scoring prompt with a version id in each release
 description: Open this when you change the scoring prompt, or when you trace a change in scores after an upgrade.
 area: strategy
-status: proposed
+status: accepted
 date: 2026-10-12
 supersedes: null
 superseded_by: null
