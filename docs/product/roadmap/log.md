@@ -1,5 +1,12 @@
 # Log
 
+## 2026-10-13
+* **State**: [STORY-47](stories/STORY-47.md) backlog -> ready, by human:pilo, at 2026-10-13T15:48:45Z
+* **State**: [STORY-46](stories/STORY-46.md) backlog -> ready, by human:pilo, at 2026-10-13T15:48:45Z
+* **State**: [FEATURE-17](features/FEATURE-17.md) backlog -> ready, by human:pilo, at 2026-10-13T15:48:45Z
+* **State**: [EPIC-05](epics/EPIC-05.md) backlog -> ready, by human:pilo, at 2026-10-13T15:48:45Z
+* **State**: [FEATURE-01](features/FEATURE-01.md) ready -> blocked, by system:regen, at 2026-10-13T15:46:39Z
+
 ## 2026-10-09
 * **State**: [EPIC-04](epics/EPIC-04.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z
 * **State**: [STORY-45](stories/STORY-45.md) ready -> backlog, by human:Pilo, at 2026-10-09T11:07:54Z

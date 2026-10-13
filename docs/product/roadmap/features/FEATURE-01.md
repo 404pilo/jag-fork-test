@@ -4,14 +4,16 @@ title: Store a key one time
 description: The user stores a TypeSafe key one time; jag finds it on each search,
   never shows it, and tells a new user where to get one.
 status: draft
-state: ready
+state: blocked
 parent: /epics/EPIC-01.md
+blocked_by:
+- /features/FEATURE-17.md
 milestone: /milestones/MILESTONE-01.md
 traces:
 - to: prd:/capabilities/CAPABILITY-01.md
   hash: 295cfa
 - to: prd:/decisions/DECISION-03.md
-  hash: '579917'
+  hash: '131646'
 - to: prd:/decisions/DECISION-08.md
   hash: 497b8a
 - to: prd:/decisions/DECISION-09.md
@@ -44,6 +46,7 @@ The user stores a TypeSafe key one time; jag finds it on each search, never show
 ## Links
 
 - parent: [EPIC-01: Setup and readiness](../epics/EPIC-01.md)
+- blocked by: [FEATURE-17: Block private data in the repository](FEATURE-17.md)
 - milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
 - traces: [CAPABILITY-01: Guided key setup and health check](../../prd/capabilities/CAPABILITY-01.md)
 - traces: [DECISION-03: jag reads the key from two variables and a config file, in a fixed order](../../prd/decisions/DECISION-03.md)
@@ -54,6 +57,7 @@ The user stores a TypeSafe key one time; jag finds it on each search, never show
 - blocks: [FEATURE-02: Readiness check](FEATURE-02.md)
 - blocks: [FEATURE-03: Clear failure when the model is not available](FEATURE-03.md)
 - blocks: [FEATURE-04: Rank matching lines by a question](FEATURE-04.md)
+- blocks: [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](FEATURE-18.md)
 - child: [STORY-01: Store a key with setup](../stories/STORY-01.md)
 - child: [STORY-02: Find the key in a fixed order](../stories/STORY-02.md)
 - child: [STORY-03: Replace or remove the stored key](../stories/STORY-03.md)

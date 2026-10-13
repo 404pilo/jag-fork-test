@@ -9,3 +9,4 @@
 ## MILESTONE-02: Make it good
 
 * [EPIC-04: A shell user keeps their habits](EPIC-04.md) - jag works in a pipe, uses grep-like options and exit codes, and is fast enough to replace grep.
+* [EPIC-05: Safe public release](EPIC-05.md) - The repository and the packages hold no private data, and the user installs jag from GitHub Releases, crates.io, or npm.

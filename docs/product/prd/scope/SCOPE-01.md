@@ -55,5 +55,7 @@ Release 1 does not serve users whose text must not leave the machine. This is a 
 - includes: [CAPABILITY-08: A repeated search costs nothing](../capabilities/CAPABILITY-08.md) (wont)
 - includes: [CAPABILITY-10: Question without a term](../capabilities/CAPABILITY-10.md) (wont)
 - subject of: [DECISION-46: jag scores each search again and does not reuse scores](../decisions/DECISION-46.md)
+- traced by: [EPIC-05: Safe public release](../../roadmap/epics/EPIC-05.md)
+- traced by: [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](../../roadmap/features/FEATURE-18.md)
 - traced by: [MILESTONE-01: Make it work](../../roadmap/milestones/MILESTONE-01.md)
 <!-- LINKS:END -->

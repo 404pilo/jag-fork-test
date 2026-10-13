@@ -21,7 +21,7 @@ As a shell power user (PERSONA-04), I want jag to skip binary, hidden, and ignor
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
 | [CRITERION-23: jag skips noise files](../criteria/CRITERION-23.md) | - | - | - | - | - |
-| [CRITERION-24: jag says how many files it skipped](../criteria/CRITERION-24.md) | - | - | - | - | - |
+| [CRITERION-24: The folder walk counts the files it skipped](../criteria/CRITERION-24.md) | - | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -31,5 +31,5 @@ As a shell power user (PERSONA-04), I want jag to skip binary, hidden, and ignor
 - parent: [FEATURE-05: Search a folder as grep -r does](../features/FEATURE-05.md)
 - milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
 - criterion or run of: [CRITERION-23: jag skips noise files](../criteria/CRITERION-23.md)
-- criterion or run of: [CRITERION-24: jag says how many files it skipped](../criteria/CRITERION-24.md)
+- criterion or run of: [CRITERION-24: The folder walk counts the files it skipped](../criteria/CRITERION-24.md)
 <!-- LINKS:END -->

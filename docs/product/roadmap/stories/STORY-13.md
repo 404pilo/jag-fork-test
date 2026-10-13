@@ -29,6 +29,7 @@ As a knowledge seeker (PERSONA-03), I want to run jag with a term, a question, a
 | [CRITERION-19: The best answer comes first](../criteria/CRITERION-19.md) | - | - | - | - | - |
 | [CRITERION-20: The term is a regular expression](../criteria/CRITERION-20.md) | - | - | - | - | - |
 | [CRITERION-71: A term with no matches makes no model call](../criteria/CRITERION-71.md) | - | - | - | - | - |
+| [CRITERION-85: A ranked search says how many files it skipped](../criteria/CRITERION-85.md) | - | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -43,4 +44,5 @@ As a knowledge seeker (PERSONA-03), I want to run jag with a term, a question, a
 - criterion or run of: [CRITERION-19: The best answer comes first](../criteria/CRITERION-19.md)
 - criterion or run of: [CRITERION-20: The term is a regular expression](../criteria/CRITERION-20.md)
 - criterion or run of: [CRITERION-71: A term with no matches makes no model call](../criteria/CRITERION-71.md)
+- criterion or run of: [CRITERION-85: A ranked search says how many files it skipped](../criteria/CRITERION-85.md)
 <!-- LINKS:END -->

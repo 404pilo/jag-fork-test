@@ -10,6 +10,7 @@ state: blocked
 parent: /epics/EPIC-02.md
 blocked_by:
 - /features/FEATURE-01.md
+- /features/FEATURE-05.md
 milestone: /milestones/MILESTONE-01.md
 traces:
 - to: prd:/capabilities/CAPABILITY-02.md
@@ -47,6 +48,7 @@ When no result answers the question well, jag shows the best results with a clea
 
 - parent: [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md)
 - blocked by: [FEATURE-01: Store a key one time](FEATURE-01.md)
+- blocked by: [FEATURE-05: Search a folder as grep -r does](FEATURE-05.md)
 - milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
 - traces: [CAPABILITY-02: Term and question search](../../prd/capabilities/CAPABILITY-02.md)
 - traces: [DECISION-10: A result is a matching line with the lines around it](../../prd/decisions/DECISION-10.md)

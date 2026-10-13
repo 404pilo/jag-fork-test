@@ -22,4 +22,5 @@ A new user installs jag, sets up a key, and gets a first good result in under fi
 - measures: [JOURNEY-01: Agent builder fixes a wrong answer](../journeys/JOURNEY-01.md)
 - subject of: [DECISION-09: The missing-key message tells a new user where to get a key](../decisions/DECISION-09.md)
 - guarded by: [METRIC-08: Setup failures](METRIC-08.md)
+- traced by: [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](../../roadmap/features/FEATURE-18.md)
 <!-- LINKS:END -->

@@ -24,13 +24,14 @@ This milestone holds the bare minimum to see jag work. The grep habits, the read
 | [EPIC-01: Setup and readiness](../epics/EPIC-01.md) | ready | 0/3 (0%) | - | - | - |
 | [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | ready | 0/5 (0%) | - | - | - |
 | [EPIC-03: Output that fits an agent](../epics/EPIC-03.md) | ready | 0/2 (0%) | - | - | - |
-| [FEATURE-01: Store a key one time](../features/FEATURE-01.md) | ready | 0/5 (0%) | - | - | - |
-| [FEATURE-04: Rank matching lines by a question](../features/FEATURE-04.md) | blocked | 0/3 (0%) | - | FEATURE-01 | - |
+| [FEATURE-01: Store a key one time](../features/FEATURE-01.md) | blocked | 0/5 (0%) | - | FEATURE-17 | - |
+| [FEATURE-04: Rank matching lines by a question](../features/FEATURE-04.md) | blocked | 0/3 (0%) | - | FEATURE-01, FEATURE-05 | - |
 | [FEATURE-05: Search a folder as grep -r does](../features/FEATURE-05.md) | ready | 0/2 (0%) | - | - | - |
 | [FEATURE-06: Cost limit on scoring](../features/FEATURE-06.md) | blocked | 0/3 (0%) | - | FEATURE-04 | - |
 | [FEATURE-08: File, line, and snippet for each result](../features/FEATURE-08.md) | blocked | 0/4 (0%) | - | FEATURE-04 | - |
 | [FEATURE-09: Size limit on the text that jag returns](../features/FEATURE-09.md) | blocked | 0/4 (0%) | - | FEATURE-08 | - |
 | [FEATURE-11: Text output for a person and structured output for an agent](../features/FEATURE-11.md) | blocked | 0/4 (0%) | - | FEATURE-08 | - |
+| [FEATURE-17: Block private data in the repository](../features/FEATURE-17.md) | ready | 0/1 (0%) | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -48,6 +49,7 @@ This milestone holds the bare minimum to see jag work. The grep habits, the read
 - item of: [FEATURE-08: File, line, and snippet for each result](../features/FEATURE-08.md)
 - item of: [FEATURE-09: Size limit on the text that jag returns](../features/FEATURE-09.md)
 - item of: [FEATURE-11: Text output for a person and structured output for an agent](../features/FEATURE-11.md)
+- item of: [FEATURE-17: Block private data in the repository](../features/FEATURE-17.md)
 - item of: [STORY-01: Store a key with setup](../stories/STORY-01.md)
 - item of: [STORY-02: Find the key in a fixed order](../stories/STORY-02.md)
 - item of: [STORY-03: Replace or remove the stored key](../stories/STORY-03.md)
@@ -73,4 +75,5 @@ This milestone holds the bare minimum to see jag work. The grep habits, the read
 - item of: [STORY-30: Turn on structured output](../stories/STORY-30.md)
 - item of: [STORY-31: Get a complete structured output with notices and errors](../stories/STORY-31.md)
 - item of: [STORY-32: Rely on a stable structured form](../stories/STORY-32.md)
+- item of: [STORY-46: Fail a pull request that adds private data](../stories/STORY-46.md)
 <!-- LINKS:END -->

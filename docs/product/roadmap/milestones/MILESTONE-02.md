@@ -30,12 +30,15 @@ This milestone holds the capabilities that make jag better to use and easier to 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
 | [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md) | backlog | 0/5 (0%) | - | - | - |
+| [EPIC-05: Safe public release](../epics/EPIC-05.md) | ready | 0/3 (0%) | - | - | - |
 | [FEATURE-02: Readiness check](../features/FEATURE-02.md) | backlog | 0/3 (0%) | - | FEATURE-01 | - |
 | [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md) | backlog | 0/4 (0%) | - | FEATURE-01 | - |
 | [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md) | backlog | 0/2 (0%) | - | - | - |
 | [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md) | backlog | 0/4 (0%) | - | - | - |
 | [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md) | backlog | 0/2 (0%) | - | FEATURE-05 | - |
 | [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md) | backlog | 0/3 (0%) | - | FEATURE-04 | - |
+| [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](../features/FEATURE-18.md) | backlog | 0/4 (0%) | - | FEATURE-01, FEATURE-17, FEATURE-19 | - |
+| [FEATURE-19: Go public with a clean history](../features/FEATURE-19.md) | backlog | 0/1 (0%) | - | FEATURE-17 | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -48,12 +51,15 @@ This milestone holds the capabilities that make jag better to use and easier to 
 - traces: [CAPABILITY-06: Feels like grep](../../prd/capabilities/CAPABILITY-06.md)
 - traces: [SCOPE-10: The held-out score confirms the gain over grep](../../prd/scope/SCOPE-10.md)
 - item of: [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md)
+- item of: [EPIC-05: Safe public release](../epics/EPIC-05.md)
 - item of: [FEATURE-02: Readiness check](../features/FEATURE-02.md)
 - item of: [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md)
 - item of: [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md)
 - item of: [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md)
 - item of: [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md)
 - item of: [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md)
+- item of: [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](../features/FEATURE-18.md)
+- item of: [FEATURE-19: Go public with a clean history](../features/FEATURE-19.md)
 - item of: [STORY-06: Check the five items of readiness](../stories/STORY-06.md)
 - item of: [STORY-07: Use the check result as an exit code](../stories/STORY-07.md)
 - item of: [STORY-08: Run the check for almost no cost](../stories/STORY-08.md)
@@ -73,4 +79,9 @@ This milestone holds the capabilities that make jag better to use and easier to 
 - item of: [STORY-42: Color the matches as grep does](../stories/STORY-42.md)
 - item of: [STORY-43: Stop at once when stopped](../stories/STORY-43.md)
 - item of: [STORY-45: Run the held-out evaluation before release](../stories/STORY-45.md)
+- item of: [STORY-47: Check the full history before the repository goes public](../stories/STORY-47.md)
+- item of: [STORY-48: Download a prebuilt binary from GitHub Releases](../stories/STORY-48.md)
+- item of: [STORY-49: Install jag with cargo from crates.io](../stories/STORY-49.md)
+- item of: [STORY-50: Install or run jag with npm](../stories/STORY-50.md)
+- item of: [STORY-51: Publish each channel from one tag](../stories/STORY-51.md)
 <!-- LINKS:END -->

@@ -24,7 +24,7 @@ jag reads the key from these sources, in this order. The first key found wins.
 
 Agent runs and automated jobs, with no person at the terminal, use a variable. The health check names the source that jag uses.
 
-The code at REDACTED commit `83f5a88a` reads other names. The public release uses this order.
+The code of the earlier prototype reads other names. The public release uses this order.
 
 <!-- LINKS:START (generated, do not edit) -->
 

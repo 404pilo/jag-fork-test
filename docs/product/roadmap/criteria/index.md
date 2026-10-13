@@ -61,6 +61,7 @@
 * [CRITERION-19: The best answer comes first](CRITERION-19.md) - jag returns the results that match the term in order of how well they answer the question, with the best answer first.
 * [CRITERION-20: The term is a regular expression](CRITERION-20.md) - jag reads the term as a regular expression, as grep does.
 * [CRITERION-71: A term with no matches makes no model call](CRITERION-71.md) - When the term matches no line, jag makes no model call, writes no results, and exits with code 1, as grep does.
+* [CRITERION-85: A ranked search says how many files it skipped](CRITERION-85.md) - When the user searches a folder with a term and a question, jag tells the user how many files it skipped.
 
 ## STORY-14: See the lines around a match
 
@@ -78,7 +79,7 @@
 ## STORY-17: Skip noise files and count them
 
 * [CRITERION-23: jag skips noise files](CRITERION-23.md) - jag skips binary files, hidden files, and ignored files.
-* [CRITERION-24: jag says how many files it skipped](CRITERION-24.md) - jag tells the user how many files it skipped.
+* [CRITERION-24: The folder walk counts the files it skipped](CRITERION-24.md) - The folder walk gives the count of the files it skipped and the text of the notice that tells the user the count.
 
 ## STORY-18: Score only the best matches
 
@@ -207,3 +208,32 @@
 ## STORY-45: Run the held-out evaluation before release
 
 * [CRITERION-73: The held-out score meets the target and beats grep](CRITERION-73.md) - The held-out run gives jag an ndcg@10 of 0.70 or more, which is higher than blind grep. The public summary shows only the numbers and no case content.
+
+## STORY-46: Fail a pull request that adds private data
+
+* [CRITERION-74: A pull request that adds private data fails the check](CRITERION-74.md) - A pull request that adds a key, case content, private evaluation data, or an internal project name fails the check, and the pull request cannot merge.
+* [CRITERION-75: The check names the place and never shows the value](CRITERION-75.md) - For each finding, the check names the file and the line, and it never shows the found value in its output.
+
+## STORY-47: Check the full history before the repository goes public
+
+* [CRITERION-76: The history holds no private data before the repository goes public](CRITERION-76.md) - Before the repository goes public, a scan of each commit finds no key, case content, private evaluation data, or internal project name, and never shows a found value.
+
+## STORY-48: Download a prebuilt binary from GitHub Releases
+
+* [CRITERION-77: Each release has one archive for each platform with a checksum](CRITERION-77.md) - Each release on GitHub Releases has one archive for Linux x86_64, Linux arm64, macOS arm64, and macOS x86_64, and each archive has a checksum.
+* [CRITERION-78: The binary runs with no runtime](CRITERION-78.md) - The binary from the archive runs on its platform with no other runtime or program installed.
+
+## STORY-49: Install jag with cargo from crates.io
+
+* [CRITERION-79: cargo install gives the release version](CRITERION-79.md) - cargo install jag-grep installs the jag command, with the same version as the GitHub Release.
+
+## STORY-50: Install or run jag with npm
+
+* [CRITERION-80: npx runs jag on each platform](CRITERION-80.md) - npx @airf/jag runs jag on each of the four platforms, and the install downloads nothing from GitHub.
+* [CRITERION-81: npm installs only the binary of the machine](CRITERION-81.md) - npm installs only the binary package that matches the platform of the machine.
+
+## STORY-51: Publish each channel from one tag
+
+* [CRITERION-82: One tag publishes each channel with the same version](CRITERION-82.md) - One version tag publishes the GitHub Release, the crate, and the npm packages, and each one has the same version.
+* [CRITERION-83: The repository stores no publish token](CRITERION-83.md) - The release publishes to crates.io and npm with trusted publishing, and the repository stores no publish token.
+* [CRITERION-84: The published packages hold no private data](CRITERION-84.md) - The archives, the crate, and the npm packages hold no key, no case content, no private evaluation data, and no internal project name.
