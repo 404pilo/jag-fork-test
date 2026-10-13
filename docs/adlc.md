@@ -33,7 +33,7 @@ Repository rules:
 1. Files on `main` are the source of truth. The board is only a copy of `main`.
 2. Do not change `main` directly. Use a worktree, a branch and a pull request. Only the retro has a fast path (see section 6).
 3. Send all messages to the orchestrator with `SendMessage`. Do not send messages to other roles directly.
-4. Do not ask the user questions. Send the question to the orchestrator. The hitl session asks the user. Exceptions: hitl and retro.
+4. Do not ask the user questions. Send the question to the orchestrator. The hitl session asks the user. Exceptions: hitl, retro, and chores (only to guide the user through a manual step).
 5. Use the message format in section 5.
 6. When the orchestrator tells you that `docs/adlc.md` changed, read it again and rebase your worktree on `main`.
 7. Never read, print or commit secrets or key files.
@@ -54,7 +54,7 @@ Repository rules:
 | specifier | opus | 1 | The orchestrator assigns a feature | prd:specifying-stories | Feature id | PR with the spec in the feature folder |
 | implementer | sonnet | 1–4 | The orchestrator assigns a merged spec | relay (non-interactive), productivity:wrapping-up-sessions | Spec on `main` | PR, then merge and clean-up |
 | verifier | opus | 1–4 | An implementer opens a PR | pr-flow:reviewing-prs | PR number | Approve or request changes |
-| chores | sonnet | 1 | A manual step is necessary | — | Chore request | Checked state, or `ASK` for a user step |
+| chores | sonnet | 1 | A manual step is necessary | — | Chore request | Checked state, after it guides the user through a user step if necessary |
 
 ### Role details
 
@@ -116,7 +116,8 @@ Repository rules:
 
 **chores**
 - Does manual setup steps that do not need the user (for example: labels, checks, config).
-- If the user must do a step (login, token scope, payment), sends `ASK` with the exact command for the user.
+- If the user must do a step (login, token scope, payment), guides the user directly through the step. Gives the exact commands, 1 step at a time, and checks the result after each step.
+- Sends decisions (a choice between options) to the orchestrator as `ASK`. The hitl session asks the user.
 
 ## 4. Feature flow
 
@@ -235,3 +236,4 @@ Send a DONE message to the orchestrator when you are ready. Then wait for TASK m
 | 2026-10-13 | Removed an internal project name and its worktree path from section 1. Kept the rule | CONSTRAINT-01: the public repository contains no internal names. `docs/handoff.md` is not in git, so it keeps the details |
 | 2026-10-13 | Changed the orchestrator name to `jag-orchestrator`. Added the rule for a name change to the orchestrator details | The orchestrator session name changed. Sessions send messages to this name |
 | 2026-10-13 | Replaced the HITL card in section 7 with the layout "Option C": 2 context lines, the question, a bordered options table, and 1 recommendation line | The user chose this layout. It gives the background first, and the table borders stay in line |
+| 2026-10-13 | The chores session can talk to the user directly and guide the user through manual steps. Decisions still go through hitl | The user asked for this change |
