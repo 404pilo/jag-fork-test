@@ -430,3 +430,7 @@ repository of about 15,000 files, while the model service works.
 - A test in the CI (`tests/speed.rs`, a release build) keeps the local part
   of a search under 1 s, and a search with a model service that needs 2 s for
   each call under 5 s.
+
+Measured results, with the TypeSafe model service:
+
+- 2026-10-14: jag 0.1.0 on Linux x86_64, 12 CPUs, Go 1.25.0 (14,490 files): medians 0.29 to 0.37 s, slowest run 0.56 s.
