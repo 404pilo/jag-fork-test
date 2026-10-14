@@ -13,7 +13,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/93
   pushed_hash: d30149
   synced:
-    state: ready
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-29-text-and-structured-output-design.md
 parent: /features/FEATURE-11.md
 milestone: /milestones/MILESTONE-01.md
