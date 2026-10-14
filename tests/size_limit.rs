@@ -429,17 +429,36 @@ fn criterion_104_a_document_inside_the_limit_has_the_values_of_nothing_left_out(
 fn criterion_104_the_document_never_goes_over_the_limit_and_left_out_is_n_minus_k() {
     let server = ranked_server();
     let root = ranked_folder();
-    for limit in (1000..=7000).step_by(500) {
+    // The count of results in the document, and its size, for one limit.
+    let at = |limit: usize| {
         let text = limit.to_string();
         let run = ask(&server, root.path(), &["--json", "--max-chars", &text], &[]);
         let document = parse_doc(&run);
-        assert!(run.chars() <= limit, "{limit}: {}", run.chars());
         let shown = document["results"].as_array().map_or(0, Vec::len);
+        (run, document, shown)
+    };
+    for limit in (1000..=7000).step_by(1000) {
+        let (run, document, shown) = at(limit);
+        assert!(run.chars() <= limit, "{limit}: {}", run.chars());
         assert_eq!(document["left_out"], 30 - shown, "{limit}");
         assert_eq!(run.code, Some(if shown < 30 { 8 } else { 0 }), "{limit}");
-        // One more result does not fit.
-        let more = ask(&server, root.path(), &["--json", "--max-chars", &text], &[]);
-        assert_eq!(more.stdout, run.stdout);
+        if shown == 30 {
+            continue;
+        }
+        // K is the largest count: the smallest limit that gives one more
+        // result gives a document that is larger than this limit.
+        let (mut low, mut high) = (limit, 8000);
+        while high - low > 1 {
+            let middle = (low + high) / 2;
+            if at(middle).2 > shown {
+                high = middle;
+            } else {
+                low = middle;
+            }
+        }
+        let (bigger, _, more) = at(high);
+        assert_eq!(more, shown + 1, "{limit}");
+        assert!(bigger.chars() > limit, "{limit}: {}", bigger.chars());
     }
 }
 
