@@ -5,7 +5,7 @@ description: jag never writes more characters than the size limit, leaves out wh
   results with the lowest rank first, and says how many it left out and how to raise
   the limit.
 status: draft
-state: blocked
+state: ready
 github:
   number: 50
   node_id: I_kwDOVDCdD88AAAABXB-Blw

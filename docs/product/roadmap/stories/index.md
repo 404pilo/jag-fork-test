@@ -2,10 +2,6 @@
 
 ## MILESTONE-01: Make it work
 
-* [STORY-21: See the file, the line, and the snippet of a result](STORY-21.md) - As a knowledge seeker (PERSONA-03), I want each result to show the file, the line, and the exact source text, so that I can open the source at that line.
-* [STORY-22: See the line range of a joined result](STORY-22.md) - As an agent builder (PERSONA-01), I want a joined result to give its first and last line and to mark each line that matches the term, so that my agent finds the exact match inside the range.
-* [STORY-23: Cut a very long line and mark the cut](STORY-23.md) - As an agent builder (PERSONA-01), I want jag to cut each line that is longer than a fixed length and to mark the cut, so that one long line does not fill the output.
-* [STORY-24: Label piped text](STORY-24.md) - As a shell power user (PERSONA-04), I want a result from piped text to have the label (standard input), so that I read a pipe result as a file result.
 * [STORY-25: Stay inside a default size limit](STORY-25.md) - As an agent builder (PERSONA-01), I want jag to never write more characters than a default size limit, so that the output fits the context of my agent.
 * [STORY-26: Leave out the lowest-ranked results](STORY-26.md) - As an agent builder (PERSONA-01), I want jag to leave out the lowest-ranked results and tell me how many, so that I know the list is not complete and how to see more.
 * [STORY-27: Cut a top result that is larger than the limit](STORY-27.md) - As an agent builder (PERSONA-01), I want jag to cut the top result and say so when that result alone is larger than the limit, so that I still get the best answer.
@@ -20,6 +16,7 @@
 * [STORY-06: Check the five items of readiness](STORY-06.md) - As an agent builder (PERSONA-01), I want one command that shows pass or fail for five items and names the fix for each failure, so that I know what to repair before I give jag to an agent.
 * [STORY-07: Use the check result as an exit code](STORY-07.md) - As an agent builder (PERSONA-01), I want the readiness check to exit with 0 when all items pass and with the code of the first cause when one fails, so that a script or an agent can act on the result.
 * [STORY-08: Run the check for almost no cost](STORY-08.md) - As an agent builder (PERSONA-01), I want the readiness check to make one call that costs nothing or almost nothing, so that I can run the check as often as I want.
+* [STORY-24: Label piped text](STORY-24.md) - As a shell power user (PERSONA-04), I want a result from piped text to have the label (standard input), so that I read a pipe result as a file result.
 * [STORY-33: Search with a term and no question](STORY-33.md) - As a shell power user (PERSONA-04), I want jag with a term and no question to return the matching lines as grep does with no model call, so that a plain search costs nothing.
 * [STORY-34: Use plain grep with no key](STORY-34.md) - As a shell power user (PERSONA-04), I want plain grep mode to work with no stored key, so that I can use jag before I set it up.
 * [STORY-35: Use the common grep options](STORY-35.md) - As a shell power user (PERSONA-04), I want jag to accept the grep options that I use most, with their grep meaning, and -F to read the term as fixed text, so that I keep my habits.

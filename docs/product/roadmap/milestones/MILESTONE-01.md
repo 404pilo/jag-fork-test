@@ -22,15 +22,15 @@ This milestone holds the bare minimum to see jag work. The grep habits, the read
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
 | [EPIC-01: Setup and readiness](../epics/EPIC-01.md) | ready | 2/4 (50%) | - | - | - |
-| [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | ready | 3/5 (60%) | - | - | - |
+| [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | ready | 4/5 (80%) | - | - | - |
 | [EPIC-03: Output that fits an agent](../epics/EPIC-03.md) | ready | 0/3 (0%) | - | - | - |
 | [FEATURE-01: Store a key one time](../features/FEATURE-01.md) | done | 5/5 (100%) | - | FEATURE-17 | - |
 | [FEATURE-04: Rank matching lines by a question](../features/FEATURE-04.md) | done | 3/3 (100%) | - | FEATURE-01, FEATURE-05 | - |
 | [FEATURE-05: Search a folder as grep -r does](../features/FEATURE-05.md) | done | 2/2 (100%) | - | - | - |
 | [FEATURE-06: Cost limit on scoring](../features/FEATURE-06.md) | done | 3/3 (100%) | - | FEATURE-04 | - |
-| [FEATURE-08: File, line, and snippet for each result](../features/FEATURE-08.md) | in_progress | 0/4 (0%) | - | FEATURE-04 | - |
-| [FEATURE-09: Size limit on the text that jag returns](../features/FEATURE-09.md) | blocked | 0/4 (0%) | - | FEATURE-08 | - |
-| [FEATURE-11: Text output for a person and structured output for an agent](../features/FEATURE-11.md) | blocked | 0/4 (0%) | - | FEATURE-08 | - |
+| [FEATURE-08: File, line, and snippet for each result](../features/FEATURE-08.md) | done | 3/3 (100%) | - | FEATURE-04 | - |
+| [FEATURE-09: Size limit on the text that jag returns](../features/FEATURE-09.md) | ready | 0/4 (0%) | - | FEATURE-08 | - |
+| [FEATURE-11: Text output for a person and structured output for an agent](../features/FEATURE-11.md) | ready | 0/4 (0%) | - | FEATURE-08 | - |
 | [FEATURE-17: Block private data in the repository](../features/FEATURE-17.md) | done | 1/1 (100%) | - | - | - |
 <!-- STATUS:END -->
 
@@ -66,7 +66,6 @@ This milestone holds the bare minimum to see jag work. The grep habits, the read
 - item of: [STORY-21: See the file, the line, and the snippet of a result](../stories/STORY-21.md)
 - item of: [STORY-22: See the line range of a joined result](../stories/STORY-22.md)
 - item of: [STORY-23: Cut a very long line and mark the cut](../stories/STORY-23.md)
-- item of: [STORY-24: Label piped text](../stories/STORY-24.md)
 - item of: [STORY-25: Stay inside a default size limit](../stories/STORY-25.md)
 - item of: [STORY-26: Leave out the lowest-ranked results](../stories/STORY-26.md)
 - item of: [STORY-27: Cut a top result that is larger than the limit](../stories/STORY-27.md)

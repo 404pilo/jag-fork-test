@@ -5,8 +5,9 @@ description: Each result shows the file, the line range, and the exact source te
   with each matching line marked, so the person or the agent can open the source at
   that line.
 status: draft
-state: in_progress
+state: done
 actual_start_date: '2026-10-14'
+actual_end_date: '2026-10-14'
 github:
   number: 49
   node_id: I_kwDOVDCdD88AAAABXB99aA
@@ -41,10 +42,9 @@ Each result shows the file, the line range, and the exact source text, with each
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-21: See the file, the line, and the snippet of a result](../stories/STORY-21.md) | ready | - | - | - | - |
-| [STORY-22: See the line range of a joined result](../stories/STORY-22.md) | ready | - | - | - | - |
-| [STORY-23: Cut a very long line and mark the cut](../stories/STORY-23.md) | ready | - | - | - | - |
-| [STORY-24: Label piped text](../stories/STORY-24.md) | ready | - | - | - | - |
+| [STORY-21: See the file, the line, and the snippet of a result](../stories/STORY-21.md) | done | - | - | - | - |
+| [STORY-22: See the line range of a joined result](../stories/STORY-22.md) | done | - | - | - | - |
+| [STORY-23: Cut a very long line and mark the cut](../stories/STORY-23.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -64,5 +64,4 @@ Each result shows the file, the line range, and the exact source text, with each
 - child: [STORY-21: See the file, the line, and the snippet of a result](../stories/STORY-21.md)
 - child: [STORY-22: See the line range of a joined result](../stories/STORY-22.md)
 - child: [STORY-23: Cut a very long line and mark the cut](../stories/STORY-23.md)
-- child: [STORY-24: Label piped text](../stories/STORY-24.md)
 <!-- LINKS:END -->

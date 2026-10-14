@@ -35,7 +35,7 @@ This milestone holds the capabilities that make jag better to use and easier to 
 | [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md) | done | 4/4 (100%) | - | FEATURE-01 | - |
 | [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md) | backlog | 0/2 (0%) | - | - | - |
 | [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md) | backlog | 0/4 (0%) | - | - | - |
-| [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md) | backlog | 0/2 (0%) | - | FEATURE-05 | - |
+| [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md) | backlog | 0/3 (0%) | - | FEATURE-05 | - |
 | [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md) | backlog | 0/3 (0%) | - | FEATURE-04 | - |
 | [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](../features/FEATURE-18.md) | backlog | 0/4 (0%) | - | FEATURE-01, FEATURE-17, FEATURE-19 | - |
 | [FEATURE-19: Go public with a clean history](../features/FEATURE-19.md) | backlog | 0/5 (0%) | - | FEATURE-17 | - |
@@ -71,6 +71,7 @@ This milestone holds the capabilities that make jag better to use and easier to 
 - item of: [STORY-10: Tell each model failure by its exit code](../stories/STORY-10.md)
 - item of: [STORY-11: Try again one time before reporting the service as down](../stories/STORY-11.md)
 - item of: [STORY-12: Fail the full search when the model stops during it](../stories/STORY-12.md)
+- item of: [STORY-24: Label piped text](../stories/STORY-24.md)
 - item of: [STORY-33: Search with a term and no question](../stories/STORY-33.md)
 - item of: [STORY-34: Use plain grep with no key](../stories/STORY-34.md)
 - item of: [STORY-35: Use the common grep options](../stories/STORY-35.md)

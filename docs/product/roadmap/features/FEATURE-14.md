@@ -35,6 +35,7 @@ With no path, jag searches the current folder or reads the pipe; the user can al
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
+| [STORY-24: Label piped text](../stories/STORY-24.md) | ready | - | - | - | - |
 | [STORY-39: Search with no path](../stories/STORY-39.md) | backlog | - | - | - | - |
 | [STORY-40: Search a mix of files and folders](../stories/STORY-40.md) | backlog | - | - | - | - |
 <!-- STATUS:END -->
@@ -49,6 +50,7 @@ With no path, jag searches the current folder or reads the pipe; the user can al
 - traces: [CAPABILITY-06: Feels like grep](../../prd/capabilities/CAPABILITY-06.md)
 - traces: [DECISION-35: With no path, jag searches the current folder or reads the pipe](../../prd/decisions/DECISION-35.md)
 - traces: [DECISION-36: The user can give any mix of files and folders](../../prd/decisions/DECISION-36.md)
+- child: [STORY-24: Label piped text](../stories/STORY-24.md)
 - child: [STORY-39: Search with no path](../stories/STORY-39.md)
 - child: [STORY-40: Search a mix of files and folders](../stories/STORY-40.md)
 <!-- LINKS:END -->

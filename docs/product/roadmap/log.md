@@ -1,6 +1,13 @@
 # Log
 
 ## 2026-10-14
+* **State**: [FEATURE-11](features/FEATURE-11.md) blocked -> ready, by system:regen, at 2026-10-14T02:21:30Z
+* **State**: [FEATURE-09](features/FEATURE-09.md) blocked -> ready, by system:regen, at 2026-10-14T02:21:30Z
+* **State**: [FEATURE-08](features/FEATURE-08.md) in_progress -> done, by human:404pilo, at 2026-10-14T02:21:29Z
+* **Plan**: [STORY-24](stories/STORY-24.md) moved with CRITERION-35 from FEATURE-08 (MILESTONE-01) to FEATURE-14 (MILESTONE-02); source: the user answer Q-ar (FEATURE-14 reads piped text and adds the end-to-end test) and FEATURE-08 spec decision 4; the same rule as CRITERION-66, by agent:planner, at 2026-10-14T02:21:29Z
+* **State**: [STORY-23](stories/STORY-23.md) ready -> done, by human:404pilo, at 2026-10-14T02:19:29Z
+* **State**: [STORY-22](stories/STORY-22.md) ready -> done, by human:404pilo, at 2026-10-14T02:19:29Z
+* **State**: [STORY-21](stories/STORY-21.md) ready -> done, by human:404pilo, at 2026-10-14T02:19:29Z
 * **State**: [FEATURE-08](features/FEATURE-08.md) claimed -> in_progress, by agent:planner, at 2026-10-14T02:09:59Z
 * **State**: [FEATURE-08](features/FEATURE-08.md) ready -> claimed, by agent:planner, at 2026-10-14T02:09:58Z
 * **State**: [FEATURE-06](features/FEATURE-06.md) in_progress -> done, by human:404pilo, at 2026-10-14T02:05:23Z

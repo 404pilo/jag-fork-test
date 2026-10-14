@@ -7,7 +7,7 @@ description: An option turns on structured output that an agent can parse, with 
 status: draft
 aliases:
 - FEATURE-10
-state: blocked
+state: ready
 github:
   number: 51
   node_id: I_kwDOVDCdD88AAAABXB-F-g

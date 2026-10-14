@@ -4,7 +4,8 @@ title: See the file, the line, and the snippet of a result
 description: As a knowledge seeker (PERSONA-03), I want each result to show the file,
   the line, and the exact source text, so that I can open the source at that line.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 82
   node_id: I_kwDOVDCdD88AAAABXCAH1A

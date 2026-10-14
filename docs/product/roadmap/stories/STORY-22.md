@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want a joined result to give it
   first and last line and to mark each line that matches the term, so that my agent
   finds the exact match inside the range.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 83
   node_id: I_kwDOVDCdD88AAAABXCAMXQ
