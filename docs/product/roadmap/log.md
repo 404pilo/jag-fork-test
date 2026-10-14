@@ -1,6 +1,10 @@
 # Log
 
 ## 2026-10-14
+* **Sync**: [STORY-28](stories/STORY-28.md) pushed to GitHub, by system:github, at 2026-10-14T13:10:24Z
+* **Sync**: [STORY-27](stories/STORY-27.md) pushed to GitHub, by system:github, at 2026-10-14T13:10:24Z
+* **Sync**: [STORY-26](stories/STORY-26.md) pushed to GitHub, by system:github, at 2026-10-14T13:10:24Z
+* **Sync**: [STORY-25](stories/STORY-25.md) pushed to GitHub, by system:github, at 2026-10-14T13:10:24Z
 * **State**: [FEATURE-09](features/FEATURE-09.md) claimed -> in_progress, by agent:planner, at 2026-10-14T13:12:28Z
 * **State**: [FEATURE-09](features/FEATURE-09.md) ready -> claimed, by agent:planner, at 2026-10-14T13:12:28Z
 * **Plan**: [STORY-38](stories/STORY-38.md) backlog -> ready by rule 11 (docs/adlc.md): its spec is merged (PR #153), its feature FEATURE-13 is not blocked (FEATURE-12 is done), and no open ASK blocks it; user approval RULE11-01 ("Always, for each rule change"), by agent:planner, at 2026-10-14T13:06:59Z
