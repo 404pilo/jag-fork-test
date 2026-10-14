@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want a clear cost report when j
   makes no model call or the service gives no cost figure, so that the search still
   works.
 status: draft
-state: backlog
+state: ready
 github:
   number: 117
   node_id: I_kwDOVDCdD88AAAABXCCgxw
@@ -13,6 +13,7 @@ github:
   pushed_hash: 8813f7
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-53-show-the-cost-of-a-search-design.md
 parent: /features/FEATURE-20.md
 milestone: /milestones/MILESTONE-02.md
 ---

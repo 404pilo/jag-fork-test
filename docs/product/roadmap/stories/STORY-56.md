@@ -4,7 +4,7 @@ title: Know the cost of a failed or stopped search
 description: As an agent builder (PERSONA-01), I want to know what a failed or stopped
   search cost, so that no cost is hidden from me.
 status: draft
-state: backlog
+state: ready
 github:
   number: 118
   node_id: I_kwDOVDCdD88AAAABXCClVw
@@ -12,6 +12,7 @@ github:
   pushed_hash: f085eb
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-53-show-the-cost-of-a-search-design.md
 parent: /features/FEATURE-20.md
 milestone: /milestones/MILESTONE-02.md
 ---

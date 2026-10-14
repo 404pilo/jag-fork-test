@@ -4,7 +4,7 @@ title: Read the cost in structured output
 description: As an agent builder (PERSONA-01), I want the cost as a field of structured
   output, so that my agent can track what its searches cost.
 status: draft
-state: backlog
+state: ready
 github:
   number: 116
   node_id: I_kwDOVDCdD88AAAABXCCcCw
@@ -12,6 +12,7 @@ github:
   pushed_hash: 9b6af8
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-53-show-the-cost-of-a-search-design.md
 parent: /features/FEATURE-20.md
 milestone: /milestones/MILESTONE-02.md
 ---

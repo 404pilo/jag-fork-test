@@ -4,7 +4,7 @@ title: See the cost after each search
 description: As a shell power user (PERSONA-04), I want a cost line after each search,
   so that I know what each search costs.
 status: draft
-state: backlog
+state: ready
 github:
   number: 115
   node_id: I_kwDOVDCdD88AAAABXCCYFg
@@ -12,6 +12,7 @@ github:
   pushed_hash: 54bb63
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-53-show-the-cost-of-a-search-design.md
 parent: /features/FEATURE-20.md
 milestone: /milestones/MILESTONE-02.md
 ---

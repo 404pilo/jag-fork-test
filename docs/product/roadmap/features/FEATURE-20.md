@@ -44,10 +44,10 @@ After each search, jag reports how many results it scored and skipped, and the b
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-53: See the cost after each search](../stories/STORY-53.md) | backlog | - | - | - | - |
-| [STORY-54: Read the cost in structured output](../stories/STORY-54.md) | backlog | - | - | - | - |
-| [STORY-55: Know the cost when no figure is available](../stories/STORY-55.md) | backlog | - | - | - | - |
-| [STORY-56: Know the cost of a failed or stopped search](../stories/STORY-56.md) | backlog | - | - | - | - |
+| [STORY-53: See the cost after each search](../stories/STORY-53.md) | ready | - | - | - | - |
+| [STORY-54: Read the cost in structured output](../stories/STORY-54.md) | ready | - | - | - | - |
+| [STORY-55: Know the cost when no figure is available](../stories/STORY-55.md) | ready | - | - | - | - |
+| [STORY-56: Know the cost of a failed or stopped search](../stories/STORY-56.md) | ready | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
