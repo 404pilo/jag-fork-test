@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want the readiness check to mak
   one call that costs nothing or almost nothing, so that I can run the check as often
   as I want.
 status: draft
-state: backlog
+state: ready
 github:
   number: 69
   node_id: I_kwDOVDCdD88AAAABXB_SIQ
@@ -13,6 +13,7 @@ github:
   pushed_hash: 5ae687
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-13-STORY-06-readiness-check-design.md
 parent: /features/FEATURE-02.md
 milestone: /milestones/MILESTONE-02.md
 traces:

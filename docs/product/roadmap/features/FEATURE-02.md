@@ -37,9 +37,9 @@ One command examines five items, shows pass or fail for each one, and names the 
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-06: Check the five items of readiness](../stories/STORY-06.md) | backlog | - | - | - | - |
-| [STORY-07: Use the check result as an exit code](../stories/STORY-07.md) | backlog | - | - | - | - |
-| [STORY-08: Run the check for almost no cost](../stories/STORY-08.md) | backlog | - | - | - | - |
+| [STORY-06: Check the five items of readiness](../stories/STORY-06.md) | ready | - | - | - | - |
+| [STORY-07: Use the check result as an exit code](../stories/STORY-07.md) | ready | - | - | - | - |
+| [STORY-08: Run the check for almost no cost](../stories/STORY-08.md) | ready | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

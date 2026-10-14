@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want the readiness check to exi
   with 0 when all items pass and with the code of the first cause when one fails,
   so that a script or an agent can act on the result.
 status: draft
-state: backlog
+state: ready
 github:
   number: 68
   node_id: I_kwDOVDCdD88AAAABXB_NxA
@@ -13,6 +13,7 @@ github:
   pushed_hash: 37fdbf
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-13-STORY-06-readiness-check-design.md
 parent: /features/FEATURE-02.md
 milestone: /milestones/MILESTONE-02.md
 traces:

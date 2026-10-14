@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want one command that shows pas
   or fail for five items and names the fix for each failure, so that I know what to
   repair before I give jag to an agent.
 status: draft
-state: backlog
+state: ready
 github:
   number: 67
   node_id: I_kwDOVDCdD88AAAABXB_JgQ
@@ -13,6 +13,7 @@ github:
   pushed_hash: b68e92
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-13-STORY-06-readiness-check-design.md
 parent: /features/FEATURE-02.md
 milestone: /milestones/MILESTONE-02.md
 traces:

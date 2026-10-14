@@ -1,6 +1,9 @@
 # Log
 
 ## 2026-10-14
+* **State**: [STORY-08](stories/STORY-08.md) backlog -> ready, by human:404pilo, at 2026-10-14T02:29:18Z
+* **State**: [STORY-07](stories/STORY-07.md) backlog -> ready, by human:404pilo, at 2026-10-14T02:29:18Z
+* **State**: [STORY-06](stories/STORY-06.md) backlog -> ready, by human:404pilo, at 2026-10-14T02:29:18Z
 * **State**: [FEATURE-11](features/FEATURE-11.md) blocked -> ready, by system:regen, at 2026-10-14T02:21:30Z
 * **State**: [FEATURE-09](features/FEATURE-09.md) blocked -> ready, by system:regen, at 2026-10-14T02:21:30Z
 * **State**: [FEATURE-08](features/FEATURE-08.md) in_progress -> done, by human:404pilo, at 2026-10-14T02:21:29Z
