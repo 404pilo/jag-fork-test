@@ -13,6 +13,7 @@ github:
   pushed_hash: 09b8c7
   synced:
     state: ready
+spec: docs/superpowers/specs/2026-10-13-STORY-21-file-line-and-snippet-for-each-result-design.md
 parent: /features/FEATURE-08.md
 milestone: /milestones/MILESTONE-01.md
 traces:
