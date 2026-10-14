@@ -3,10 +3,6 @@
 ## MILESTONE-02: Make it good
 
 * [STORY-24: Label piped text](STORY-24.md) - As a shell power user (PERSONA-04), I want a result from piped text to have the label (standard input), so that I read a pipe result as a file result.
-* [STORY-35: Use the common grep options](STORY-35.md) - As a shell power user (PERSONA-04), I want jag to accept the grep options that I use most, with their grep meaning, and -F to read the term as fixed text, so that I keep my habits.
-* [STORY-36: Set the lines around a match](STORY-36.md) - As a shell power user (PERSONA-04), I want -A, -B, and -C to set the lines around each match in a question search, so that I choose how much context I read.
-* [STORY-37: Get a usage error for an unknown option](STORY-37.md) - As a shell power user (PERSONA-04), I want any other option to give a usage error that names the option and exit code 2, so that a typo does not pass without a notice.
-* [STORY-38: Keep the grep exit codes](STORY-38.md) - As a shell power user (PERSONA-04), I want the grep exit codes 0, 1, and 2, so that my scripts that test grep exit codes keep working.
 * [STORY-39: Search with no path](STORY-39.md) - As a shell power user (PERSONA-04), I want jag with no path to search the current folder, or to read the pipe when text comes in through one, so that I use jag as I use grep.
 * [STORY-40: Search a mix of files and folders](STORY-40.md) - As a shell power user (PERSONA-04), I want to give several paths, each a file or a folder, so that I search exactly the places that I choose.
 * [STORY-45: Run the held-out evaluation before release](STORY-45.md) - As an agent builder (PERSONA-01), I want the held-out evaluation run done before release 1, so that I can trust that jag answers better than grep.

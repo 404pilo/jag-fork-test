@@ -5,7 +5,8 @@ description: As a shell power user (PERSONA-04), I want jag to accept the grep o
   that I use most, with their grep meaning, and -F to read the term as fixed text,
   so that I keep my habits.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 96
   node_id: I_kwDOVDCdD88AAAABXCBLgw

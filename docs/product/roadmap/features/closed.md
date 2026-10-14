@@ -25,5 +25,6 @@ generated:
 * [FEATURE-02: Readiness check](FEATURE-02.md) - One command examines five items, shows pass or fail for each one, and names the fix for each failure, with one call that costs almost nothing.
 * [FEATURE-03: Clear failure when the model is not available](FEATURE-03.md) - When the key is missing or out of credit, or the model service is down, jag stops with a message that names the cause and the fix, and exits with the code of that cause.
 * [FEATURE-12: Plain grep with no question](FEATURE-12.md) - With a term and no question, jag returns the matching lines as grep does, makes no model call, and costs nothing.
+* [FEATURE-13: Common grep options and exit codes](FEATURE-13.md) - jag keeps the grep options that people use most and the grep exit codes 0, 1, and 2; any other option is a usage error that names it.
 * [FEATURE-15: Good behavior in a terminal and in a pipe](FEATURE-15.md) - jag shows progress and color only in a terminal, and it stops at once with no partial results when the user stops it or the pipe closes.
 * [FEATURE-21: Send the model calls through an AI gateway](FEATURE-21.md) - The user can set a base URL and a model name, so that jag sends the same model calls through an AI gateway. With no setting, jag calls TypeSafe directly.

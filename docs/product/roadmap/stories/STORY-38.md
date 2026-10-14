@@ -4,7 +4,8 @@ title: Keep the grep exit codes
 description: As a shell power user (PERSONA-04), I want the grep exit codes 0, 1,
   and 2, so that my scripts that test grep exit codes keep working.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 99
   node_id: I_kwDOVDCdD88AAAABXCBYAw
