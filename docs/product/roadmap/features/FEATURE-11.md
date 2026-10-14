@@ -7,7 +7,8 @@ description: An option turns on structured output that an agent can parse, with 
 status: draft
 aliases:
 - FEATURE-10
-state: ready
+state: in_progress
+actual_start_date: '2026-10-14'
 github:
   number: 51
   node_id: I_kwDOVDCdD88AAAABXB-F-g
