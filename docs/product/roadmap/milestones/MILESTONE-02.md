@@ -32,7 +32,7 @@ This milestone holds the capabilities that make jag better to use and easier to 
 | [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md) | backlog | 0/5 (0%) | - | - | - |
 | [EPIC-05: Safe public release](../epics/EPIC-05.md) | ready | 1/3 (33%) | - | - | - |
 | [FEATURE-02: Readiness check](../features/FEATURE-02.md) | backlog | 0/3 (0%) | - | FEATURE-01 | - |
-| [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md) | backlog | 0/4 (0%) | - | FEATURE-01 | - |
+| [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md) | done | 4/4 (100%) | - | FEATURE-01 | - |
 | [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md) | backlog | 0/2 (0%) | - | - | - |
 | [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md) | backlog | 0/4 (0%) | - | - | - |
 | [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md) | backlog | 0/2 (0%) | - | FEATURE-05 | - |

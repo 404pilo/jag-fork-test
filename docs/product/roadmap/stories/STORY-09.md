@@ -4,7 +4,8 @@ title: Name the cause and the fix of a model failure
 description: As an agent builder (PERSONA-01), I want jag to stop with the cause and
   the fix when the model is not available, so that I know what to do next.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 spec: docs/superpowers/specs/2026-10-13-STORY-09-clear-failure-when-the-model-is-not-available-design.md
 parent: /features/FEATURE-03.md
 milestone: /milestones/MILESTONE-02.md

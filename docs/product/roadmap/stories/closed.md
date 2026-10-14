@@ -22,3 +22,10 @@ generated:
 * [STORY-16: Search each subfolder of a folder](STORY-16.md) - As a shell power user (PERSONA-04), I want jag to search each file in a folder and in each subfolder, so that a folder search works as grep -r does.
 * [STORY-17: Skip noise files and count them](STORY-17.md) - As a shell power user (PERSONA-04), I want jag to skip binary, hidden, and ignored files and to say how many files it skipped, so that I trust the search and see what it left out.
 * [STORY-46: Fail a pull request that adds private data](STORY-46.md) - As an agent builder (PERSONA-01), I want each pull request checked for private data, so that the public repository never holds keys, case content, private evaluation data, or internal project names.
+
+## MILESTONE-02: Make it good
+
+* [STORY-09: Name the cause and the fix of a model failure](STORY-09.md) - As an agent builder (PERSONA-01), I want jag to stop with the cause and the fix when the model is not available, so that I know what to do next.
+* [STORY-10: Tell each model failure by its exit code](STORY-10.md) - As an agent builder (PERSONA-01), I want each cause of a model failure to have its own exit code above 2, so that my agent can tell the causes apart and react to each one.
+* [STORY-11: Try again one time before reporting the service as down](STORY-11.md) - As an operator (PERSONA-02), I want jag to wait a fixed time and try again one time before it reports the service as down, so that a short outage does not stop my search.
+* [STORY-12: Fail the full search when the model stops during it](STORY-12.md) - As an agent builder (PERSONA-01), I want a search to show no partial result when the credit or the service stops during it, so that my agent never trusts a half-ranked list.

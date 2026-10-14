@@ -5,7 +5,8 @@ description: When the key is missing or out of credit, or the model service is d
   jag stops with a message that names the cause and the fix, and exits with the code
   of that cause.
 status: draft
-state: backlog
+state: done
+actual_end_date: '2026-10-14'
 parent: /epics/EPIC-01.md
 blocked_by:
 - /features/FEATURE-01.md
@@ -33,10 +34,10 @@ When the key is missing or out of credit, or the model service is down, jag stop
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-09: Name the cause and the fix of a model failure](../stories/STORY-09.md) | ready | - | - | - | - |
-| [STORY-10: Tell each model failure by its exit code](../stories/STORY-10.md) | ready | - | - | - | - |
-| [STORY-11: Try again one time before reporting the service as down](../stories/STORY-11.md) | ready | - | - | - | - |
-| [STORY-12: Fail the full search when the model stops during it](../stories/STORY-12.md) | ready | - | - | - | - |
+| [STORY-09: Name the cause and the fix of a model failure](../stories/STORY-09.md) | done | - | - | - | - |
+| [STORY-10: Tell each model failure by its exit code](../stories/STORY-10.md) | done | - | - | - | - |
+| [STORY-11: Try again one time before reporting the service as down](../stories/STORY-11.md) | done | - | - | - | - |
+| [STORY-12: Fail the full search when the model stops during it](../stories/STORY-12.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
