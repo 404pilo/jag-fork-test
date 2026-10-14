@@ -12,7 +12,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/119
   pushed_hash: df3282
   synced:
-    state: backlog
+    state: ready
 spec: docs/superpowers/specs/2026-10-13-STORY-57-send-the-model-calls-through-an-ai-gateway-design.md
 parent: /features/FEATURE-21.md
 milestone: /milestones/MILESTONE-02.md
