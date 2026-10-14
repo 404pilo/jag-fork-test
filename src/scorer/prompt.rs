@@ -289,9 +289,10 @@ mod tests {
 
     #[test]
     fn one_snippet_of_the_largest_size_fits_with_the_longest_question() {
-        // 12 lines of 300 control characters: JSON writes each as 6 bytes.
+        // 25 lines (the largest result with `--ask`, FEATURE-13 decision 14) of
+        // 300 control characters: JSON writes each as 6 bytes.
         let line = "\u{1}".repeat(300);
-        let lines: Vec<&str> = (0..12).map(|_| line.as_str()).collect();
+        let lines: Vec<&str> = (0..25).map(|_| line.as_str()).collect();
         let question = "q".repeat(12_000);
         let batches = split_batches(&[snippet("a.txt", &lines)], &question);
         assert_eq!(batches.len(), 1);

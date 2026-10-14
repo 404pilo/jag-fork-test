@@ -296,6 +296,37 @@ only when a field is removed or renamed.
   new model call, and ends by the signal SIGPIPE with no message. A shell
   shows the exit code 141.
 
+## Grep options
+
+jag takes these grep options, with their grep meaning: `-i`, `-w`, `-F`, `-e`,
+`-A`, `-B`, `-C`, `-l`, `-c`, `-q`, `--include`, and `--exclude`. Each one also
+has its long name of GNU grep, for example `--ignore-case`.
+
+- jag always searches folders, as `grep -r` does, and always shows the path and
+  the line number, as `grep -H -n` does. So jag does not take `-r`, `-n`, or
+  `-H`. Each other option, also `-r`, gives a usage error and exit code 2.
+  `-h` shows the help, as in `rg`.
+- `-e TERM` gives a term. With more than one `-e`, a line matches one of the
+  terms. With `-e`, each word after the options is a path, as in grep.
+- With `--ask`, `-A`, `-B`, and `-C` take 0 to 12 lines, and a result has at
+  most 25 lines. With no option, a result has 3 lines before and 3 lines after
+  the match, and at most 12 lines. With no `--ask`, the options take each
+  number, and `--` stands between two groups of lines, as in grep.
+- `-l`, `-c`, and `-q` work only with no `--ask` and with no `--json`. `-c`
+  writes `path:N` also for one file. If you give more than one of the three,
+  `-q` wins, then `-l`, then `-c`.
+- `--include` and `--exclude` match the name of the file, with the glob rules
+  of ripgrep, for example `*.{rs,toml}`. They do not apply to folders. The last
+  glob that matches the name decides. When no glob matches, jag searches the
+  file, unless the first glob is an `--include` glob.
+- The size limit applies to `-l` and `-c`: each line is one whole item. When the
+  limit leaves out lines, jag writes the size notice and exits with 8. `-q`
+  writes nothing, so the limit has no effect on it.
+- jag skips binary files, so `-l` and `-c` do not show them.
+- The exit codes: 0 for a match, 1 for no match (with `--ask`, also for no good
+  answer), and 2 for a usage error, as in grep.
+
+
 ## Speed
 
 A typical search returns in under 5 seconds. A typical search is one search

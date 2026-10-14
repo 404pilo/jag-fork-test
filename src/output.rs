@@ -15,7 +15,7 @@ use crate::config::{SIZE_LIMIT_OFF_OPTION, SIZE_LIMIT_OPTION};
 use crate::failure::Failure;
 use crate::scorer::{PROMPT_VERSION, THRESHOLD};
 use crate::search::snippet::{Snippet, SnippetLine, Source, char_count, char_prefix};
-use crate::search::walk::{SkipCounts, WalkWarning};
+use crate::search::walk::{FileMatches, SkipCounts, WalkWarning};
 
 /// The first line on standard output when no result answers well.
 pub const NO_GOOD_ANSWER: &str =
@@ -442,17 +442,107 @@ pub fn write_text(
 }
 
 /// Write the lines of a search with no question (FEATURE-12): one
-/// `path:N:text` line for each line of `results`, in that order. No `--` and
-/// no label line, as grep with no context option. The size limit applies as
-/// for `write_text` (FEATURE-09).
+/// `path:N:text` line for each line of `results`, in that order, and no label
+/// line. With `groups`, `--` stands between two results, as grep with a
+/// context option (FEATURE-13, decision 15). With no `groups`, no `--`, as
+/// grep with no context option. The size limit applies as for `write_text`
+/// (FEATURE-09).
 pub fn write_lines(
     out: &mut dyn Write,
     results: &[Snippet],
     paint: Option<Paint>,
+    groups: bool,
     limit: Option<usize>,
 ) -> io::Result<SizeReport> {
     let results: Vec<&Snippet> = results.iter().collect();
-    write_fitted(out, b"", &results, false, paint, limit)
+    write_fitted(out, b"", &results, groups, paint, limit)
+}
+/// Write each of `items` as one whole line, inside `limit` (`None` for no
+/// limit). The lines that fit come from the top. The report says how many
+/// lines jag left out (FEATURE-13, decision 19 and 20; FEATURE-09).
+fn write_whole_lines(
+    out: &mut dyn Write,
+    items: &[Vec<u8>],
+    limit: Option<usize>,
+) -> io::Result<SizeReport> {
+    let kept = match limit {
+        None => items.len(),
+        Some(limit) => {
+            let mut sums = vec![0usize];
+            for bytes in items {
+                sums.push(sums[sums.len() - 1] + char_count(bytes));
+            }
+            fitting_count(items.len(), limit, |k| sums[k])
+        }
+    };
+    for bytes in &items[..kept] {
+        out.write_all(bytes)?;
+    }
+    Ok(SizeReport {
+        shown: kept,
+        left_out: items.len() - kept,
+        top_result_cut: 0,
+    })
+}
+
+/// The bytes of one line: the parts of `parts` with their color codes when
+/// `colored`, and `\n` at the end.
+fn colored_line(colored: bool, parts: &[(&str, &[u8])]) -> Vec<u8> {
+    let mut bytes = Vec::new();
+    // A write to a `Vec` does not fail.
+    for (code, text) in parts {
+        let _ = item(&mut bytes, colored, code, text);
+    }
+    bytes.push(b'\n');
+    bytes
+}
+
+/// Write the path of each file with a match, one path on each line, in the
+/// order of `files` (FEATURE-13, decision 19). The path is in `PATH` when
+/// `colored`. The size limit applies, with each line as one whole item.
+pub fn write_files(
+    out: &mut dyn Write,
+    files: &[FileMatches],
+    colored: bool,
+    limit: Option<usize>,
+) -> io::Result<SizeReport> {
+    let items: Vec<Vec<u8>> = files
+        .iter()
+        .filter(|file| !file.lines.is_empty())
+        .map(|file| colored_line(colored, &[(PATH, file.path.as_os_str().as_encoded_bytes())]))
+        .collect();
+    write_whole_lines(out, &items, limit)
+}
+
+/// Write `path:N` for each file of `files`, in that order: N is the count of
+/// matching lines (FEATURE-13, decision 20). The path is in `PATH` and the `:`
+/// in `SEPARATOR` when `colored`. The size limit applies, with each line as
+/// one whole item.
+pub fn write_counts(
+    out: &mut dyn Write,
+    files: &[FileMatches],
+    colored: bool,
+    limit: Option<usize>,
+) -> io::Result<SizeReport> {
+    let items: Vec<Vec<u8>> = files
+        .iter()
+        .map(|file| {
+            let count = file.lines.len().to_string();
+            let mut line = colored_line(
+                colored,
+                &[
+                    (PATH, file.path.as_os_str().as_encoded_bytes()),
+                    (SEPARATOR, b":"),
+                ],
+            );
+            // The line ends with `\n`: put the count before it.
+            line.pop();
+            line.extend_from_slice(count.as_bytes());
+            line.push(b'\n');
+            line
+        })
+        .collect();
+    write_whole_lines(out, &items, limit)
 }
 
 /// The second sentence of the size notice, and the field `size_limit_fix`.
@@ -1182,7 +1272,7 @@ mod tests {
 
     fn lines_text(results: &[Snippet], paint: Option<Paint>) -> String {
         let mut out = Vec::new();
-        write_lines(&mut out, results, paint, None).expect("write");
+        write_lines(&mut out, results, paint, false, None).expect("write");
         String::from_utf8(out).expect("text")
     }
 
@@ -1225,6 +1315,81 @@ mod tests {
         let lines = lines_text(&[result], Some(&find));
         assert_eq!(lines.as_bytes(), text);
         assert!(lines.contains("\x1b[01;31m"));
+    }
+
+    #[test]
+    fn write_lines_with_groups_writes_a_double_dash_between_two_results() {
+        let results = [
+            snippet("a.txt", &[(3, "3", false), (4, "X", true), (5, "5", false)]),
+            snippet("b.txt", &[(1, "X", true)]),
+        ];
+        let mut out = Vec::new();
+        write_lines(&mut out, &results, None, true, None).expect("write");
+        assert_eq!(
+            String::from_utf8(out).expect("text"),
+            "a.txt-3-3\na.txt:4:X\na.txt-5-5\n--\nb.txt:1:X\n"
+        );
+        let mut out = Vec::new();
+        write_lines(&mut out, &results, Some(&find_needle), true, None).expect("write");
+        let text = String::from_utf8(out).expect("text");
+        assert!(text.contains(&format!("\n{}\n", paint("36", "--"))));
+        assert!(text.starts_with(&head("a.txt", "-", 3)));
+    }
+
+    fn found(path: &str, count: u64) -> FileMatches {
+        FileMatches {
+            path: PathBuf::from(path),
+            lines: (1..=count)
+                .map(|number| crate::search::walk::MatchLine {
+                    line_number: number,
+                    text: b"needle".to_vec(),
+                })
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn write_files_gives_each_path_with_a_match_one_time_for_each_place() {
+        let files = [found("a.txt", 2), found("b.txt", 0), found("a.txt", 1)];
+        let mut out = Vec::new();
+        write_files(&mut out, &files, false, None).expect("write");
+        assert_eq!(out, b"a.txt\na.txt\n");
+        let mut out = Vec::new();
+        write_files(&mut out, &files[..1], true, None).expect("write");
+        assert_eq!(out, b"\x1b[35m\x1b[Ka.txt\x1b[m\x1b[K\n");
+    }
+
+    #[test]
+    fn write_counts_gives_path_and_count_also_for_no_match() {
+        let files = [found("a.txt", 2), found("b.txt", 0)];
+        let mut out = Vec::new();
+        write_counts(&mut out, &files, false, None).expect("write");
+        assert_eq!(out, b"a.txt:2\nb.txt:0\n");
+        // The bytes of `grep --color=always -c needle a.txt b.txt`.
+        let mut out = Vec::new();
+        write_counts(&mut out, &files[..1], true, None).expect("write");
+        assert_eq!(
+            out,
+            b"\x1b[35m\x1b[Ka.txt\x1b[m\x1b[K\x1b[36m\x1b[K:\x1b[m\x1b[K2\n"
+        );
+    }
+
+    #[test]
+    fn write_files_and_write_counts_fit_whole_lines_inside_the_limit() {
+        let files = [found("a.txt", 2), found("b.txt", 1), found("c.txt", 1)];
+        // `a.txt\n` has 6 characters, so 2 lines fit in 12.
+        let mut out = Vec::new();
+        let size = write_files(&mut out, &files, false, Some(12)).expect("write");
+        assert_eq!(out, b"a.txt\nb.txt\n");
+        assert_eq!((size.shown, size.left_out), (2, 1));
+        // `a.txt:2\n` has 8 characters, so 1 line fits in 12.
+        let mut out = Vec::new();
+        let size = write_counts(&mut out, &files, false, Some(12)).expect("write");
+        assert_eq!(out, b"a.txt:2\n");
+        assert_eq!((size.shown, size.left_out), (1, 2));
+        let mut out = Vec::new();
+        let size = write_counts(&mut out, &files, false, None).expect("write");
+        assert_eq!(size.left_out, 0);
     }
 
     #[test]
@@ -1499,11 +1664,11 @@ mod tests {
             })
             .collect();
         let mut out = Vec::new();
-        let size = write_lines(&mut out, &lines, None, Some(1000)).expect("write");
+        let size = write_lines(&mut out, &lines, None, false, Some(1000)).expect("write");
         assert_eq!(size, report(8, 22, 0));
         assert_eq!(String::from_utf8_lossy(&out).chars().count(), 896);
         let mut out = Vec::new();
-        let size = write_lines(&mut out, &lines, None, Some(60)).expect("write");
+        let size = write_lines(&mut out, &lines, None, false, Some(60)).expect("write");
         assert_eq!(size.shown, 1);
         assert_eq!(size.left_out, 29);
         assert!(size.top_result_cut > 0);

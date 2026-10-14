@@ -1,5 +1,6 @@
 //! C-cli: option parsing, dispatch, the search flow, and the exit code.
 
+mod grep;
 mod stop;
 
 use std::ffi::{OsStr, OsString};
@@ -9,10 +10,10 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::Duration;
 
-use clap::Parser;
 use clap::error::ErrorKind;
+use clap::{CommandFactory, FromArgMatches, Parser};
 use grep_matcher::Matcher;
-use grep_regex::{RegexMatcher, RegexMatcherBuilder};
+use grep_regex::RegexMatcher;
 
 use crate::check;
 use crate::config::{
@@ -27,8 +28,11 @@ use crate::output::{
 };
 use crate::prerank;
 use crate::scorer::{ScoreError, ScoreSettings, probe, rank, score};
-use crate::search::snippet::{Snippet, line_windows, match_texts, plan_windows, read_snippets};
-use crate::search::{ScanOptions, ScanReport, WalkWarning, scan};
+use crate::search::snippet::{
+    ContextLines, Snippet, line_windows, match_texts, plan_windows, read_snippets,
+};
+use crate::search::{FileFilter, GlobKind, ScanOptions, ScanReport, WalkWarning, scan};
+use grep::{MatchOptions, Report, build_matcher};
 use stop::Stop;
 
 /// The longest question, in UTF-8 bytes (decision 30).
@@ -38,13 +42,17 @@ const MAX_QUESTION_BYTES: usize = 12_000;
 /// command line, because a value can be a key (CV-6, decision 26).
 const USAGE_ERROR: &str = "jag: the command line is not valid. Run jag --help to see the usage.";
 
+/// The options that `--check`, `--setup`, and `--forget-key` refuse (FEATURE-13,
+/// decision 6).
+const MODES: [&str; 3] = ["setup", "forget_key", "check"];
+
 /// Grep with a model that ranks the matches by how well they answer your question.
 #[derive(Parser, Debug)]
 #[command(
     name = "jag",
     version,
     arg_required_else_help = true,
-    override_usage = "jag [OPTIONS] TERM [PATH...]\n       jag [OPTIONS] --ask QUESTION TERM [PATH...]\n       jag --check [--timeout SECONDS] [--retry-wait SECONDS] [--base-url URL] [--model NAME]\n       jag --setup\n       jag --forget-key"
+    override_usage = "jag [OPTIONS] TERM [PATH...]\n       jag [OPTIONS] --ask QUESTION TERM [PATH...]\n       jag [OPTIONS] -e TERM ... [PATH...]\n       jag --check [--timeout SECONDS] [--retry-wait SECONDS] [--base-url URL] [--model NAME]\n       jag --setup\n       jag --forget-key"
 )]
 struct Cli {
     /// Write one JSON document for an agent, in place of text
@@ -64,6 +72,58 @@ struct Cli {
         conflicts_with_all = ["setup", "forget_key", "check"]
     )]
     color: Option<String>,
+
+    /// Match upper case and lower case letters as the same
+    #[arg(short = 'i', long = "ignore-case", conflicts_with_all = MODES)]
+    ignore_case: bool,
+
+    /// Match only whole words
+    #[arg(short = 'w', long = "word-regexp", conflicts_with_all = MODES)]
+    word: bool,
+
+    /// Read the term as fixed text, not as a regular expression
+    #[arg(short = 'F', long = "fixed-strings", conflicts_with_all = MODES)]
+    fixed: bool,
+
+    /// Use TERM as the term. With more than one -e, a line matches one of the terms
+    #[arg(short = 'e', long = "regexp", value_name = "TERM", allow_hyphen_values = true, conflicts_with_all = MODES)]
+    terms: Vec<String>,
+
+    /// Show NUM lines after each match
+    #[arg(short = 'A', long = "after-context", value_name = "NUM", allow_hyphen_values = true, overrides_with = "after", conflicts_with_all = MODES)]
+    after: Option<String>,
+
+    /// Show NUM lines before each match
+    #[arg(short = 'B', long = "before-context", value_name = "NUM", allow_hyphen_values = true, overrides_with = "before", conflicts_with_all = MODES)]
+    before: Option<String>,
+
+    /// Show NUM lines before and after each match
+    #[arg(short = 'C', long = "context", value_name = "NUM", allow_hyphen_values = true, overrides_with = "context", conflicts_with_all = MODES)]
+    context: Option<String>,
+
+    /// Show only the path of each file with a match (not with --ask or --json)
+    #[arg(short = 'l', long = "files-with-matches", conflicts_with_all = MODES)]
+    files_with_matches: bool,
+
+    /// Show only the count of matching lines of each file (not with --ask or --json)
+    #[arg(short = 'c', long = "count", conflicts_with_all = MODES)]
+    count: bool,
+
+    /// Write nothing to standard output: give only the exit code (not with --ask or --json)
+    #[arg(short = 'q', long = "quiet", alias = "silent", conflicts_with_all = MODES)]
+    quiet: bool,
+
+    /// Search only the files whose name matches GLOB
+    #[arg(long, value_name = "GLOB", conflicts_with_all = MODES)]
+    include: Vec<String>,
+
+    /// Do not search the files whose name matches GLOB
+    #[arg(long, value_name = "GLOB", conflicts_with_all = MODES)]
+    exclude: Vec<String>,
+
+    /// The globs of --include and --exclude, in the order of the command line
+    #[arg(skip)]
+    globs: Vec<(GlobKind, String)>,
 
     /// Check that jag is ready: the key, the service, and the key file
     #[arg(long, conflicts_with_all = ["setup", "forget_key", "cost_limit", "term", "ask", "paths"])]
@@ -111,7 +171,7 @@ struct Cli {
 
     /// The regular expression that the lines must match
     #[arg(value_name = "TERM")]
-    term: Option<String>,
+    term: Option<OsString>,
 
     /// The files and folders to search
     #[arg(value_name = "PATH")]
@@ -274,7 +334,7 @@ fn error_document(summary: &mut Summary, failure: Failure, limit: Option<usize>)
 /// Parse with `try_parse`, and never write the text of a clap error: clap
 /// repeats a value from the command line in many errors (CV-6, decision 26).
 fn parse() -> Result<Cli, ExitCode> {
-    match Cli::try_parse() {
+    match parse_from(std::env::args_os()) {
         Ok(cli) => Ok(cli),
         Err(error) => match error.kind() {
             // These texts hold no value from the command line.
@@ -284,23 +344,38 @@ fn parse() -> Result<Cli, ExitCode> {
                 let _ = error.print();
                 Err(ExitCode::from(u8::try_from(error.exit_code()).unwrap_or(2)))
             }
-            _ if json_requested(std::env::args_os()) => {
-                // The document holds only fixed texts, so it fits.
-                let buffer = error_document(
-                    &mut Summary::default(),
-                    argument_failure(),
-                    Some(DEFAULT_SIZE_LIMIT),
-                );
-                // A failed write goes to the error stream (decision 25).
-                let code = emit(&mut io::stdout(), &mut io::stderr(), &buffer, 2);
-                Err(ExitCode::from(code))
-            }
-            _ => {
-                eprintln!("{USAGE_ERROR}");
+            kind => {
+                // An unknown option names itself and never a value
+                // (FEATURE-13, decision 18).
+                let named = (kind == ErrorKind::UnknownArgument)
+                    .then(|| grep::unknown_option_failure(&error))
+                    .flatten();
+                if json_requested(std::env::args_os()) {
+                    let failure = named.unwrap_or_else(argument_failure);
+                    // The document holds only fixed texts, so it fits.
+                    let buffer =
+                        error_document(&mut Summary::default(), failure, Some(DEFAULT_SIZE_LIMIT));
+                    // A failed write goes to the error stream (decision 25).
+                    let code = emit(&mut io::stdout(), &mut io::stderr(), &buffer, 2);
+                    return Err(ExitCode::from(code));
+                }
+                match named {
+                    Some(failure) => eprint!("{}", failure.render()),
+                    None => eprintln!("{USAGE_ERROR}"),
+                }
                 Err(ExitCode::from(2))
             }
         },
     }
+}
+
+/// Parse a command line. The order of the globs comes from the matches, which
+/// `Cli::try_parse_from` does not give (FEATURE-13, decision 27).
+fn parse_from(args: impl IntoIterator<Item = OsString>) -> Result<Cli, clap::Error> {
+    let matches = Cli::command().try_get_matches_from(args)?;
+    let mut cli = Cli::from_arg_matches(&matches)?;
+    cli.globs = grep::ordered_globs(&matches);
+    Ok(cli)
 }
 
 /// Write a failure and give the exit code (CV-1, CV-3). In text mode the
@@ -357,11 +432,21 @@ fn usage_failure(cause: &str, fix: &str) -> Failure {
 }
 
 /// What the user typed for a search, after the checks of step 1.
+#[derive(Debug)]
 struct SearchArgs<'a> {
-    term: &'a str,
+    /// A line matches one of the terms (FEATURE-13, `-e`).
+    terms: Vec<&'a str>,
     /// `None` for a search with no question (FEATURE-12).
     question: Option<&'a str>,
-    paths: &'a [PathBuf],
+    paths: Vec<PathBuf>,
+    /// The options `-i`, `-w`, and `-F`.
+    matching: MatchOptions,
+    /// What plain grep writes: the lines, or `-l`, `-c`, or `-q`.
+    report: Report,
+    /// The lines around a match. `None`: no option gave them.
+    context: Option<ContextLines>,
+    /// The globs of `--include` and `--exclude`.
+    files: FileFilter,
     /// The parsed `--timeout`, `--retry-wait`, `--base-url`, and `--model`.
     settings: SettingOptions,
     /// The parsed `--max-scored`.
@@ -372,13 +457,22 @@ struct SearchArgs<'a> {
 
 /// Step 1: the arguments of a search. No message shows a value.
 fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
-    let Some(term) = cli.term.as_deref() else {
-        return Err(usage_failure(
-            "a search needs a term.",
-            "Use: jag [OPTIONS] TERM PATH...",
-        ));
+    // With -e, each word is a path. With no -e, the first word is the term
+    // (FEATURE-13, decision 10).
+    let words = grep::words(cli);
+    let (terms, path_words) = if cli.terms.is_empty() {
+        let Some((term, rest)) = words.split_first() else {
+            return Err(usage_failure(
+                "a search needs a term.",
+                "Use: jag [OPTIONS] TERM PATH...",
+            ));
+        };
+        let term = term.to_str().ok_or_else(argument_failure)?;
+        (vec![term], rest.to_vec())
+    } else {
+        (cli.terms.iter().map(String::as_str).collect(), words)
     };
-    if cli.paths.is_empty() {
+    if path_words.is_empty() {
         return Err(usage_failure(
             "a search needs a path.",
             "Searching standard input comes later.",
@@ -399,6 +493,10 @@ fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
             ));
         }
     }
+    // Then the options of FEATURE-13 (decision 30).
+    let report = grep::report(cli, question.is_some())?;
+    let context = grep::context_lines(cli, question.is_some())?;
+    let files = grep::file_filter(&cli.globs)?;
     // The time options come after the other checks and before the key
     // (decision 11). The timeout is checked first.
     let times = time_options(cli)?;
@@ -419,9 +517,13 @@ fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
     };
     let settings = address_options(cli, times)?;
     Ok(SearchArgs {
-        term,
+        terms,
         question,
-        paths: &cli.paths,
+        paths: path_words.into_iter().map(PathBuf::from).collect(),
+        matching: MatchOptions::of(cli),
+        report,
+        context,
+        files,
         settings,
         cost_limit,
         size_limit,
@@ -518,10 +620,14 @@ fn search(
         .chars();
     stop.set_size_limit(size);
 
-    let matcher = build_matcher(args.term)?;
+    let matcher = build_matcher(&args.terms, args.matching)?;
 
-    let report = scan(args.paths, &matcher, &ScanOptions::default());
-    let windows = plan_windows(&report.files);
+    let options = ScanOptions {
+        files: args.files.clone(),
+        ..ScanOptions::default()
+    };
+    let report = scan(&args.paths, &matcher, &options);
+    let windows = plan_windows(&report.files, args.context.unwrap_or(ContextLines::DEFAULT));
     let total = windows.len();
     // Only a search with more results than the limit pre-ranks them, from
     // the text of the scan, with no file read (decisions 8 and 15).
@@ -643,9 +749,31 @@ fn plain(
         .map_err(Failure::from)?
         .chars();
     stop.set_size_limit(size);
-    let matcher = build_matcher(args.term)?;
-    let report = scan(args.paths, &matcher, &ScanOptions::default());
-    let windows = line_windows(&report.files);
+    let matcher = build_matcher(&args.terms, args.matching)?;
+    let options = ScanOptions {
+        files: args.files.clone(),
+        keep_files_with_no_match: args.report == Report::Counts,
+        ..ScanOptions::default()
+    };
+    let report = scan(&args.paths, &matcher, &options);
+    if args.report != Report::Lines {
+        let colored = colored(cli, env, stdout_is_terminal);
+        return grep::write_report(
+            args.report,
+            colored,
+            &report,
+            context,
+            summary,
+            stdout,
+            stderr,
+        );
+    }
+    // With an option for the lines around a match, groups of lines. With none,
+    // one line for each match (FEATURE-13, decision 15).
+    let windows = match args.context {
+        Some(lines) => plan_windows(&report.files, lines),
+        None => line_windows(&report.files),
+    };
     let (lines, read_warnings) = read_snippets(&windows);
     record(
         summary,
@@ -671,8 +799,8 @@ fn plain(
         Mode::Text => {
             let find = |line: &[u8]| find_ranges(&matcher, line);
             let paint = colored(cli, env, stdout_is_terminal).then_some(&find as Paint);
-            let report =
-                write_lines(&mut buffer, &lines, paint, size).map_err(|_| write_failure())?;
+            let report = write_lines(&mut buffer, &lines, paint, args.context.is_some(), size)
+                .map_err(|_| write_failure())?;
             if let Some(notice) = size_notice(&report, size) {
                 stop.notice(stderr, &notice);
             }
@@ -686,18 +814,6 @@ fn plain(
         }
     };
     Ok(emit_claimed(stop, stdout, stderr, &buffer, code))
-}
-
-fn build_matcher(term: &str) -> Result<RegexMatcher, Failure> {
-    RegexMatcherBuilder::new()
-        .line_terminator(Some(b'\n'))
-        .build(term)
-        .map_err(|_| {
-            usage_failure(
-                "the term is not a valid regular expression.",
-                "Check the term. It uses the regular expression rules of ripgrep.",
-            )
-        })
 }
 
 /// The byte ranges of the matches in one line, for the color.
@@ -900,7 +1016,8 @@ mod tests {
                 .iter()
                 .map(|path| path.display().to_string())
                 .collect();
-            (cli.ask, cli.term, paths)
+            let term = cli.term.map(|term| term.to_string_lossy().into_owned());
+            (cli.ask, term, paths)
         })
     }
 
@@ -977,7 +1094,7 @@ mod tests {
         let cli =
             Cli::try_parse_from(["jag", "--color", "never", "question", "path"]).expect("parse");
         assert_eq!(cli.color_when(), ColorWhen::Auto);
-        assert_eq!(cli.term.as_deref(), Some("never"));
+        assert_eq!(cli.term.as_deref(), Some(OsStr::new("never")));
     }
 
     fn scoring_step_that_fails(progress: &Progress) -> Result<(), Failure> {

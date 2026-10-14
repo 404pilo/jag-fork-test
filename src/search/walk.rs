@@ -14,8 +14,10 @@ use grep_matcher::Matcher;
 use grep_searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkFinish, SinkMatch};
 use ignore::{DirEntry, WalkBuilder, WalkState};
 
+use super::filter::FileFilter;
+
 /// The options of a scan. `ScanOptions::default()` is what jag uses.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct ScanOptions {
     /// The count of threads. 0: the `ignore` crate picks the count.
     pub threads: usize,
@@ -23,6 +25,11 @@ pub struct ScanOptions {
     pub global_ignore: bool,
     /// Read the ignore files of parent folders.
     pub parent_ignore: bool,
+    /// The globs of --include and --exclude (FEATURE-13).
+    pub files: FileFilter,
+    /// Keep a `FileMatches` with no line for each searched file with no
+    /// match (FEATURE-13, `-c`).
+    pub keep_files_with_no_match: bool,
 }
 
 impl Default for ScanOptions {
@@ -31,6 +38,8 @@ impl Default for ScanOptions {
             threads: 0,
             global_ignore: true,
             parent_ignore: true,
+            files: FileFilter::default(),
+            keep_files_with_no_match: false,
         }
     }
 }
@@ -133,7 +142,8 @@ impl WalkWarning {
 /// The result of a scan.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ScanReport {
-    /// Only the files with a match, in the order of the paths on the command
+    /// Only the files with a match (with `keep_files_with_no_match`, also each
+    /// searched file with no match and no binary data), in the order of the paths on the command
     /// line, then in the byte order of the path. A path that the command line
     /// gives two times, or a path under another path, gives its files at each
     /// place of the root, as `grep` does.
@@ -193,7 +203,7 @@ where
         let shared = &shared;
         Box::new(move |result| {
             match result {
-                Ok(entry) => visit_entry(shared, matcher, &mut searcher, &entry),
+                Ok(entry) => visit_entry(shared, matcher, options, &mut searcher, &entry),
                 Err(error) => visit_error(shared, &error),
             }
             WalkState::Continue
@@ -205,6 +215,7 @@ where
 fn visit_entry<M: Matcher>(
     shared: &Shared,
     matcher: &M,
+    options: &ScanOptions,
     searcher: &mut Searcher,
     entry: &DirEntry,
 ) {
@@ -225,10 +236,19 @@ fn visit_entry<M: Matcher>(
         if let Ok(mut folders) = shared.folder_paths.lock() {
             folders.insert(entry.path().to_path_buf());
         }
-    } else if file_type.is_file() {
+    } else if file_type.is_file() && options.files.allows(entry.file_name()) {
+        // The walk counted the entry above, so a file that a glob skips is
+        // not in the skip notice (FEATURE-13, decision 27).
         let path = entry.path();
         let root = path.ancestors().nth(entry.depth()).unwrap_or(path);
-        search_file(shared, matcher, searcher, root, path);
+        search_file(
+            shared,
+            matcher,
+            searcher,
+            root,
+            path,
+            options.keep_files_with_no_match,
+        );
     }
 }
 
@@ -264,6 +284,7 @@ fn search_file<M: Matcher>(
     searcher: &mut Searcher,
     root: &Path,
     path: &Path,
+    keep_no_match: bool,
 ) {
     let mut sink = LineSink::default();
     match searcher.search_path(matcher, path, &mut sink) {
@@ -277,7 +298,7 @@ fn search_file<M: Matcher>(
         Ok(()) if sink.binary => {
             shared.binary.fetch_add(1, Ordering::Relaxed);
         }
-        Ok(()) if !sink.lines.is_empty() => push(
+        Ok(()) if keep_no_match || !sink.lines.is_empty() => push(
             &shared.files,
             (
                 root.to_path_buf(),

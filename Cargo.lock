@@ -445,6 +445,7 @@ version = "0.1.0"
 dependencies = [
  "assert_cmd",
  "clap",
+ "globset",
  "grep-matcher",
  "grep-regex",
  "grep-searcher",

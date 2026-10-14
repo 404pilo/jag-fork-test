@@ -131,6 +131,25 @@ impl Snippet {
     }
 }
 
+/// The lines around each match (FEATURE-13, decisions 13 to 17).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ContextLines {
+    pub before: u64,
+    pub after: u64,
+    /// The most lines of one result. `None`: no limit (plain grep).
+    pub max_lines: Option<u64>,
+}
+
+impl ContextLines {
+    /// 3 lines before, 3 lines after, and at most 12 lines (FEATURE-04 spec
+    /// decision 4).
+    pub const DEFAULT: ContextLines = ContextLines {
+        before: CONTEXT_LINES,
+        after: CONTEXT_LINES,
+        max_lines: Some(MAX_LINES),
+    };
+}
+
 /// The plan of one result. The plan uses only line numbers.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Window {
@@ -141,31 +160,39 @@ pub struct Window {
     pub matches: Vec<u64>,
 }
 
-/// Join the matches of each file into windows of 12 lines or less.
+/// Join the matches of each file into windows of `context.max_lines` lines
+/// or less, with `context.before` and `context.after` lines around each
+/// match. With no limit, windows that touch or overlap always join.
 ///
 /// The windows are in the order of `files`, then in line order.
-pub fn plan_windows(files: &[FileMatches]) -> Vec<Window> {
+pub fn plan_windows(files: &[FileMatches], context: ContextLines) -> Vec<Window> {
+    // The last line that a window from `start` can hold.
+    let last_line = |start: u64| {
+        context
+            .max_lines
+            .map_or(u64::MAX, |max| start.saturating_add(max.saturating_sub(1)))
+    };
     let mut windows = Vec::new();
     for file in files {
         let mut current: Option<Window> = None;
         for line in &file.lines {
             let m = line.line_number;
             current = Some(match current.take() {
-                None => open_window(&file.path, m, 1),
+                None => open_window(&file.path, m, 1, context),
                 Some(mut window) => {
-                    if m <= window.start + (MAX_LINES - 1)
-                        && m.saturating_sub(CONTEXT_LINES) <= window.end + 1
+                    if m <= last_line(window.start)
+                        && m.saturating_sub(context.before) <= window.end.saturating_add(1)
                     {
                         window.matches.push(m);
                         window.end = window
                             .end
-                            .max(m + CONTEXT_LINES)
-                            .min(window.start + (MAX_LINES - 1));
+                            .max(m.saturating_add(context.after))
+                            .min(last_line(window.start));
                         window
                     } else {
-                        let first_free = window.end + 1;
+                        let first_free = window.end.saturating_add(1);
                         windows.push(window);
-                        open_window(&file.path, m, first_free)
+                        open_window(&file.path, m, first_free, context)
                     }
                 }
             });
@@ -176,11 +203,11 @@ pub fn plan_windows(files: &[FileMatches]) -> Vec<Window> {
 }
 
 /// A new window for the match `m`. No line before `first_free` is in it.
-fn open_window(path: &std::path::Path, m: u64, first_free: u64) -> Window {
+fn open_window(path: &std::path::Path, m: u64, first_free: u64, context: ContextLines) -> Window {
     Window {
         path: path.to_path_buf(),
-        start: m.saturating_sub(CONTEXT_LINES).max(first_free),
-        end: m + CONTEXT_LINES,
+        start: m.saturating_sub(context.before).max(first_free),
+        end: m.saturating_add(context.after),
         matches: vec![m],
     }
 }
@@ -203,7 +230,7 @@ pub fn line_windows(files: &[FileMatches]) -> Vec<Window> {
 
 /// The text of the matching lines of each window, in the order of `windows`.
 ///
-/// `windows` must be the output of `plan_windows(files)`. That function puts
+/// `windows` must be the output of `plan_windows(files, context)`. That function puts
 /// each matching line of `files` in exactly one window, in order. So window
 /// k holds the next `windows[k].matches.len()` matching lines. This reads no
 /// file.
@@ -406,10 +433,71 @@ mod tests {
 
     /// The `(start, end)` of each window for one file.
     fn spans(numbers: &[u64]) -> Vec<(u64, u64)> {
-        plan_windows(&[file("a", numbers)])
+        plan_windows(&[file("a", numbers)], ContextLines::DEFAULT)
             .iter()
             .map(|window| (window.start, window.end))
             .collect()
+    }
+
+    /// The `(start, end)` of each window for one file, with `context`.
+    fn spans_with(
+        numbers: &[u64],
+        before: u64,
+        after: u64,
+        max_lines: Option<u64>,
+    ) -> Vec<(u64, u64)> {
+        let context = ContextLines {
+            before,
+            after,
+            max_lines,
+        };
+        plan_windows(&[file("a", numbers)], context)
+            .iter()
+            .map(|window| (window.start, window.end))
+            .collect()
+    }
+
+    #[test]
+    fn only_lines_after_give_no_line_before() {
+        assert_eq!(spans_with(&[5], 0, 2, Some(12)), [(5, 7)]);
+    }
+
+    #[test]
+    fn twelve_lines_on_each_side_give_a_window_of_25_lines() {
+        assert_eq!(spans_with(&[30], 12, 12, Some(25)), [(18, 42)]);
+    }
+
+    #[test]
+    fn with_no_limit_groups_that_touch_join_and_others_do_not() {
+        assert_eq!(spans_with(&[4, 6], 1, 1, None), [(3, 7)]);
+        assert_eq!(spans_with(&[4, 10], 1, 1, None), [(3, 5), (9, 11)]);
+        // Lines 3 to 5 and 6 to 8 touch, so they join. Line 6 is a gap
+        // between 3 to 5 and 7 to 9.
+        assert_eq!(spans_with(&[4, 7], 1, 1, None), [(3, 8)]);
+        assert_eq!(spans_with(&[4, 8], 1, 1, None), [(3, 5), (7, 9)]);
+        assert_eq!(spans_with(&[4, 5], 0, 0, None), [(4, 5)]);
+        assert_eq!(spans_with(&[4, 10], 0, 0, None), [(4, 4), (10, 10)]);
+        let many: Vec<u64> = (1..=100).step_by(2).collect();
+        assert_eq!(spans_with(&many, 1, 1, None), [(1, 100)]);
+    }
+
+    #[test]
+    fn a_very_large_value_does_not_overflow() {
+        assert_eq!(spans_with(&[5, 9], 0, u64::MAX, None), [(5, u64::MAX)]);
+        assert_eq!(
+            spans_with(&[5], u64::MAX, u64::MAX, Some(u64::MAX)),
+            [(1, u64::MAX)]
+        );
+        assert_eq!(
+            spans_with(&[u64::MAX], 3, 3, Some(12)),
+            [(u64::MAX - 3, u64::MAX)]
+        );
+    }
+
+    #[test]
+    fn the_default_context_gives_the_windows_of_feature_04() {
+        assert_eq!(spans_with(&[10, 16], 3, 3, Some(12)), spans(&[10, 16]));
+        assert_eq!(ContextLines::DEFAULT.max_lines, Some(MAX_LINES));
     }
 
     fn cut(bytes: &[u8]) -> (usize, u64) {
@@ -533,14 +621,14 @@ mod tests {
 
     #[test]
     fn the_matches_of_a_window_are_kept_in_line_order() {
-        let windows = plan_windows(&[file("a", &[10, 13, 16, 40])]);
+        let windows = plan_windows(&[file("a", &[10, 13, 16, 40])], ContextLines::DEFAULT);
         assert_eq!(windows[0].matches, [10, 13, 16]);
         assert_eq!(windows[1].matches, [40]);
     }
 
     #[test]
     fn windows_follow_the_order_of_the_files() {
-        let windows = plan_windows(&[file("a", &[1]), file("b", &[1])]);
+        let windows = plan_windows(&[file("a", &[1]), file("b", &[1])], ContextLines::DEFAULT);
         assert_eq!(windows[0].path, PathBuf::from("a"));
         assert_eq!(windows[1].path, PathBuf::from("b"));
     }
@@ -554,7 +642,7 @@ mod tests {
         let mut second = file("b", &[2]);
         second.lines[0].text = b"two".to_vec();
         let files = [first, second];
-        let windows = plan_windows(&files);
+        let windows = plan_windows(&files, ContextLines::DEFAULT);
         assert_eq!(windows.len(), 3);
         let texts = match_texts(&files, &windows);
         assert_eq!(
@@ -702,7 +790,7 @@ mod tests {
                 file(&dir.path().join(name).to_string_lossy(), &[1])
             })
             .collect();
-        let windows = plan_windows(&files);
+        let windows = plan_windows(&files, ContextLines::DEFAULT);
         assert_eq!(windows.len(), 250);
         let (snippets, warnings) = read_snippets(&windows[..200]);
         assert_eq!(snippets.len(), 200);

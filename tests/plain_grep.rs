@@ -430,7 +430,11 @@ fn decision_2_a_question_that_starts_with_a_dash_needs_an_equals_sign() {
     let server = FakeServer::constant(0.9);
     let run = self::run(&server, root.path(), &["--ask", "-v", "needle", "dir"]);
     assert_eq!(run.code, Some(2));
-    assert_eq!(run.stderr, USAGE_ERROR);
+    // `-v` is an unknown option, and jag names it (FEATURE-13, decision 18).
+    assert_eq!(
+        run.stderr,
+        "jag: the option -v is not valid.\nRun jag --help to see the options.\n"
+    );
     assert!(server.requests().is_empty());
 }
 

@@ -18,7 +18,7 @@ fn an_argument_error_writes_one_fixed_line_with_no_value() {
     let cases: [&[&str]; 5] = [
         &["--setup", "SENTINEL-SENTINEL-SENTINEL"],
         &["--setup=SENTINEL-SENTINEL-SENTINEL"],
-        &["--SENTINEL-SENTINEL-SENTINEL"],
+        &["--SENTINEL-SENTINEL-SENTINEL-SENTINEL"],
         &["--forget-key", "needle", "SENTINEL-SENTINEL-SENTINEL"],
         &["--forget-key=SENTINEL-SENTINEL-SENTINEL"],
     ];
@@ -45,7 +45,22 @@ fn help_and_version_exit_0() {
         .stdout(predicate::str::contains(
             "jag [OPTIONS] --ask QUESTION TERM [PATH...]",
         ))
+        .stdout(predicate::str::contains(
+            "jag [OPTIONS] -e TERM ... [PATH...]",
+        ))
         .stdout(predicate::str::contains("--ask <QUESTION>"))
+        .stdout(predicate::str::contains("-i, --ignore-case"))
+        .stdout(predicate::str::contains("-w, --word-regexp"))
+        .stdout(predicate::str::contains("-F, --fixed-strings"))
+        .stdout(predicate::str::contains("-e, --regexp <TERM>"))
+        .stdout(predicate::str::contains("-A, --after-context <NUM>"))
+        .stdout(predicate::str::contains("-B, --before-context <NUM>"))
+        .stdout(predicate::str::contains("-C, --context <NUM>"))
+        .stdout(predicate::str::contains("-l, --files-with-matches"))
+        .stdout(predicate::str::contains("-c, --count"))
+        .stdout(predicate::str::contains("-q, --quiet"))
+        .stdout(predicate::str::contains("--include <GLOB>"))
+        .stdout(predicate::str::contains("--exclude <GLOB>"))
         .stdout(predicate::str::contains("--json"))
         .stdout(predicate::str::contains("--color[=<WHEN>]"))
         .stdout(predicate::str::contains("--max-scored <COUNT>"))
@@ -605,11 +620,10 @@ fn the_size_options_conflict_with_each_other_and_with_the_other_modes() {
 // standard output, and it holds no value from the command line.
 #[test]
 fn an_argument_error_with_json_writes_one_document_with_no_value() {
-    let cases: [&[&str]; 6] = [
+    let cases: [&[&str]; 5] = [
         &["--json", "--setup"],
         &["--json", "--forget-key"],
         &["--json", "--check"],
-        &["--json", "--bogus"],
         &["--json", "--timeout"],
         &["--json", "--setup", "SENTINEL-SENTINEL-SENTINEL"],
     ];
@@ -625,9 +639,35 @@ fn an_argument_error_with_json_writes_one_document_with_no_value() {
         assert_eq!(document["error"]["cause"], "the command line is not valid.");
         assert_eq!(document["error"]["fix"], "Run jag --help to see the usage.");
         assert_eq!(document["results"], serde_json::json!([]));
-        assert!(!text.contains("bogus"));
         assert!(!text.contains("SENTINEL"));
     }
+}
+
+// FEATURE-13, CRITERION-57: with `--json`, an unknown option gives a document
+// that names the option.
+#[test]
+fn an_unknown_option_with_json_writes_one_document_that_names_the_option() {
+    let home = home();
+    let output = jag_bare(home.path())
+        .args(["--json", "--nope=SENTINEL"])
+        .output()
+        .expect("run jag");
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stderr.is_empty());
+    let text = String::from_utf8_lossy(&output.stdout);
+    assert!(text.ends_with('\n') && text.matches('\n').count() == 1);
+    let document: serde_json::Value = serde_json::from_str(&text).expect("a document");
+    assert_eq!(document["exit_code"], 2);
+    assert_eq!(
+        document["error"]["cause"],
+        "the option --nope is not valid."
+    );
+    assert_eq!(
+        document["error"]["fix"],
+        "Run jag --help to see the options."
+    );
+    assert_eq!(document["results"], serde_json::json!([]));
+    assert!(!text.contains("SENTINEL"));
 }
 
 #[test]
@@ -638,7 +678,7 @@ fn json_after_a_double_dash_is_not_the_option() {
         .assert()
         .code(2)
         .stdout(predicate::str::is_empty())
-        .stderr(FIXED_LINE);
+        .stderr("jag: the option --bogus is not valid.\nRun jag --help to see the options.\n");
 }
 
 #[test]
