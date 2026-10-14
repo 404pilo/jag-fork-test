@@ -179,37 +179,41 @@ Always use this layout, in this order:
 2. Context line 2: `Related: <linked items and how they relate>`. If nothing is related, do not write this line.
 3. One empty line.
 4. The question, in 1 sentence.
-5. The options table: 3 columns (Option, Pro, Con), with full borders.
+5. The options list: 1 bullet for each option, with the pros and the cons indented below it.
 6. The recommendation line: `⭐ Recommended: <n>. <reason in 1 sentence>`
 
-Example:
+Example (markdown source):
 
-```
+```markdown
 Q-aa · question 5 of 11 · from specifier → FEATURE-04 spec, Output section
 Related: FEATURE-09 adds the size limit later
 
 Which results does jag show when there is a good answer?
-┌────────────────────────────────┬────────────────────┬────────────────────┐
-│ Option                         │ Pro                │ Con                │
-├────────────────────────────────┼────────────────────┼────────────────────┤
-│ 1. All scored results, in rank │ Nothing is hidden  │ Long output until  │
-│ order  [recommended]           │                    │ FEATURE-09         │
-├────────────────────────────────┼────────────────────┼────────────────────┤
-│ 2. Only results at or above    │ Short output       │ Can hide a useful  │
-│ the threshold, plus a count    │                    │ result             │
-└────────────────────────────────┴────────────────────┴────────────────────┘
+
+- **Option 1:** All scored results, in rank order [recommended]
+  - **Pros:**
+    - Nothing is hidden
+  - **Cons:**
+    - Long output until FEATURE-09
+- **Option 2:** Only results at or above the threshold, plus a count
+  - **Pros:**
+    - Short output
+  - **Cons:**
+    - Can hide a useful result
+
 ⭐ Recommended: 1. Nothing is hidden, and FEATURE-09 adds the limit later.
 ```
 
 Rules:
 - Context: Always give the role that asks, the feature, the spec section and the question number. The person gets the background before they read the question.
-- Pros and cons: Give each option 1 or more pros and 1 or more cons. Keep each cell to a short phrase.
-- Borders: Draw full borders with box-drawing lines (`┌ ─ ┬ ┐ │ ├ ┼ ┤ └ ┴ ┘`). Do not use markdown tables. If the output can go to a terminal or log that is not UTF-8, use plain ASCII (`+ - |`).
-- Alignment: Wrap long text onto more lines in the cell. Pad each line with spaces to the column width, so that each border stays in line.
-- Emojis: Use only ⭐, and only on the recommendation line. Do not put an emoji in the table, because an emoji is 2 characters wide and moves the border. In the table, mark the recommended option with the text `[recommended]`.
+- Options list: Do not use tables. Tables do not show correctly on a mobile screen. Use a markdown bullet list.
+- Highlight: Write `**Option <n>:**`, `**Pros:**` and `**Cons:**` in bold.
+- Pros and cons: Give each option 1 or more pros and 1 or more cons. Put each pro and each con on its own indented bullet. Keep each bullet to a short phrase.
+- Recommended option: Mark it with the text `[recommended]` after the option text.
+- Emojis: Use only ⭐, and only on the recommendation line.
 - Do not use 🟥 🟨 🟩 🎯 🛠️ 🔗 ✅ ❌ ✍️, or the labels What, How and Context.
 - No repeated text: Give each fact 1 time only. For example, put a note about a related feature in the Related line, not in each option.
-- Width: Keep the table at 78 characters or less. Use 2 or 3 options. If there are 4 or more options, keep this layout. Do not change to side-by-side columns.
+- Number of options: Use 2 or 3 options. If there are 4 or more options, keep this layout.
 
 ## 8. Start commands
 
@@ -237,3 +241,4 @@ Send a DONE message to the orchestrator when you are ready. Then wait for TASK m
 | 2026-10-13 | Changed the orchestrator name to `jag-orchestrator`. Added the rule for a name change to the orchestrator details | The orchestrator session name changed. Sessions send messages to this name |
 | 2026-10-13 | Replaced the HITL card in section 7 with the layout "Option C": 2 context lines, the question, a bordered options table, and 1 recommendation line | The user chose this layout. It gives the background first, and the table borders stay in line |
 | 2026-10-13 | The chores session can talk to the user directly and guide the user through manual steps. Decisions still go through hitl | The user asked for this change |
+| 2026-10-13 | Replaced the options table in the HITL card (section 7) with a bullet list. Each option has its pros and cons as indented bullets | The user asked for this change. A table does not show correctly on a mobile screen |
