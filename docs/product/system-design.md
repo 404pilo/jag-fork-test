@@ -3,7 +3,7 @@ type: system-design
 title: jag system design
 status: accepted
 version: 1
-updated: 2026-10-13
+updated: 2026-10-14
 prd_tree: 104339a44fa1f15943107f1ef69c72b169083dfe
 session: 2d045b37-ac91-451e-b37b-928ac1645df2
 areas:
@@ -388,7 +388,7 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 |---|---|---|---|---|
 | IF-1 | C-typesafe | C-scorer | HTTPS `POST /v1/systemone` with a Bearer key. One call holds the question and 32 snippets. The response gives the probabilities and the billed usage. | Each jag release pins the Jev model version that its prompt and threshold were tuned on. A setting can name another model (contracts-5). |
 | IF-2 | C-gateway | C-scorer | The same calls as IF-1, to the base URL that a setting names. | The same as IF-1. The user sets the model name for the gateway. |
-| IF-3 | C-cli | Agent, person | The command line: `jag TERM "QUESTION" [PATH...]` (DECISION-31) with the grep options of DECISION-34. The options `--setup`, `--check`, and `--forget-key` run the setup, the readiness check, and the key removal (contracts-2). | Semantic versions of jag. A removed or changed option needs a new major version. |
+| IF-3 | C-cli | Agent, person | The command line: `jag TERM ["QUESTION"] [PATH...]` (DECISION-31). With no question, jag works as plain grep, with no model call and no cost (DECISION-32). jag takes the grep options of DECISION-34. The options `--setup`, `--check`, and `--forget-key` run the setup, the readiness check, and the key removal (contracts-2). | Semantic versions of jag. A removed or changed option needs a new major version. |
 | IF-4 | C-cli | Agent, script | Exit codes: 0 results found, 1 no match or no good answer, 2 usage error, 3 key missing, 4 key not accepted, 5 no credit, 6 service down, 7 cost limit reached, 8 results left out by the size limit, 130 stopped with Ctrl-C (contracts-3). DECISION-13 and DECISION-47 give the order when two apply. | A code never changes its meaning in one major version. |
 | IF-5 | C-output | Agent | Structured output: one JSON document on standard output, with `version`, `prompt_version`, `results`, and the summary fields of DECISION-28. An error is a JSON document of the same form (DECISION-07, CV-1). An output that does not parse means that jag stopped (contracts-4, DECISION-30). | `version` is the version of the form. In one major version, fields are only added (CONSTRAINT-05). |
 | IF-6 | C-search | C-prerank, C-scorer, C-output | The `Result` record in memory: path, first and last line, the lines, the marks on matching lines and on cut lines. | Internal. It changes with the code. |
@@ -474,7 +474,7 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | building-blocks-4 | 0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md | accepted | building-blocks | The outside crates of setup and their test crates | adr |
 | data-1 | |  | data | The store of the API key | human:404pilo, 2026-10-12 |
 | data-2 | |  | data | Nothing is kept between searches | human:404pilo, 2026-10-12 |
-| contracts-1 | |  | contracts | The command form of a search: `jag TERM "QUESTION" [PATH...]` | human:404pilo, 2026-10-12 |
+| contracts-1 | |  | contracts | The command form of a search: `jag TERM ["QUESTION"] [PATH...]` | human:404pilo, 2026-10-12 |
 | contracts-2 | 0006-run-setup-the-readiness-check-and-key-removal-as-options.md | accepted | contracts | The form of the setup, readiness, and key-removal commands | adr |
 | contracts-3 | 0007-number-the-exit-codes-above-2-from-3-to-8.md | accepted | contracts | The numbers of the exit codes above 2 | adr |
 | contracts-4 | 0008-write-structured-output-as-one-json-document.md | accepted | contracts | The format of structured output and its version field | adr |
