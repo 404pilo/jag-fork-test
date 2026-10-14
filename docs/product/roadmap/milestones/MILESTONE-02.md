@@ -98,5 +98,5 @@ This milestone holds the capabilities that make jag better to use and easier to 
 - item of: [STORY-58: Set the gateway as an option, a variable, or in the config file](../stories/STORY-58.md)
 - item of: [STORY-59: Limit guesses through the check results of fork pull requests](../stories/STORY-59.md)
 - item of: [STORY-60: Run the private-data check on fork pull requests in the new public repository](../stories/STORY-60.md)
-- item of: [STORY-61: Make the project board and the open issues public with the new repository](../stories/STORY-61.md)
+- item of: [STORY-61: Make the project board and all issues public with the new repository](../stories/STORY-61.md)
 <!-- LINKS:END -->

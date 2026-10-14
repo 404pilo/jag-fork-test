@@ -9,7 +9,7 @@ okf_version: "0.2"
 * [building-blocks](#building-blocks) - 4 decisions: 4 accepted
 * [context](#context) - 1 decision: 1 accepted
 * [contracts](#contracts) - 9 decisions: 9 accepted
-* [deployment](#deployment) - 1 decision: 1 accepted
+* [deployment](#deployment) - 2 decisions: 2 accepted
 * [strategy](#strategy) - 3 decisions: 3 accepted
 
 ## building-blocks
@@ -46,6 +46,7 @@ okf_version: "0.2"
 ### accepted
 
 * [0010: Ship jag on GitHub Releases, crates.io, and npm](./0010-ship-jag-on-github-releases-crates-io-and-npm.md) - accepted. Open this when you change how users install jag, or when you add or remove a package channel.
+* [0019: Give the new public repository the name ai-ready-future/jag](./0019-give-the-new-public-repository-the-name-ai-ready-future-jag.md) - accepted. Open this when you change the name of the public or the private repository, the remote of a copy, or a link to an issue of the private repository.
 
 ## strategy
 

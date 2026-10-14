@@ -243,7 +243,7 @@
 
 * [CRITERION-86: The new public repository gets one clean history, after the scan](CRITERION-86.md) - After the history scan lists each finding, one new history that has none of the findings is made for the new public repository. The new history is not made before the scan.
 * [CRITERION-87: A second scan is clean before the new repository becomes public](CRITERION-87.md) - Before the new repository becomes public, a second scan of each of its refs finds no key, no case content, no private evaluation data, and no internal project name.
-* [CRITERION-102: This repository stays private](CRITERION-102.md) - After the new public repository is created, ai-ready-future/jag stays private, and its history is not rewritten.
+* [CRITERION-102: The private repository stays private](CRITERION-102.md) - After the new public repository is created, the private repository ai-ready-future/jag-private stays private, and its history is not rewritten.
 
 ## STORY-53: See the cost after each search
 
@@ -281,8 +281,8 @@
 
 * [CRITERION-99: The Actions event policy lets the check run on fork pull requests](CRITERION-99.md) - Before the new repository becomes public, its Actions event policy allows pull_request_target for the private-data check, and a test fork pull request shows that the check runs.
 
-## STORY-61: Make the project board and the open issues public with the new repository
+## STORY-61: Make the project board and all issues public with the new repository
 
 * [CRITERION-100: The project board becomes public after the new repository](CRITERION-100.md) - After the new repository becomes public, the Project is linked to it and becomes public. Until then, it is private.
 * [CRITERION-101: The project board holds no private data when it becomes public](CRITERION-101.md) - Before the new repository and the Project become public, the items, the issues, and their comments hold no private data.
-* [CRITERION-103: The open issues move to the new repository while it is private](CRITERION-103.md) - While the new repository is private, each open issue moves to it with gh issue transfer. The same labels and milestones exist in it first.
+* [CRITERION-103: All issues move to the new repository while it is private](CRITERION-103.md) - While the new repository is private, each issue, open or closed, moves to it with gh issue transfer. A scan of the issues and the same labels and milestones come first.

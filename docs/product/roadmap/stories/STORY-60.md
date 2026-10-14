@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want the private-data check to 
   on each fork pull request in the new public repository, so that no fork pull request
   skips the check.
 status: draft
-state: backlog
+state: ready
 github:
   number: 122
   node_id: I_kwDOVDCdD88AAAABXCC3Ig
@@ -13,6 +13,7 @@ github:
   pushed_hash: 76a4dc
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-47-go-public-with-a-clean-history-design.md
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
 ---

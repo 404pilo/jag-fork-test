@@ -34,3 +34,5 @@ source	relation	target	target_state	target_status	source_area	target_area	note
 0018-take-the-question-only-from-the-ask-option.md	parent_spec	docs/superpowers/specs/2026-10-14-STORY-33-plain-grep-with-no-question-design.md	doc	-	contracts	-	-
 0018-take-the-question-only-from-the-ask-option.md	related	0006-run-setup-the-readiness-check-and-key-removal-as-options.md	live	accepted	contracts	contracts	-
 0018-take-the-question-only-from-the-ask-option.md	related	0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md	live	accepted	contracts	building-blocks	-
+0019-give-the-new-public-repository-the-name-ai-ready-future-jag.md	parent_spec	docs/superpowers/specs/2026-10-14-STORY-47-go-public-with-a-clean-history-design.md	doc	-	deployment	-	-
+0019-give-the-new-public-repository-the-name-ai-ready-future-jag.md	related	0010-ship-jag-on-github-releases-crates-io-and-npm.md	live	accepted	deployment	deployment	-

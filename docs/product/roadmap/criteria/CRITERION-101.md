@@ -17,5 +17,5 @@ The comments of an issue move with the issue.
 
 ## Links
 
-- item: [STORY-61: Make the project board and the open issues public with the new repository](../stories/STORY-61.md)
+- item: [STORY-61: Make the project board and all issues public with the new repository](../stories/STORY-61.md)
 <!-- LINKS:END -->

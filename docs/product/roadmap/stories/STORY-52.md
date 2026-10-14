@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want a new public repository wi
   a clean history, so that no public commit holds private data, and the private repository
   stays as it is.
 status: draft
-state: backlog
+state: ready
 github:
   number: 114
   node_id: I_kwDOVDCdD88AAAABXCCT-Q
@@ -13,6 +13,7 @@ github:
   pushed_hash: a3c9e4
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-47-go-public-with-a-clean-history-design.md
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
 ---
@@ -27,7 +28,7 @@ As an agent builder (PERSONA-01), I want a new public repository with a clean hi
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [CRITERION-102: This repository stays private](../criteria/CRITERION-102.md) | - | - | - | - | - |
+| [CRITERION-102: The private repository stays private](../criteria/CRITERION-102.md) | - | - | - | - | - |
 | [CRITERION-86: The new public repository gets one clean history, after the scan](../criteria/CRITERION-86.md) | - | - | - | - | - |
 | [CRITERION-87: A second scan is clean before the new repository becomes public](../criteria/CRITERION-87.md) | - | - | - | - | - |
 <!-- STATUS:END -->
@@ -38,7 +39,7 @@ As an agent builder (PERSONA-01), I want a new public repository with a clean hi
 
 - parent: [FEATURE-19: Go public with a clean history](../features/FEATURE-19.md)
 - milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
-- criterion or run of: [CRITERION-102: This repository stays private](../criteria/CRITERION-102.md)
+- criterion or run of: [CRITERION-102: The private repository stays private](../criteria/CRITERION-102.md)
 - criterion or run of: [CRITERION-86: The new public repository gets one clean history, after the scan](../criteria/CRITERION-86.md)
 - criterion or run of: [CRITERION-87: A second scan is clean before the new repository becomes public](../criteria/CRITERION-87.md)
 <!-- LINKS:END -->
