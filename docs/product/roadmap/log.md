@@ -6,6 +6,10 @@
 * **Sync**: [STORY-36](stories/STORY-36.md) pushed to GitHub, by system:github, at 2026-10-14T19:11:52Z
 * **Sync**: [STORY-35](stories/STORY-35.md) pushed to GitHub, by system:github, at 2026-10-14T19:11:52Z
 * **Sync**: [FEATURE-13](features/FEATURE-13.md) pushed to GitHub, by system:github, at 2026-10-14T19:11:52Z
+* **State**: [FEATURE-14](features/FEATURE-14.md) backlog -> done, by human:404pilo, at 2026-10-14T19:10:52Z
+* **State**: [STORY-40](stories/STORY-40.md) ready -> done, by human:404pilo, at 2026-10-14T19:10:52Z
+* **State**: [STORY-39](stories/STORY-39.md) ready -> done, by human:404pilo, at 2026-10-14T19:10:51Z
+* **State**: [STORY-24](stories/STORY-24.md) ready -> done, by human:404pilo, at 2026-10-14T19:10:51Z
 * **Plan**: [EPIC-01](epics/EPIC-01.md) ready -> done: each of its 4 features (FEATURE-01, FEATURE-02, FEATURE-03, FEATURE-21) is done; user answer (human:404pilo, hitl, 2026-10-14): "always allow": the planner sets each epic whose features are all done to done as human:404pilo, with no card, by agent:planner, at 2026-10-14T19:09:27Z
 * **State**: [EPIC-01](epics/EPIC-01.md) ready -> done, by human:404pilo, at 2026-10-14T19:09:27Z
 * **Sync**: [STORY-58](stories/STORY-58.md) pushed to GitHub, by system:github, at 2026-10-14T19:03:58Z

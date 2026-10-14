@@ -4,7 +4,8 @@ title: Files, folders, and piped text
 description: With no path, jag searches the current folder or reads the pipe; the
   user can also give any mix of files and folders.
 status: draft
-state: backlog
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 54
   node_id: I_kwDOVDCdD88AAAABXB-SAw
@@ -35,9 +36,9 @@ With no path, jag searches the current folder or reads the pipe; the user can al
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-24: Label piped text](../stories/STORY-24.md) | ready | - | - | - | - |
-| [STORY-39: Search with no path](../stories/STORY-39.md) | ready | - | - | - | - |
-| [STORY-40: Search a mix of files and folders](../stories/STORY-40.md) | ready | - | - | - | - |
+| [STORY-24: Label piped text](../stories/STORY-24.md) | done | - | - | - | - |
+| [STORY-39: Search with no path](../stories/STORY-39.md) | done | - | - | - | - |
+| [STORY-40: Search a mix of files and folders](../stories/STORY-40.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

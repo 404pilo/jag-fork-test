@@ -5,7 +5,8 @@ description: As a shell power user (PERSONA-04), I want jag with no path to sear
   the current folder, or to read the pipe when text comes in through one, so that
   I use jag as I use grep.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 100
   node_id: I_kwDOVDCdD88AAAABXCBcOw

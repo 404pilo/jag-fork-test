@@ -2,9 +2,6 @@
 
 ## MILESTONE-02: Make it good
 
-* [STORY-24: Label piped text](STORY-24.md) - As a shell power user (PERSONA-04), I want a result from piped text to have the label (standard input), so that I read a pipe result as a file result.
-* [STORY-39: Search with no path](STORY-39.md) - As a shell power user (PERSONA-04), I want jag with no path to search the current folder, or to read the pipe when text comes in through one, so that I use jag as I use grep.
-* [STORY-40: Search a mix of files and folders](STORY-40.md) - As a shell power user (PERSONA-04), I want to give several paths, each a file or a folder, so that I search exactly the places that I choose.
 * [STORY-45: Run the held-out evaluation before release](STORY-45.md) - As an agent builder (PERSONA-01), I want the held-out evaluation run done before release 1, so that I can trust that jag answers better than grep.
 * [STORY-47: Check the full history before jag goes public](STORY-47.md) - As an agent builder (PERSONA-01), I want each commit in the history checked for private data before jag goes public, so that no old commit shows it.
 * [STORY-48: Download a prebuilt binary from GitHub Releases](STORY-48.md) - As a shell power user (PERSONA-04), I want a prebuilt binary for my platform on GitHub Releases, so that I can install jag in seconds with no runtime.
