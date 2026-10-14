@@ -50,18 +50,20 @@ Repository rules:
 
 ## 3. Roles
 
-| Role | Model | Count | Starts when | Skills | Input | Output |
-|---|---|---|---|---|---|---|
-| orchestrator | opus | 1 | The `sofa` skill runs | sofa | Messages from all roles | Routed messages, started sessions |
-| hitl | opus | 1 | Always running | — | `ASK` messages | `ANSWER` messages |
-| retro | opus | 1 | The user changes or adds a role | — | `RETRO` signal | Updated `docs/adlc.md` on `main` |
-| planner | opus | 1 | Scope change, gap in PRD or roadmap, milestone done | prd:plan, prd:review, prd:explore | Gap or change | PR that updates PRD or roadmap |
-| projecter | sonnet | 1 | A PR that changes `docs/product` merges | prd:roadmap-sync | Merged roadmap | Board that matches `main` |
-| architect | opus | 1 | Only on request | adr:* | Design question | Answer, or PR with new or changed ADR |
-| specifier | opus (effort `xhigh`) | 1–2 | The orchestrator assigns a feature | prd:specifying-stories | Feature id | PR with the spec in the feature folder |
-| implementer | sonnet | 1–4 | The orchestrator assigns a merged spec | relay (non-interactive), productivity:wrapping-up-sessions | Spec on `main` | PR, then merge and clean-up |
-| verifier | opus | 1–4 | An implementer opens a PR | pr-flow:reviewing-prs | PR number | Approve or request changes |
-| chores | sonnet | 1 | A manual step is necessary | — | Chore request | Checked state, after it guides the user through a user step if necessary |
+| Role | Model | Effort | Count | Starts when | Skills | Input | Output |
+|---|---|---|---|---|---|---|---|
+| orchestrator | `claude-opus-5-5` | `medium` | 1 | The `sofa` skill runs | sofa | Messages from all roles | Routed messages, started sessions |
+| hitl | `claude-sonnet-5-5` | `medium` | 1 | Always running | — | `ASK` messages | `ANSWER` messages |
+| retro | `claude-opus-5-5` | `medium` | 1 | The user changes or adds a role | — | `RETRO` signal | Updated `docs/adlc.md` on `main` |
+| planner | `claude-opus-5-5` | `medium` | 1 | Scope change, gap in PRD or roadmap, milestone done | prd:plan, prd:review, prd:explore | Gap or change | PR that updates PRD or roadmap |
+| projecter | `claude-sonnet-5-5` | `medium` | 1 | A PR that changes `docs/product` merges | prd:roadmap-sync | Merged roadmap | Board that matches `main` |
+| architect | `claude-opus-5-5` | `high` | 1 | Only on request | adr:* | Design question | Answer, or PR with new or changed ADR |
+| specifier | `claude-opus-5-5` | `xhigh` | 1–2 | The orchestrator assigns a feature | prd:specifying-stories | Feature id | PR with the spec in the feature folder |
+| implementer | `claude-sonnet-5-5` | `high` | 1–4 | The orchestrator assigns a merged spec | relay (non-interactive), productivity:wrapping-up-sessions | Spec on `main` | PR, then merge and clean-up |
+| verifier | `claude-opus-5-5` | `high` | 1–4 | An implementer opens a PR | pr-flow:reviewing-prs | PR number | Approve or request changes |
+| chores | `claude-sonnet-5-5` | `medium` | 1 | A manual step is necessary | — | Chore request | Checked state, after it guides the user through a user step if necessary |
+
+Model and Effort: use the exact values in the table.
 
 ### Role details
 
@@ -241,7 +243,8 @@ The orchestrator starts each session from the main folder:
 cd <main folder> && claude --bg -n <prefix>-<role>[-n] --model <model> [--effort <effort>] --permission-mode bypassPermissions "<start prompt>"
 ```
 
-Add `--effort` only if the Model column in section 3 gives an effort (for example, the specifier uses `--effort xhigh`).
+Use the Model and Effort columns in section 3 for `--model` and `--effort` (for example, a verifier uses `--model claude-opus-5-5 --effort high`).
+A live session does not change its model or effort after `RELOAD`. If section 3 changes the model or the effort of a role, restart each session of that role when it has no work.
 
 Start prompt:
 
@@ -265,3 +268,4 @@ Send a DONE message to the orchestrator when you are ready. Then wait for TASK m
 | 2026-10-13 | Hitl asks the cards in priority order, up to 4 cards of 1 feature together. Up to 2 specifiers. The specifier uses effort `xhigh`, infers more from the ADRs and the system design, and asks guideline questions. For document PRs, an exact non-blocking fix merges with no new check | The user asked for these changes to make the team faster. Today, code work stopped for about 3 hours because specs waited for user answers |
 | 2026-10-13 | Changed the HITL card (section 7): a header with the role and a plain title, plain words with no IDs, options with no numbers, ✅ and ❌ on the Pros and Cons lines, and `[recommended]` with no separate recommendation line | The user asked for this change. The cards must be easy to read with no knowledge of the IDs |
 | 2026-10-13 | Added rule 11: a story is `ready` only if its spec is merged, its feature is not blocked, and no open `ASK` blocks it. The orchestrator assigns a ready story to an implementer at once. The specifier and each PR that sets a feature to `done` set the story state by this rule | The user asked for this change. 9 stories showed `ready` but were blocked or had no spec |
+| 2026-10-14 | Added an Effort column to section 3. Orchestrator: `claude-opus-5-5`, `medium`. Hitl: `claude-sonnet-5-5`, `medium`. Planner: `claude-opus-5-5`, `medium`. Projecter: `claude-sonnet-5-5`, `medium`. Architect: `claude-opus-5-5`, `high`. Implementer: `claude-sonnet-5-5`, `high`. Verifier: `claude-opus-5-5`, `high`. Chores: `claude-sonnet-5-5`, `medium`. Retro: `claude-opus-5-5`, `medium`. Specifier: `claude-opus-5-5`, `xhigh`. Section 8 uses these values and restarts a session when its model or effort changes | The user asked for this change |
