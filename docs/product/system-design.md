@@ -29,6 +29,7 @@ adrs:
   - 0011-build-jag-as-one-cargo-package-with-one-module-per-component.md
   - 0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md
   - 0013-exit-2-when-setup-runs-with-no-terminal.md
+  - 0018-take-the-question-only-from-the-ask-option.md
 ---
 
 # jag system design
@@ -235,7 +236,7 @@ components:
         style: sync
       - id: C-check
         style: sync
-    governed_by: [0005-build-jag-as-one-rust-binary.md, 0006-run-setup-the-readiness-check-and-key-removal-as-options.md, 0007-number-the-exit-codes-above-2-from-3-to-8.md, 0010-ship-jag-on-github-releases-crates-io-and-npm.md, 0011-build-jag-as-one-cargo-package-with-one-module-per-component.md, 0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md, 0013-exit-2-when-setup-runs-with-no-terminal.md, CV-1, CV-3, CV-4, CV-7]
+    governed_by: [0005-build-jag-as-one-rust-binary.md, 0006-run-setup-the-readiness-check-and-key-removal-as-options.md, 0007-number-the-exit-codes-above-2-from-3-to-8.md, 0010-ship-jag-on-github-releases-crates-io-and-npm.md, 0011-build-jag-as-one-cargo-package-with-one-module-per-component.md, 0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md, 0013-exit-2-when-setup-runs-with-no-terminal.md, 0018-take-the-question-only-from-the-ask-option.md, CV-1, CV-3, CV-4, CV-7]
     realizes: [CAPABILITY-05, CAPABILITY-06]
     areas: [building-blocks, contracts, conventions]
   - id: C-config
@@ -388,7 +389,7 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 |---|---|---|---|---|
 | IF-1 | C-typesafe | C-scorer | HTTPS `POST /v1/systemone` with a Bearer key. One call holds the question and 32 snippets. The response gives the probabilities and the billed usage. | Each jag release pins the Jev model version that its prompt and threshold were tuned on. A setting can name another model (contracts-5). |
 | IF-2 | C-gateway | C-scorer | The same calls as IF-1, to the base URL that a setting names. | The same as IF-1. The user sets the model name for the gateway. |
-| IF-3 | C-cli | Agent, person | The command line: `jag TERM ["QUESTION"] [PATH...]` (DECISION-31). With no question, jag works as plain grep, with no model call and no cost (DECISION-32). jag takes the grep options of DECISION-34. The options `--setup`, `--check`, and `--forget-key` run the setup, the readiness check, and the key removal (contracts-2). | Semantic versions of jag. A removed or changed option needs a new major version. |
+| IF-3 | C-cli | Agent, person | The command line: `jag [OPTIONS] TERM [PATH...]`. The question comes only from the option `--ask QUESTION`, with no short form, and each word after the term is a path (contracts-1). With `--ask`, the model ranks the matches. With no `--ask`, jag works as plain grep, with no model call, no key, and no cost (DECISION-32). jag takes the grep options of DECISION-34. The options `--setup`, `--check`, and `--forget-key` run the setup, the readiness check, and the key removal (contracts-2). | Semantic versions of jag. A removed or changed option needs a new major version. |
 | IF-4 | C-cli | Agent, script | Exit codes: 0 results found, 1 no match or no good answer, 2 usage error, 3 key missing, 4 key not accepted, 5 no credit, 6 service down, 7 cost limit reached, 8 results left out by the size limit, 130 stopped with Ctrl-C (contracts-3). DECISION-13 and DECISION-47 give the order when two apply. | A code never changes its meaning in one major version. |
 | IF-5 | C-output | Agent | Structured output: one JSON document on standard output, with `version`, `prompt_version`, `results`, and the summary fields of DECISION-28. An error is a JSON document of the same form (DECISION-07, CV-1). An output that does not parse means that jag stopped (contracts-4, DECISION-30). | `version` is the version of the form. In one major version, fields are only added (CONSTRAINT-05). |
 | IF-6 | C-search | C-prerank, C-scorer, C-output | The `Result` record in memory: path, first and last line, the lines, the marks on matching lines and on cut lines. | Internal. It changes with the code. |
@@ -474,7 +475,7 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | building-blocks-4 | 0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md | accepted | building-blocks | The outside crates of setup and their test crates | adr |
 | data-1 | |  | data | The store of the API key | human:404pilo, 2026-10-12 |
 | data-2 | |  | data | Nothing is kept between searches | human:404pilo, 2026-10-12 |
-| contracts-1 | |  | contracts | The command form of a search: `jag TERM ["QUESTION"] [PATH...]` | human:404pilo, 2026-10-12 |
+| contracts-1 | 0018-take-the-question-only-from-the-ask-option.md | accepted | contracts | The command form of a search: `jag [OPTIONS] TERM [PATH...]`, with the question only in `--ask QUESTION` | adr |
 | contracts-2 | 0006-run-setup-the-readiness-check-and-key-removal-as-options.md | accepted | contracts | The form of the setup, readiness, and key-removal commands | adr |
 | contracts-3 | 0007-number-the-exit-codes-above-2-from-3-to-8.md | accepted | contracts | The numbers of the exit codes above 2 | adr |
 | contracts-4 | 0008-write-structured-output-as-one-json-document.md | accepted | contracts | The format of structured output and its version field | adr |
