@@ -13,9 +13,6 @@
 
 ## MILESTONE-02: Make it good
 
-* [STORY-06: Check the five items of readiness](STORY-06.md) - As an agent builder (PERSONA-01), I want one command that shows pass or fail for five items and names the fix for each failure, so that I know what to repair before I give jag to an agent.
-* [STORY-07: Use the check result as an exit code](STORY-07.md) - As an agent builder (PERSONA-01), I want the readiness check to exit with 0 when all items pass and with the code of the first cause when one fails, so that a script or an agent can act on the result.
-* [STORY-08: Run the check for almost no cost](STORY-08.md) - As an agent builder (PERSONA-01), I want the readiness check to make one call that costs nothing or almost nothing, so that I can run the check as often as I want.
 * [STORY-24: Label piped text](STORY-24.md) - As a shell power user (PERSONA-04), I want a result from piped text to have the label (standard input), so that I read a pipe result as a file result.
 * [STORY-33: Search with a term and no question](STORY-33.md) - As a shell power user (PERSONA-04), I want jag with a term and no question to return the matching lines as grep does with no model call, so that a plain search costs nothing.
 * [STORY-34: Use plain grep with no key](STORY-34.md) - As a shell power user (PERSONA-04), I want plain grep mode to work with no stored key, so that I can use jag before I set it up.

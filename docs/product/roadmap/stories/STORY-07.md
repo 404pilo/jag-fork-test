@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want the readiness check to exi
   with 0 when all items pass and with the code of the first cause when one fails,
   so that a script or an agent can act on the result.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 68
   node_id: I_kwDOVDCdD88AAAABXB_NxA

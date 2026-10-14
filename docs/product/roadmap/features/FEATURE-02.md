@@ -4,7 +4,8 @@ title: Readiness check
 description: One command examines five items, shows pass or fail for each one, and
   names the fix for each failure, with one call that costs almost nothing.
 status: draft
-state: backlog
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 43
   node_id: I_kwDOVDCdD88AAAABXB9Dmw
@@ -37,9 +38,9 @@ One command examines five items, shows pass or fail for each one, and names the 
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-06: Check the five items of readiness](../stories/STORY-06.md) | ready | - | - | - | - |
-| [STORY-07: Use the check result as an exit code](../stories/STORY-07.md) | ready | - | - | - | - |
-| [STORY-08: Run the check for almost no cost](../stories/STORY-08.md) | ready | - | - | - | - |
+| [STORY-06: Check the five items of readiness](../stories/STORY-06.md) | done | - | - | - | - |
+| [STORY-07: Use the check result as an exit code](../stories/STORY-07.md) | done | - | - | - | - |
+| [STORY-08: Run the check for almost no cost](../stories/STORY-08.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want the readiness check to mak
   one call that costs nothing or almost nothing, so that I can run the check as often
   as I want.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 69
   node_id: I_kwDOVDCdD88AAAABXB_SIQ

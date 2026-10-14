@@ -21,7 +21,7 @@ This milestone holds the bare minimum to see jag work. The grep habits, the read
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [EPIC-01: Setup and readiness](../epics/EPIC-01.md) | ready | 2/4 (50%) | - | - | - |
+| [EPIC-01: Setup and readiness](../epics/EPIC-01.md) | ready | 3/4 (75%) | - | - | - |
 | [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | ready | 4/5 (80%) | - | - | - |
 | [EPIC-03: Output that fits an agent](../epics/EPIC-03.md) | ready | 0/3 (0%) | - | - | - |
 | [FEATURE-01: Store a key one time](../features/FEATURE-01.md) | done | 5/5 (100%) | - | FEATURE-17 | - |

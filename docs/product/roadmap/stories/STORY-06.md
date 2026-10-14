@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want one command that shows pas
   or fail for five items and names the fix for each failure, so that I know what to
   repair before I give jag to an agent.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 67
   node_id: I_kwDOVDCdD88AAAABXB_JgQ

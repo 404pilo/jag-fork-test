@@ -31,6 +31,9 @@ generated:
 
 ## MILESTONE-02: Make it good
 
+* [STORY-06: Check the five items of readiness](STORY-06.md) - As an agent builder (PERSONA-01), I want one command that shows pass or fail for five items and names the fix for each failure, so that I know what to repair before I give jag to an agent.
+* [STORY-07: Use the check result as an exit code](STORY-07.md) - As an agent builder (PERSONA-01), I want the readiness check to exit with 0 when all items pass and with the code of the first cause when one fails, so that a script or an agent can act on the result.
+* [STORY-08: Run the check for almost no cost](STORY-08.md) - As an agent builder (PERSONA-01), I want the readiness check to make one call that costs nothing or almost nothing, so that I can run the check as often as I want.
 * [STORY-09: Name the cause and the fix of a model failure](STORY-09.md) - As an agent builder (PERSONA-01), I want jag to stop with the cause and the fix when the model is not available, so that I know what to do next.
 * [STORY-10: Tell each model failure by its exit code](STORY-10.md) - As an agent builder (PERSONA-01), I want each cause of a model failure to have its own exit code above 2, so that my agent can tell the causes apart and react to each one.
 * [STORY-11: Try again one time before reporting the service as down](STORY-11.md) - As an operator (PERSONA-02), I want jag to wait a fixed time and try again one time before it reports the service as down, so that a short outage does not stop my search.
