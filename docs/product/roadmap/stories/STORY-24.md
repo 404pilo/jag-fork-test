@@ -11,7 +11,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/85
   pushed_hash: 07d8e5
   synced:
-    state: ready
+    state: backlog
 spec: docs/superpowers/specs/2026-10-13-STORY-21-file-line-and-snippet-for-each-result-design.md
 parent: /features/FEATURE-14.md
 milestone: /milestones/MILESTONE-02.md

@@ -11,7 +11,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/109
   pushed_hash: cc138e
   synced:
-    state: ready
+    state: backlog
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
 ---
