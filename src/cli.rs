@@ -1,5 +1,6 @@
 //! C-cli: option parsing, dispatch, the search flow, and the exit code.
 
+use std::ffi::OsString;
 use std::io::{self, IsTerminal, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -15,7 +16,7 @@ use crate::config::{
     model_settings, parse_cost_limit, parse_seconds,
 };
 use crate::failure::Failure;
-use crate::output::write_text;
+use crate::output::{Summary, is_no_good_answer, write_json, write_text};
 use crate::prerank;
 use crate::scorer::{ScoreSettings, probe, rank, score};
 use crate::search::snippet::{match_texts, plan_windows, read_snippets};
@@ -34,9 +35,13 @@ const USAGE_ERROR: &str = "jag: the command line is not valid. Run jag --help to
     name = "jag",
     version,
     arg_required_else_help = true,
-    override_usage = "jag [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]\n       jag --check [--timeout SECONDS] [--retry-wait SECONDS]\n       jag --setup\n       jag --forget-key"
+    override_usage = "jag [--json] [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]\n       jag --check [--timeout SECONDS] [--retry-wait SECONDS]\n       jag --setup\n       jag --forget-key"
 )]
 struct Cli {
+    /// Write one JSON document for an agent, in place of text
+    #[arg(long, conflicts_with_all = ["setup", "forget_key", "check"])]
+    json: bool,
+
     /// Check that jag is ready: the key, the service, and the key file
     #[arg(long, conflicts_with_all = ["setup", "forget_key", "cost_limit", "term", "question", "paths"])]
     check: bool,
@@ -87,6 +92,8 @@ pub fn run() -> ExitCode {
     let env = Env { vars: &vars, home };
     let mut stdout = io::stdout();
     let mut stderr = io::stderr();
+    let mode = if cli.json { Mode::Json } else { Mode::Text };
+    let mut summary = Summary::default();
 
     let result = if cli.setup {
         config::setup(
@@ -105,9 +112,44 @@ pub fn run() -> ExitCode {
     } else if cli.check {
         check(&cli, &env, &mut stdout, &mut stderr)
     } else {
-        search(&cli, &env, &mut stdout, &mut stderr)
+        search(&cli, &env, mode, &mut summary, &mut stdout, &mut stderr)
     };
-    finish(result)
+    finish(result, mode, &mut summary, &mut stdout, &mut stderr)
+}
+
+/// The form of the output (DECISION-27). Only `--json` gives `Json`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Mode {
+    Text,
+    Json,
+}
+
+/// True when the command line holds `--json` before the first `--`. After
+/// `--`, `--json` is a term or a path, not the option.
+fn json_requested(args: impl IntoIterator<Item = OsString>) -> bool {
+    args.into_iter()
+        .skip(1)
+        .take_while(|arg| arg != "--")
+        .any(|arg| arg == "--json")
+}
+
+/// The failure of an argument error. It holds no value from the command
+/// line.
+fn argument_failure() -> Failure {
+    usage_failure(
+        "the command line is not valid.",
+        "Run jag --help to see the usage.",
+    )
+}
+
+/// The document of a failure: the summary has what jag counted before it.
+fn error_document(summary: &mut Summary, failure: Failure) -> Vec<u8> {
+    summary.exit_code = failure.exit_code;
+    summary.error = Some(failure);
+    let mut buffer = Vec::new();
+    // A write to a `Vec` does not fail.
+    let _ = write_json(&mut buffer, summary, &[]);
+    buffer
 }
 
 /// Parse with `try_parse`, and never write the text of a clap error: clap
@@ -123,6 +165,12 @@ fn parse() -> Result<Cli, ExitCode> {
                 let _ = error.print();
                 Err(ExitCode::from(u8::try_from(error.exit_code()).unwrap_or(2)))
             }
+            _ if json_requested(std::env::args_os()) => {
+                let buffer = error_document(&mut Summary::default(), argument_failure());
+                // A failed write goes to the error stream (decision 25).
+                let code = emit(&mut io::stdout(), &mut io::stderr(), &buffer, 2);
+                Err(ExitCode::from(code))
+            }
             _ => {
                 eprintln!("{USAGE_ERROR}");
                 Err(ExitCode::from(2))
@@ -131,13 +179,43 @@ fn parse() -> Result<Cli, ExitCode> {
     }
 }
 
-/// Write a failure to the error stream and give the exit code (CV-1, CV-3).
-fn finish(result: Result<u8, Failure>) -> ExitCode {
+/// Write a failure and give the exit code (CV-1, CV-3). In text mode the
+/// failure goes to the error stream. In JSON mode it goes to standard output,
+/// as one document (decision 21).
+fn finish(
+    result: Result<u8, Failure>,
+    mode: Mode,
+    summary: &mut Summary,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> ExitCode {
     match result {
         Ok(code) => ExitCode::from(code),
+        Err(failure) if mode == Mode::Json => {
+            let code = failure.exit_code;
+            let buffer = error_document(summary, failure);
+            ExitCode::from(emit(stdout, stderr, &buffer, code))
+        }
         Err(failure) => {
-            eprint!("{}", failure.render());
+            let _ = write!(stderr, "{}", failure.render());
             ExitCode::from(failure.exit_code)
+        }
+    }
+}
+
+/// Write all output in one call. Gives `code` when the write works. When the
+/// reader closes the pipe, jag writes no message and also gives `code`
+/// (CV-4). Another write error writes the failure as text on the error
+/// stream, because standard output does not work, and gives exit 2
+/// (decision 25).
+fn emit(stdout: &mut dyn Write, stderr: &mut dyn Write, bytes: &[u8], code: u8) -> u8 {
+    match stdout.write_all(bytes).and_then(|()| stdout.flush()) {
+        Ok(()) => code,
+        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => code,
+        Err(_) => {
+            let failure = write_failure();
+            let _ = write!(stderr, "{}", failure.render());
+            failure.exit_code
         }
     }
 }
@@ -223,6 +301,8 @@ fn parse_option(text: Option<&str>, setting: TimeSetting) -> Result<Option<Durat
 fn search(
     cli: &Cli,
     env: &Env,
+    mode: Mode,
+    summary: &mut Summary,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> Result<u8, Failure> {
@@ -259,19 +339,40 @@ fn search(
     };
     let (snippets, read_warnings) = read_snippets(&kept);
 
-    // CRITERION-85: the notice and the warnings go to the error stream.
-    if let Some(notice) = report.skipped.notice() {
-        let _ = writeln!(stderr, "{notice}");
-    }
-    for warning in report.warnings.iter().chain(&read_warnings) {
-        let _ = writeln!(stderr, "{}", warning.message());
+    // A failure after this point finds in the summary what jag counted.
+    summary.files_skipped = report.skipped;
+    summary.warnings = report
+        .warnings
+        .iter()
+        .chain(&read_warnings)
+        .cloned()
+        .collect();
+    summary.results_found = total as u64;
+    summary.results_scored = kept.len() as u64;
+    summary.results_skipped = (total - kept.len()) as u64;
+
+    // CRITERION-85: in text mode, the notice and the warnings go to the error
+    // stream. In JSON mode they are fields of the document.
+    if mode == Mode::Text {
+        if let Some(notice) = report.skipped.notice() {
+            let _ = writeln!(stderr, "{notice}");
+        }
+        for warning in &summary.warnings {
+            let _ = writeln!(stderr, "{}", warning.message());
+        }
     }
 
     if snippets.is_empty() {
+        if mode == Mode::Json {
+            summary.exit_code = 1;
+            let mut buffer = Vec::new();
+            write_json(&mut buffer, summary, &[]).map_err(|_| write_failure())?;
+            return Ok(emit(stdout, stderr, &buffer, 1));
+        }
         return Ok(1);
     }
     let cost_limit_reached = total > limit;
-    if cost_limit_reached {
+    if cost_limit_reached && mode == Mode::Text {
         let _ = writeln!(
             stderr,
             "jag: cost limit reached: scored {} of {total} results, skipped {}.",
@@ -284,22 +385,29 @@ fn search(
     let scores = score(&snippets, args.question, &key, &score_settings).map_err(Failure::from)?;
     let ranked = rank(snippets, scores);
 
-    // All output stays in memory until here, so a failure writes no partial
-    // result (CV-2).
-    let mut buffer = Vec::new();
-    let no_good_answer = write_text(&mut buffer, &ranked).map_err(|_| write_failure())?;
-    match stdout.write_all(&buffer).and_then(|()| stdout.flush()) {
-        Ok(()) => {}
-        // The reader closed the pipe: end with the code of the search, with
-        // no message (CV-4).
-        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => {}
-        Err(_) => return Err(write_failure()),
-    }
-    Ok(search_exit_code(SearchOutcome {
+    let no_good_answer = is_no_good_answer(&ranked);
+    let code = search_exit_code(SearchOutcome {
         no_good_answer,
         cost_limit_reached,
         left_out: false,
-    }))
+    });
+
+    // All output stays in memory until here, so a failure writes no partial
+    // result (CV-2).
+    let mut buffer = Vec::new();
+    match mode {
+        Mode::Text => {
+            write_text(&mut buffer, &ranked).map_err(|_| write_failure())?;
+        }
+        Mode::Json => {
+            summary.no_good_answer = no_good_answer;
+            summary.exit_code = code;
+            write_json(&mut buffer, summary, &ranked).map_err(|_| write_failure())?;
+        }
+    }
+    // A reader that closed the pipe gives no message and the code of the
+    // search (CV-4).
+    Ok(emit(stdout, stderr, &buffer, code))
 }
 
 /// The readiness check (FEATURE-02). Gives the exit code of the first item
@@ -369,6 +477,21 @@ fn write_failure() -> Failure {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn args(list: &[&str]) -> Vec<OsString> {
+        list.iter().map(OsString::from).collect()
+    }
+
+    #[test]
+    fn json_requested_reads_the_option_before_the_first_double_dash() {
+        assert!(json_requested(args(&["jag", "--json"])));
+        assert!(json_requested(args(&["jag", "x", "--json"])));
+        assert!(json_requested(args(&["jag", "--json", "--", "--json"])));
+        assert!(!json_requested(args(&["jag", "--", "--json"])));
+        assert!(!json_requested(args(&["jag", "--json=1"])));
+        assert!(!json_requested(args(&["jag"])));
+        assert!(!json_requested(args(&[])));
+    }
 
     fn code(no_good_answer: bool, cost_limit_reached: bool, left_out: bool) -> u8 {
         search_exit_code(SearchOutcome {

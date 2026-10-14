@@ -42,8 +42,9 @@ fn help_and_version_exit_0() {
         .assert()
         .success()
         .stdout(predicate::str::contains(
-            "jag [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]",
+            "jag [--json] [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]",
         ))
+        .stdout(predicate::str::contains("--json"))
         .stdout(predicate::str::contains("--max-scored <COUNT>"))
         .stdout(predicate::str::contains("--timeout <SECONDS>"))
         .stdout(predicate::str::contains("--retry-wait <SECONDS>"));
@@ -371,4 +372,77 @@ fn the_limit_option_with_setup_or_forget_key_gives_the_fixed_line() {
             .stdout(predicate::str::is_empty())
             .stderr(FIXED_LINE);
     }
+}
+
+// FEATURE-11, CRITERION-51: with `--json`, an argument error is a document on
+// standard output, and it holds no value from the command line.
+#[test]
+fn an_argument_error_with_json_writes_one_document_with_no_value() {
+    let cases: [&[&str]; 6] = [
+        &["--json", "--setup"],
+        &["--json", "--forget-key"],
+        &["--json", "--check"],
+        &["--json", "--bogus"],
+        &["--json", "--timeout"],
+        &["--json", "--setup", "SENTINEL-SENTINEL-SENTINEL"],
+    ];
+    for args in cases {
+        let home = home();
+        let output = jag_bare(home.path()).args(args).output().expect("run jag");
+        assert_eq!(output.status.code(), Some(2), "{args:?}");
+        assert!(output.stderr.is_empty(), "{args:?}");
+        let text = String::from_utf8_lossy(&output.stdout);
+        assert!(text.ends_with('\n') && text.matches('\n').count() == 1);
+        let document: serde_json::Value = serde_json::from_str(&text).expect("a document");
+        assert_eq!(document["exit_code"], 2);
+        assert_eq!(document["error"]["cause"], "the command line is not valid.");
+        assert_eq!(document["error"]["fix"], "Run jag --help to see the usage.");
+        assert_eq!(document["results"], serde_json::json!([]));
+        assert!(!text.contains("bogus"));
+        assert!(!text.contains("SENTINEL"));
+    }
+}
+
+#[test]
+fn json_after_a_double_dash_is_not_the_option() {
+    let home = home();
+    jag_bare(home.path())
+        .args(["--bogus", "--", "--json"])
+        .assert()
+        .code(2)
+        .stdout(predicate::str::is_empty())
+        .stderr(FIXED_LINE);
+}
+
+#[test]
+fn help_and_version_with_json_write_their_text() {
+    let home = home();
+    jag_bare(home.path())
+        .args(["--json", "--help"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Usage:"))
+        .stdout(predicate::str::contains("\"version\"").not());
+    jag_bare(home.path())
+        .args(["--json", "--version"])
+        .assert()
+        .success()
+        .stdout(predicate::str::starts_with("jag "));
+}
+
+#[test]
+fn json_with_no_term_gives_an_error_document() {
+    let home = home();
+    let output = jag_bare(home.path())
+        .arg("--json")
+        .output()
+        .expect("run jag");
+    assert_eq!(output.status.code(), Some(2));
+    assert!(output.stderr.is_empty());
+    let document: serde_json::Value = serde_json::from_slice(&output.stdout).expect("a document");
+    assert_eq!(
+        document["error"]["cause"],
+        "a search needs a term and a question."
+    );
+    assert_eq!(document["exit_code"], 2);
 }

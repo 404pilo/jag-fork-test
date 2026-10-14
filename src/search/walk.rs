@@ -101,25 +101,31 @@ pub struct WalkWarning {
 }
 
 impl WalkWarning {
-    /// One line for the user. It holds no error text from a crate.
-    pub fn message(&self) -> String {
+    /// The text of the warning, with no `jag: ` in front. It holds no error
+    /// text from a crate.
+    pub fn text(&self) -> String {
         match (&self.kind, &self.path) {
             (WarningKind::Read(kind), Some(path)) => {
-                format!("jag: cannot read {}: {kind}", path.display())
+                format!("cannot read {}: {kind}", path.display())
             }
-            (WarningKind::Read(kind), None) => format!("jag: cannot read a file: {kind}"),
+            (WarningKind::Read(kind), None) => format!("cannot read a file: {kind}"),
             (WarningKind::IgnoreRule, Some(path)) => {
                 format!(
-                    "jag: a rule in {} is not valid; jag uses the other rules",
+                    "a rule in {} is not valid; jag uses the other rules",
                     path.display()
                 )
             }
             (WarningKind::IgnoreRule, None) => {
-                "jag: an ignore rule is not valid; jag uses the other rules".to_string()
+                "an ignore rule is not valid; jag uses the other rules".to_string()
             }
-            (WarningKind::Other, Some(path)) => format!("jag: cannot walk {}", path.display()),
-            (WarningKind::Other, None) => "jag: cannot walk a folder".to_string(),
+            (WarningKind::Other, Some(path)) => format!("cannot walk {}", path.display()),
+            (WarningKind::Other, None) => "cannot walk a folder".to_string(),
         }
+    }
+
+    /// One line for the error stream of the text mode.
+    pub fn message(&self) -> String {
+        format!("jag: {}", self.text())
     }
 }
 
