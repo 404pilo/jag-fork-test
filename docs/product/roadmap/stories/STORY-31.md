@@ -13,6 +13,7 @@ github:
   pushed_hash: bc7d5d
   synced:
     state: ready
+spec: docs/superpowers/specs/2026-10-13-STORY-29-text-and-structured-output-design.md
 parent: /features/FEATURE-11.md
 milestone: /milestones/MILESTONE-01.md
 traces:
