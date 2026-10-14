@@ -12,7 +12,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/95
   pushed_hash: d65ab2
   synced:
-    state: ready
+    state: done
 spec: docs/superpowers/specs/2026-10-14-STORY-33-plain-grep-with-no-question-design.md
 parent: /features/FEATURE-12.md
 milestone: /milestones/MILESTONE-02.md
