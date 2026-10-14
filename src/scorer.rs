@@ -261,26 +261,17 @@ pub fn score(
     }
 }
 
-/// Sort the results by score, highest first. Equal scores go by path (byte
-/// order), then by the first line (decision 28).
+/// Sort the results by score, highest first. Equal scores go by source (byte
+/// order of the label), then by the first line (decision 28).
 pub fn rank(snippets: Vec<Snippet>, scores: Vec<f64>) -> Vec<(Snippet, f64)> {
     let mut ranked: Vec<(Snippet, f64)> = snippets.into_iter().zip(scores).collect();
     ranked.sort_by(|(a, a_score), (b, b_score)| {
         b_score
             .total_cmp(a_score)
-            .then_with(|| {
-                a.path
-                    .as_os_str()
-                    .as_encoded_bytes()
-                    .cmp(b.path.as_os_str().as_encoded_bytes())
-            })
-            .then_with(|| first_line(a).cmp(&first_line(b)))
+            .then_with(|| a.source.label().cmp(b.source.label()))
+            .then_with(|| a.first_line().cmp(&b.first_line()))
     });
     ranked
-}
-
-fn first_line(snippet: &Snippet) -> u64 {
-    snippet.lines.first().map_or(0, |line| line.number)
 }
 
 #[cfg(test)]
@@ -288,23 +279,24 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
-    use crate::search::snippet::SnippetLine;
+    use crate::search::snippet::{SnippetLine, Source};
 
     fn snippet(path: &str, first: u64) -> Snippet {
         Snippet {
-            path: PathBuf::from(path),
-            lines: vec![SnippetLine {
-                number: first,
-                text: b"x".to_vec(),
-                is_match: true,
-            }],
+            source: Source::File(PathBuf::from(path)),
+            lines: vec![SnippetLine::new(first, b"x", true)],
         }
     }
 
     fn order(ranked: &[(Snippet, f64)]) -> Vec<(String, u64)> {
         ranked
             .iter()
-            .map(|(snippet, _)| (snippet.path.display().to_string(), first_line(snippet)))
+            .map(|(snippet, _)| {
+                (
+                    String::from_utf8_lossy(snippet.source.label()).into_owned(),
+                    snippet.first_line(),
+                )
+            })
             .collect()
     }
 
@@ -340,6 +332,17 @@ mod tests {
                 ("a".into(), 20),
                 ("b".into(), 1)
             ]
+        );
+    }
+
+    #[test]
+    fn standard_input_goes_before_a_file_when_the_scores_are_equal() {
+        let mut input = snippet("z", 1);
+        input.source = Source::StandardInput;
+        let ranked = rank(vec![snippet("a.txt", 1), input], vec![0.5, 0.5]);
+        assert_eq!(
+            order(&ranked),
+            [("(standard input)".into(), 1), ("a.txt".into(), 1)]
         );
     }
 

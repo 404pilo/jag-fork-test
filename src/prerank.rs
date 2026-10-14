@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use crate::scorer::prompt::MAX_LINE_CHARS;
+use crate::search::snippet::MAX_LINE_CHARS;
 
 /// BM25 term saturation.
 pub const K1: f64 = 1.2;

@@ -8,14 +8,12 @@ use std::ops::Range;
 use serde::Serialize;
 use serde_json::{Map, json};
 
-use crate::search::snippet::Snippet;
+use crate::search::snippet::{MAX_LINE_CHARS, Snippet};
 
 /// The most results in one call (ADR-0002).
 pub const MAX_CALL_RESULTS: usize = 32;
 /// A call closes before the estimate is more than this (decision 22).
 pub const MAX_CALL_ESTIMATE: usize = 24_000;
-/// The request holds this many characters of a line (decision 21).
-pub const MAX_LINE_CHARS: usize = 300;
 
 /// The text of question `n`. It names the snippet number, because the API
 /// does not send the question ids to the model.
@@ -43,7 +41,7 @@ fn snippet_json(n: usize, snippet: &Snippet) -> SnippetJson<'_> {
         .collect();
     SnippetJson {
         n,
-        path: snippet.path.to_string_lossy(),
+        path: String::from_utf8_lossy(snippet.source.label()),
         lines: lines.join("\n"),
     }
 }
@@ -129,18 +127,16 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
-    use crate::search::snippet::SnippetLine;
+    use crate::search::snippet::{SnippetLine, Source};
 
     fn snippet(path: &str, lines: &[&str]) -> Snippet {
         Snippet {
-            path: PathBuf::from(path),
+            source: Source::File(PathBuf::from(path)),
             lines: lines
                 .iter()
                 .enumerate()
-                .map(|(index, text)| SnippetLine {
-                    number: index as u64 + 1,
-                    text: text.as_bytes().to_vec(),
-                    is_match: index == 0,
+                .map(|(index, text)| {
+                    SnippetLine::new(index as u64 + 1, text.as_bytes(), index == 0)
                 })
                 .collect(),
         }
@@ -188,6 +184,41 @@ mod tests {
             .as_str()
             .expect("text");
         assert_eq!(lines.chars().count(), 300);
+    }
+
+    #[test]
+    fn the_request_holds_the_label_of_standard_input() {
+        let mut one = snippet("a.txt", &["x"]);
+        one.source = Source::StandardInput;
+        let body: serde_json::Value =
+            serde_json::from_str(&request_body("m", "q", &[one])).expect("json");
+        assert_eq!(body["state"]["snippets"][0]["path"], "(standard input)");
+    }
+
+    #[test]
+    fn the_request_text_is_the_first_300_characters_of_the_full_line() {
+        let mut lines: Vec<Vec<u8>> = vec![
+            vec![b'a'; 300],
+            vec![b'a'; 301],
+            vec![b'a'; 1000],
+            "漢".repeat(400).into_bytes(),
+            vec![0xFF; 400],
+        ];
+        let mut mixed = vec![b'a'; 299];
+        mixed.extend([0xE2, 0x82]);
+        mixed.extend([b'b'; 10]);
+        lines.push(mixed);
+        let mut returned = vec![b'a'; 300];
+        returned.push(b'\r');
+        lines.push(returned);
+        for full in lines {
+            let mut one = snippet("a.txt", &["x"]);
+            one.lines[0] = SnippetLine::new(1, &full, true);
+            let body: serde_json::Value =
+                serde_json::from_str(&request_body("m", "q", &[one])).expect("json");
+            let want: String = String::from_utf8_lossy(&full).chars().take(300).collect();
+            assert_eq!(body["state"]["snippets"][0]["lines"], want.as_str());
+        }
     }
 
     #[test]

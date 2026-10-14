@@ -14,21 +14,102 @@ pub const CONTEXT_LINES: u64 = 3;
 /// The most lines in one result.
 pub const MAX_LINES: u64 = 12;
 
+/// The most characters of a line in a request and in the output (decision 21).
+pub const MAX_LINE_CHARS: usize = 300;
+
+/// Where the text of a result came from.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Source {
+    File(PathBuf),
+    StandardInput,
+}
+
+impl Source {
+    /// The label of standard input, in the place of a path.
+    pub const STANDARD_INPUT_LABEL: &'static str = "(standard input)";
+
+    /// The bytes that show the source: the path as typed, or the label.
+    pub fn label(&self) -> &[u8] {
+        match self {
+            Source::File(path) => path.as_os_str().as_encoded_bytes(),
+            Source::StandardInput => Self::STANDARD_INPUT_LABEL.as_bytes(),
+        }
+    }
+}
+
 /// One line of a result.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SnippetLine {
     /// The number of the line. The first line is 1.
     pub number: u64,
-    /// The bytes of the line, with no `\n`. A `\r` at the end stays.
+    /// The bytes of the line that jag keeps, with no `\n`. A `\r` at the end
+    /// stays. A line of more than `MAX_LINE_CHARS` characters is cut.
     pub text: Vec<u8>,
     pub is_match: bool,
+    /// The count of characters cut from the end. 0 for no cut.
+    pub cut: u64,
+}
+
+impl SnippetLine {
+    /// A line from its full bytes. The line is cut at `MAX_LINE_CHARS`.
+    pub fn new(number: u64, line: &[u8], is_match: bool) -> SnippetLine {
+        let (kept, cut) = cut_line(line);
+        SnippetLine {
+            number,
+            text: kept.to_vec(),
+            is_match,
+            cut,
+        }
+    }
+}
+
+/// Keep the first `MAX_LINE_CHARS` characters of a line. Gives the kept bytes
+/// and the count of the other characters. Each bad sequence of bytes counts as
+/// one character, as in the request (`from_utf8_lossy` gives one U+FFFD for
+/// it).
+pub fn cut_line(bytes: &[u8]) -> (&[u8], u64) {
+    let widths = bytes.utf8_chunks().flat_map(|chunk| {
+        let bad = chunk.invalid().len();
+        chunk
+            .valid()
+            .chars()
+            .map(char::len_utf8)
+            .chain((bad > 0).then_some(bad))
+    });
+    let mut count = 0usize;
+    let mut offset = 0usize;
+    let mut kept = 0usize;
+    for width in widths {
+        offset += width;
+        count += 1;
+        if count == MAX_LINE_CHARS {
+            kept = offset;
+        }
+    }
+    if count <= MAX_LINE_CHARS {
+        (bytes, 0)
+    } else {
+        (&bytes[..kept], (count - MAX_LINE_CHARS) as u64)
+    }
 }
 
 /// One result: a match with the lines around it (IF-6).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Snippet {
-    pub path: PathBuf,
+    pub source: Source,
     pub lines: Vec<SnippetLine>,
+}
+
+impl Snippet {
+    /// The number of the first line. 0 when the result has no line.
+    pub fn first_line(&self) -> u64 {
+        self.lines.first().map_or(0, |line| line.number)
+    }
+
+    /// The number of the last line. 0 when the result has no line.
+    pub fn last_line(&self) -> u64 {
+        self.lines.last().map_or(0, |line| line.number)
+    }
 }
 
 /// The plan of one result. The plan uses only line numbers.
@@ -199,14 +280,16 @@ fn snippet_of(window: &Window, lines: &[&[u8]]) -> Option<Snippet> {
     }
     let end = window.end.min(last);
     let lines = (window.start..=end)
-        .map(|number| SnippetLine {
-            number,
-            text: lines[(number - 1) as usize].to_vec(),
-            is_match: matches.binary_search(&number).is_ok(),
+        .map(|number| {
+            SnippetLine::new(
+                number,
+                lines[(number - 1) as usize],
+                matches.binary_search(&number).is_ok(),
+            )
         })
         .collect();
     Some(Snippet {
-        path: window.path.clone(),
+        source: Source::File(window.path.clone()),
         lines,
     })
 }
@@ -241,6 +324,99 @@ mod tests {
             .iter()
             .map(|window| (window.start, window.end))
             .collect()
+    }
+
+    fn cut(bytes: &[u8]) -> (usize, u64) {
+        let (kept, cut) = cut_line(bytes);
+        (kept.len(), cut)
+    }
+
+    #[test]
+    fn a_line_of_300_characters_is_not_cut() {
+        assert_eq!(cut(&[b'a'; 300]), (300, 0));
+        assert_eq!(cut(b""), (0, 0));
+    }
+
+    #[test]
+    fn a_line_of_more_than_300_characters_is_cut() {
+        assert_eq!(cut(&[b'a'; 301]), (300, 1));
+        assert_eq!(cut(&[b'a'; 1000]), (300, 700));
+    }
+
+    #[test]
+    fn a_multibyte_character_counts_as_one_character() {
+        let line = "漢".repeat(400);
+        assert_eq!(cut(line.as_bytes()), (900, 100));
+    }
+
+    #[test]
+    fn a_byte_that_is_not_utf8_counts_as_one_character() {
+        assert_eq!(cut(&[0xFF; 400]), (300, 100));
+    }
+
+    #[test]
+    fn a_bad_sequence_counts_as_one_character() {
+        let mut line = vec![b'a'; 299];
+        line.extend([0xE2, 0x82]);
+        line.extend([b'b'; 10]);
+        assert_eq!(cut(&line), (301, 10));
+    }
+
+    #[test]
+    fn a_carriage_return_counts_as_one_character() {
+        let mut line = vec![b'a'; 300];
+        line.push(b'\r');
+        assert_eq!(cut(&line), (300, 1));
+    }
+
+    #[test]
+    fn the_kept_bytes_of_valid_text_are_valid_text() {
+        for line in ["é".repeat(500), "漢".repeat(500), "😀".repeat(500)] {
+            let (kept, cut) = cut_line(line.as_bytes());
+            assert!(std::str::from_utf8(kept).is_ok());
+            assert_eq!(
+                std::str::from_utf8(kept).expect("text").chars().count(),
+                300
+            );
+            assert_eq!(cut, 200);
+        }
+    }
+
+    #[test]
+    fn a_new_line_is_cut_at_300_characters() {
+        let line = SnippetLine::new(4, &[b'x'; 1000], true);
+        assert_eq!((line.number, line.text.len(), line.cut), (4, 300, 700));
+        assert!(line.is_match);
+    }
+
+    #[test]
+    fn a_file_line_of_1000_characters_is_read_as_300_and_a_cut_of_700() {
+        let (_dir, path) = folder_with("a.txt", format!("{}\n", "x".repeat(1000)).as_bytes());
+        let (snippets, _) = read_snippets(&[window(&path, 1, 1, &[1])]);
+        assert_eq!(snippets[0].lines[0].text.len(), 300);
+        assert_eq!(snippets[0].lines[0].cut, 700);
+    }
+
+    #[test]
+    fn a_result_gives_its_first_and_last_line() {
+        let snippet = Snippet {
+            source: Source::StandardInput,
+            lines: (7..=17)
+                .map(|n| SnippetLine::new(n, b"x", n == 10))
+                .collect(),
+        };
+        assert_eq!((snippet.first_line(), snippet.last_line()), (7, 17));
+        let empty = Snippet {
+            source: Source::StandardInput,
+            lines: Vec::new(),
+        };
+        assert_eq!((empty.first_line(), empty.last_line()), (0, 0));
+    }
+
+    #[test]
+    fn the_label_of_standard_input_is_fixed() {
+        assert_eq!(Source::StandardInput.label(), b"(standard input)");
+        assert_eq!(Source::File(PathBuf::from("a/b")).label(), b"a/b");
     }
 
     #[test]

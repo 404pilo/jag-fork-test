@@ -280,15 +280,117 @@ fn the_default_limit_scores_200_results() {
 }
 
 #[test]
-fn a_long_line_is_cut_in_the_request_and_whole_in_the_output() {
+fn a_long_line_is_cut_and_marked() {
     let server = FakeServer::constant(0.8);
     let dir = folder();
     let long = format!("needle{}", "x".repeat(994));
     write(dir.path(), "a.txt", format!("{long}\n").as_bytes());
-    let output = search(&server, "needle", dir.path(), &[]);
+    let output = search_from(&server, dir.path(), &["a.txt"]);
     assert_eq!(output.status.code(), Some(0));
-    assert_eq!(server.requests()[0].snippet_texts()[0].chars().count(), 300);
-    assert!(stdout(&output).contains(&format!("a.txt:1:{long}\n")));
+    let kept = format!("needle{}", "x".repeat(294));
+    let request_text = server.requests()[0].snippet_texts()[0].clone();
+    assert_eq!(request_text.chars().count(), 300);
+    assert_eq!(request_text, kept);
+    assert_eq!(stdout(&output), format!("a.txt:1:{kept} [+700 chars]\n"));
+}
+
+/// Run a search with the paths as typed, from the folder `cwd`.
+fn search_from(server: &FakeServer, cwd: &Path, paths: &[&str]) -> std::process::Output {
+    let home = folder();
+    let output = jag(home.path(), &server.base_url())
+        .current_dir(cwd)
+        .args(["needle", QUESTION])
+        .args(paths)
+        .output()
+        .expect("run jag");
+    assert_no_key(&output, server);
+    output
+}
+
+// CRITERION-31: each line shows the path, the line number, and the text; a
+// matching line has `:` and another line has `-`.
+#[test]
+fn criterion_31_each_line_has_the_path_the_number_and_a_separator() {
+    let server = FakeServer::constant(0.8);
+    let dir = folder();
+    let lines: Vec<String> = (1..=8)
+        .map(|number| {
+            if number == 5 {
+                "needle".to_string()
+            } else {
+                format!("line {number}")
+            }
+        })
+        .collect();
+    write(
+        dir.path(),
+        "notes/a.txt",
+        format!("{}\n", lines.join("\n")).as_bytes(),
+    );
+    let output = search_from(&server, dir.path(), &["notes"]);
+    assert_eq!(output.status.code(), Some(0));
+    let expected: String = (2..=8)
+        .map(|number| {
+            let separator = if number == 5 { ':' } else { '-' };
+            format!(
+                "notes/a.txt{separator}{number}{separator}{}\n",
+                lines[number - 1]
+            )
+        })
+        .collect();
+    assert_eq!(stdout(&output), expected);
+}
+
+// CRITERION-32: the path is as the user typed it, in each form.
+#[test]
+fn criterion_32_the_path_has_the_form_that_the_user_typed() {
+    let server = FakeServer::constant(0.8);
+    let dir = folder();
+    write(dir.path(), "dir/sub/a.txt", b"needle\n");
+    let absolute = dir.path().join("dir");
+    let absolute = absolute.to_string_lossy().into_owned();
+    let cases = [
+        ("dir", "dir/sub/a.txt:1:needle\n".to_string()),
+        ("dir/", "dir/sub/a.txt:1:needle\n".to_string()),
+        ("./dir", "./dir/sub/a.txt:1:needle\n".to_string()),
+        (
+            absolute.as_str(),
+            format!("{absolute}/sub/a.txt:1:needle\n"),
+        ),
+        ("dir/sub/a.txt", "dir/sub/a.txt:1:needle\n".to_string()),
+    ];
+    for (typed, expected) in cases {
+        let output = search_from(&server, dir.path(), &[typed]);
+        assert_eq!(output.status.code(), Some(0), "{typed}");
+        assert_eq!(stdout(&output), expected, "{typed}");
+    }
+}
+
+// CRITERION-33: the result runs from the first line to the last line of its
+// window, so two near matches give one result.
+#[test]
+fn criterion_33_a_result_runs_from_its_first_line_to_its_last_line() {
+    let server = FakeServer::constant(0.8);
+    let dir = folder();
+    let text: String = (1..=20)
+        .map(|number| {
+            if number == 10 || number == 14 {
+                "needle\n".to_string()
+            } else {
+                format!("line {number}\n")
+            }
+        })
+        .collect();
+    write(dir.path(), "a.txt", text.as_bytes());
+    let output = search_from(&server, dir.path(), &["a.txt"]);
+    let out = stdout(&output);
+    let rows: Vec<&str> = out.lines().collect();
+    assert_eq!(rows.len(), 11);
+    assert!(rows[0].starts_with("a.txt-7-"));
+    assert!(rows[10].starts_with("a.txt-17-"));
+    assert!(rows[3].starts_with("a.txt:10:"));
+    assert!(rows[7].starts_with("a.txt:14:"));
+    assert!(!out.contains("--\n"));
 }
 
 #[test]

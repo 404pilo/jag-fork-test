@@ -12,19 +12,19 @@ use common::fake_server::{FakeServer, Reply};
 use jag::config::ApiKey;
 use jag::failure::Failure;
 use jag::scorer::{ScoreError, ScoreSettings, score};
-use jag::search::snippet::{Snippet, SnippetLine};
+use jag::search::snippet::{Snippet, SnippetLine, Source};
 
 const KEY: &str = "SENTINEL-SENTINEL-SENTINEL";
 
 fn snippets(count: usize) -> Vec<Snippet> {
     (0..count)
         .map(|index| Snippet {
-            path: PathBuf::from(format!("f{index}.txt")),
-            lines: vec![SnippetLine {
-                number: 1,
-                text: format!("text-{index}").into_bytes(),
-                is_match: true,
-            }],
+            source: Source::File(PathBuf::from(format!("f{index}.txt"))),
+            lines: vec![SnippetLine::new(
+                1,
+                format!("text-{index}").as_bytes(),
+                true,
+            )],
         })
         .collect()
 }
