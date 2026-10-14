@@ -4,7 +4,7 @@ title: Stay inside a default size limit
 description: As an agent builder (PERSONA-01), I want jag to never write more characters
   than a default size limit, so that the output fits the context of my agent.
 status: draft
-state: backlog
+state: ready
 github:
   number: 86
   node_id: I_kwDOVDCdD88AAAABXCAZMw
@@ -12,6 +12,7 @@ github:
   pushed_hash: '799827'
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-13-STORY-25-size-limit-on-the-text-that-jag-returns-design.md
 parent: /features/FEATURE-09.md
 milestone: /milestones/MILESTONE-01.md
 traces:

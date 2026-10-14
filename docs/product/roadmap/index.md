@@ -10,4 +10,4 @@ okf_version: '0.2'
 * [epics/](epics/index.md) - 5 pages
 * [features/](features/index.md) - 19 pages
 * [stories/](stories/index.md) - 61 pages
-* [criteria/](criteria/index.md) - 103 pages
+* [criteria/](criteria/index.md) - 104 pages

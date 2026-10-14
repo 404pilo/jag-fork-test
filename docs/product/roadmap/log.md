@@ -8,6 +8,14 @@
 * **State**: [FEATURE-12](features/FEATURE-12.md) backlog -> done, by human:404pilo, at 2026-10-14T12:55:13Z
 * **State**: [STORY-34](stories/STORY-34.md) ready -> done, by human:404pilo, at 2026-10-14T12:55:13Z
 * **State**: [STORY-33](stories/STORY-33.md) ready -> done, by human:404pilo, at 2026-10-14T12:55:13Z
+* **Plan**: [STORY-28](stories/STORY-28.md) backlog -> ready by rule 11 (docs/adlc.md): the spec is in this PR (FEATURE-09 spec PR #134), FEATURE-09 is not blocked (FEATURE-08 is done), and the two ASKs of the spec have their answers (human:404pilo, 2026-10-14), by agent:specifier-1, at 2026-10-14T12:49:26Z
+* **State**: [STORY-28](stories/STORY-28.md) backlog -> ready, by human:404pilo, at 2026-10-14T12:49:26Z
+* **Plan**: [STORY-27](stories/STORY-27.md) backlog -> ready by rule 11 (docs/adlc.md): the spec is in this PR (FEATURE-09 spec PR #134), FEATURE-09 is not blocked (FEATURE-08 is done), and the two ASKs of the spec have their answers (human:404pilo, 2026-10-14), by agent:specifier-1, at 2026-10-14T12:49:26Z
+* **State**: [STORY-27](stories/STORY-27.md) backlog -> ready, by human:404pilo, at 2026-10-14T12:49:26Z
+* **Plan**: [STORY-26](stories/STORY-26.md) backlog -> ready by rule 11 (docs/adlc.md): the spec is in this PR (FEATURE-09 spec PR #134), FEATURE-09 is not blocked (FEATURE-08 is done), and the two ASKs of the spec have their answers (human:404pilo, 2026-10-14), by agent:specifier-1, at 2026-10-14T12:49:26Z
+* **State**: [STORY-26](stories/STORY-26.md) backlog -> ready, by human:404pilo, at 2026-10-14T12:49:26Z
+* **Plan**: [STORY-25](stories/STORY-25.md) backlog -> ready by rule 11 (docs/adlc.md): the spec is in this PR (FEATURE-09 spec PR #134), FEATURE-09 is not blocked (FEATURE-08 is done), and the two ASKs of the spec have their answers (human:404pilo, 2026-10-14), by agent:specifier-1, at 2026-10-14T12:49:26Z
+* **State**: [STORY-25](stories/STORY-25.md) backlog -> ready, by human:404pilo, at 2026-10-14T12:49:26Z
 * **Sync**: [STORY-34](stories/STORY-34.md) pushed to GitHub, by system:github, at 2026-10-14T12:34:56Z
 * **Sync**: [STORY-33](stories/STORY-33.md) pushed to GitHub, by system:github, at 2026-10-14T12:34:56Z
 * **Sync**: [FEATURE-04](features/FEATURE-04.md) pushed to GitHub, by system:github, at 2026-10-14T12:34:56Z

@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want jag to cut the top result 
   say so when that result alone is larger than the limit, so that I still get the
   best answer.
 status: draft
-state: backlog
+state: ready
 github:
   number: 88
   node_id: I_kwDOVDCdD88AAAABXCAjBA
@@ -13,6 +13,7 @@ github:
   pushed_hash: d8e49c
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-13-STORY-25-size-limit-on-the-text-that-jag-returns-design.md
 parent: /features/FEATURE-09.md
 milestone: /milestones/MILESTONE-01.md
 traces:

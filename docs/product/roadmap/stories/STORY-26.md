@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want jag to leave out the lowes
   results and tell me how many, so that I know the list is not complete and how to
   see more.
 status: draft
-state: backlog
+state: ready
 github:
   number: 87
   node_id: I_kwDOVDCdD88AAAABXCAdog
@@ -13,6 +13,7 @@ github:
   pushed_hash: 0c3779
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-13-STORY-25-size-limit-on-the-text-that-jag-returns-design.md
 parent: /features/FEATURE-09.md
 milestone: /milestones/MILESTONE-01.md
 traces:
@@ -36,6 +37,7 @@ As an agent builder (PERSONA-01), I want jag to leave out whole results with the
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
+| [CRITERION-104: The size-limit notice is named fields in structured output](../criteria/CRITERION-104.md) | - | - | - | - | - |
 | [CRITERION-39: jag leaves out whole results with the lowest rank first](../criteria/CRITERION-39.md) | - | - | - | - | - |
 | [CRITERION-41: The notice gives the count and how to raise the limit](../criteria/CRITERION-41.md) | - | - | - | - | - |
 | [CRITERION-42: Leaving out results has its own exit code](../criteria/CRITERION-42.md) | - | - | - | - | - |
@@ -52,6 +54,7 @@ As an agent builder (PERSONA-01), I want jag to leave out whole results with the
 - traces: [DECISION-24: The notice gives the count and how to raise the limit](../../prd/decisions/DECISION-24.md)
 - traces: [DECISION-26: Leaving out results has its own exit code](../../prd/decisions/DECISION-26.md)
 - traces: [DECISION-47: The cost-limit exit code wins over the left-out exit code](../../prd/decisions/DECISION-47.md)
+- criterion or run of: [CRITERION-104: The size-limit notice is named fields in structured output](../criteria/CRITERION-104.md)
 - criterion or run of: [CRITERION-39: jag leaves out whole results with the lowest rank first](../criteria/CRITERION-39.md)
 - criterion or run of: [CRITERION-41: The notice gives the count and how to raise the limit](../criteria/CRITERION-41.md)
 - criterion or run of: [CRITERION-42: Leaving out results has its own exit code](../criteria/CRITERION-42.md)

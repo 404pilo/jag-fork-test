@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want a limit of zero, a negativ
   limit, or a value that is not a number to give a usage error, so that a typo does
   not hide the output.
 status: draft
-state: backlog
+state: ready
 github:
   number: 89
   node_id: I_kwDOVDCdD88AAAABXCAnKQ
@@ -13,6 +13,7 @@ github:
   pushed_hash: 1f189f
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-13-STORY-25-size-limit-on-the-text-that-jag-returns-design.md
 parent: /features/FEATURE-09.md
 milestone: /milestones/MILESTONE-01.md
 traces:

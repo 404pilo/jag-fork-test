@@ -123,6 +123,7 @@
 * [CRITERION-41: The notice gives the count and how to raise the limit](CRITERION-41.md) - When jag leaves out results, a notice gives their number and tells the user how to raise the limit.
 * [CRITERION-42: Leaving out results has its own exit code](CRITERION-42.md) - When jag leaves out results to stay inside the limit, it exits with its own exit code above 2.
 * [CRITERION-66: Cost-limit code wins when both limits apply](CRITERION-66.md) - When a search reaches the cost limit and also leaves out results, jag exits with the cost-limit code, and the notice says that results were left out.
+* [CRITERION-104: The size-limit notice is named fields in structured output](CRITERION-104.md) - When jag leaves out results or cuts the top result, structured output gives the size-limit notice as named fields, and the error stream holds no size-limit notice.
 
 ## STORY-27: Cut a top result that is larger than the limit
 
