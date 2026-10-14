@@ -5,7 +5,7 @@ description: As a shell power user (PERSONA-04), I want a progress line on the e
   stream only when that stream is a terminal, so that a pipe or a log holds no progress
   noise.
 status: draft
-state: backlog
+state: ready
 github:
   number: 102
   node_id: I_kwDOVDCdD88AAAABXCBkqQ
@@ -13,6 +13,7 @@ github:
   pushed_hash: bc4d17
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-41-good-behavior-in-a-terminal-and-in-a-pipe-design.md
 parent: /features/FEATURE-15.md
 milestone: /milestones/MILESTONE-02.md
 traces:

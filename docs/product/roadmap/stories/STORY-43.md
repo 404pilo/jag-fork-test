@@ -4,7 +4,7 @@ title: Stop at once when stopped
 description: As a shell power user (PERSONA-04), I want jag to stop at once on Ctrl-C
   or a closed pipe, so that a stopped search wastes no more credit.
 status: draft
-state: backlog
+state: ready
 github:
   number: 104
   node_id: I_kwDOVDCdD88AAAABXCBtLw
@@ -12,6 +12,7 @@ github:
   pushed_hash: 37537d
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-41-good-behavior-in-a-terminal-and-in-a-pipe-design.md
 parent: /features/FEATURE-15.md
 milestone: /milestones/MILESTONE-02.md
 traces:

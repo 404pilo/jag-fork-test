@@ -37,9 +37,9 @@ jag shows progress and color only in a terminal, and it stops at once with no pa
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-41: See progress only in a terminal](../stories/STORY-41.md) | backlog | - | - | - | - |
-| [STORY-42: Color the matches as grep does](../stories/STORY-42.md) | backlog | - | - | - | - |
-| [STORY-43: Stop at once when stopped](../stories/STORY-43.md) | backlog | - | - | - | - |
+| [STORY-41: See progress only in a terminal](../stories/STORY-41.md) | ready | - | - | - | - |
+| [STORY-42: Color the matches as grep does](../stories/STORY-42.md) | ready | - | - | - | - |
+| [STORY-43: Stop at once when stopped](../stories/STORY-43.md) | ready | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

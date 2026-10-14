@@ -5,7 +5,7 @@ description: As a shell power user (PERSONA-04), I want jag to color the matchin
   text only in a terminal, with --color=never and --color=always to change that, so
   that color works as grep --color=auto.
 status: draft
-state: backlog
+state: ready
 github:
   number: 103
   node_id: I_kwDOVDCdD88AAAABXCBohA
@@ -13,6 +13,7 @@ github:
   pushed_hash: 8c7622
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-41-good-behavior-in-a-terminal-and-in-a-pipe-design.md
 parent: /features/FEATURE-15.md
 milestone: /milestones/MILESTONE-02.md
 traces:
