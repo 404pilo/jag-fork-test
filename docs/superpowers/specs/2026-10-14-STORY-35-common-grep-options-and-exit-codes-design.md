@@ -59,7 +59,7 @@ search with no `--ask`. The user answers of 2026-10-14 for this feature say
 | # | Decision | Choice | Source |
 |---|---|---|---|
 | 1 | Spec grouping | One spec for STORY-35 to STORY-38. The four stories change the same command line and the same search flow | docs/adlc.md (one feature gives one spec) |
-| 2 | Names of the options | The 12 options of DECISION-34, with the short names of grep. Each one also has its long name of GNU grep: `--ignore-case`, `--word-regexp`, `--fixed-strings`, `--regexp=TERM`, `--after-context=NUM`, `--before-context=NUM`, `--context=NUM`, `--files-with-matches`, `--count`, and `--quiet` with the alias `--silent`. `--include=GLOB` and `--exclude=GLOB` have only a long name, as in grep. A short option takes its value as the next word or joined (`-A2`), and short options join (`-iw`, `-iA2`), as in grep. A long option takes its value after `=` or as the next word, as in grep | DECISION-34; CRITERION-55 ("with their grep meaning"); FEATURE-15 spec decision 5 (`--colour`, an alias from the help of grep); GNU grep 3.12 (`grep --help`, checked on 2026-10-14); clap 4.6.7 (checked in Docker on 2026-10-14: `-iA2`, `-e-x`, and `--regexp=a` parse) (inferred) |
+| 2 | Names of the options | The 12 options of DECISION-34, with the short names of grep. Each one also has its long name of GNU grep: `--ignore-case`, `--word-regexp`, `--fixed-strings`, `--regexp=TERM`, `--after-context=NUM`, `--before-context=NUM`, `--context=NUM`, `--files-with-matches`, `--count`, and `--quiet` with the alias `--silent`. `--include=GLOB` and `--exclude=GLOB` have only a long name, as in grep. A short option takes its value as the next word or joined (`-A2`), and short options join (`-iw`, `-iA2`), as in grep. A long option takes its value after `=` or as the next word, as in grep. Decision 37 gives a short option with `=`, for example `-e=foo` | DECISION-34; CRITERION-55 ("with their grep meaning"); FEATURE-15 spec decision 5 (`--colour`, an alias from the help of grep); GNU grep 3.12 (`grep --help`, checked on 2026-10-14); clap 4.6.7 (checked in Docker on 2026-10-14: `-iA2`, `-e-x`, and `--regexp=a` parse) (inferred) |
 | 3 | The options of jag | "Any other option" (CRITERION-57) is each option that is not in DECISION-34 and that is not an option of jag from another decision: `--ask` (`0018-take-the-question-only-from-the-ask-option.md`), `--json` (DECISION-27), `--color` and `--colour` (DECISION-38), `--timeout` and `--retry-wait` (FEATURE-03 spec), `--max-scored` (FEATURE-06 spec), `--check`, `--setup`, and `--forget-key` (contracts-2), `--help` and `-h`, `--version` and `-V`, and `--max-chars` and `--no-max-chars` when the FEATURE-09 code merges | DECISION-27; DECISION-38; DECISION-34; system-design.md IF-3 and contracts-2; FEATURE-15 spec "Other features" ("The usage error for an unknown option must accept `--color` and `--colour`"); FEATURE-09 spec decisions 4 and 5 (PR #134, not merged) |
 | 4 | `-h` and `-V` | `-h` and `--help` show the help, and `-V` and `--version` show the version, as today and as rg. In grep, `-h` removes the path from each line, and DECISION-34 does not keep that option (Risk 2) | `src/cli.rs` (clap gives `-h` and `-V`); FEATURE-12 spec "Out of scope" ("`-h`: DECISION-34 does not keep them"); ripgrep (`rg -h` shows the help) (inferred) |
 | 5 | Grep options that jag does not keep | Each other option of grep is an unknown option (decision 18), for example `-r`, `-n`, `-H`, `-s`, `-v`, `-x`, `-o`, `-m`, `-L`, `-Z`, `--exclude-dir`, and `-NUM`. jag always searches a folder as `grep -r` does, and always shows the path and the line number, as `grep -H -n` does. So `jag -rn` gives exit 2 (Risk 1) | DECISION-34 ("Any other option is a usage error"; rejected: "jag ignores an unknown option with a warning", and "All GNU grep options"); FEATURE-05 spec; FEATURE-08 spec decisions 1 and 5 |
@@ -94,6 +94,8 @@ search with no `--ask`. The user answers of 2026-10-14 for this feature say
 | 34 | Story state | All four stories stay `backlog`. The user answers of 2026-10-14 close the three ASKs of decisions 14, 18, and 22, so no open ASK blocks a story. FEATURE-13 has FEATURE-12 in its `blocked_by` list, because `-l`, `-c`, `-q`, and the lines around a match in plain grep need the plain flow of FEATURE-12 (Build order step 5). So CRITERION-55 cannot pass before the FEATURE-12 code is on `main`. By rule 11, no story of FEATURE-13 is `ready` before FEATURE-12 is `done` | docs/adlc.md rule 11; the orchestrator ANSWER of 2026-10-14 ("STORY-35–38 stay backlog because FEATURE-13 is blocked_by FEATURE-12 (rule 11)"); verifier-1, pre-check of PR #153 (the `blocked_by` entry) |
 | 35 | Other features | FEATURE-12 (the plain flow and the option `--ask`), FEATURE-14 (the order of the scan, piped text, an empty pipe, and a path that does not exist), FEATURE-09 (the size limit and its open point: exit 8 or 0), FEATURE-15 (color), FEATURE-11 (structured mode), FEATURE-16 (speed), and FEATURE-20 (the cost line): see "Other features". The user answered the open points of FEATURE-12 and FEATURE-14 on 2026-10-14, and this spec applies the answers to its options. It decides no open point of FEATURE-09 | The orchestrator TASK of 2026-10-14 ("Do not decide the open points of FEATURE-14 (empty pipe, missing path), FEATURE-12 (question or path) or FEATURE-09 (exit 8 or 0) — name the interaction"); the user answers of 2026-10-14 for FEATURE-12 and FEATURE-14; FEATURE-12 spec; FEATURE-14 spec (PR #142); FEATURE-09 spec (PR #134) |
 | 36 | Tests | The new file `tests/grep_options.rs` holds the end-to-end tests of the five criteria. Unit tests go in `src/cli.rs`, `src/search/snippet.rs`, `src/search/filter.rs`, `src/search/walk.rs`, and `src/output.rs`. Three tests of `tests/usage.rs` change (decision 18). The expected bytes of grep in the tests come from GNU grep 3.12, checked on 2026-10-14. No test runs the `grep` program | FEATURE-11 and FEATURE-15 specs (one test file for each feature, the fake server, a temporary `$HOME`); `tests/common/mod.rs` (`jag_bare`, `jag`, `write`); `tests/usage.rs` (inferred) |
+| 37 | A short option with `=` | A short option that takes a value reads one `=` just after its letter as the separator, as rg does. `-e=foo` gives the term `foo`, the same as `--regexp=foo`. `-ie=FOO` gives `-i` and the term `FOO`. `-e==foo` gives the term `=foo`. `-e=` gives an empty term, the same as `-e ''`, so each line matches. `-A=2`, `-B=2`, and `-C=2` give 2. A word that is the value of the option before it does not change: `-e -e=foo` gives the term `-e=foo`, as in grep. GNU grep reads the `=` as a part of the value: `-e=foo` gives the pattern `=foo`, and `-A=2` gives exit 2. jag does not copy this. Each option keeps its grep meaning. Only the form of the separator is not the same. clap gives this form today, so the code does not change. New tests record it, and the README tells the difference | PR #170 review (verifier-2, round 1, note 2: "The spec does not name the `=` form of a short option", and "A test that records the current behavior is enough for now"); `0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md` (clap reads the command line); decision 26 and "Out of scope" (the prefixes of a long option): jag does not copy each rare form of grep, and the README tells the difference; ripgrep 15.1.0 (checked on 2026-10-14: `rg -e=foo` gives `foo`, `rg -e=` matches each line, and `rg -A=2` gives 2); GNU grep 3.12 (`/usr/bin/grep`, checked on 2026-10-14: `-e=foo` matches only `=foo`, `-ie=FOO` gives `=FOO`, `-A=2` gives `=2: invalid context length argument` and exit 2, and `-e -e=foo` gives the pattern `-e=foo`); the jag binary of `main` eff47ff, built in `rust:1.99` (checked on 2026-10-14: `-e=foo`, `-ie=FOO`, `-e==foo`, `-e=`, `-A=2`, `-B=1`, `-C=1`, and `-e -e=foo` give the results of this decision) (inferred) |
+| 38 | `--json` in an argument error | An argument error writes the error document only when clap reads `--json` as the option. So an argument error has the mode of the same command line with no error. jag reads the words from left to right, as clap does, also after the word that gives the error. A word that is the value of an option is not an option: `-e --json`, `--regexp --json`, `-ie --json`, `-A --json`, `-B --json`, and `-C --json` give the value `--json` (decisions 10 and 12). So `jag -e --json --nope dir` writes the text error of `--nope`. A `--` that is the value of an option does not end the options: in `jag -e -- --json --nope dir`, the term is `--`, `--json` is the option, and jag writes the error document. The other options with a value do not take a value that starts with `-`, so `--json` after them is the option, as today (FEATURE-12 spec decision 2: `jag --ask --json TERM PATH` writes the document). A value joined to its option is not the word `--json`: `-e--json` and `--regexp=--json` give the text error, as today. The option is only the word `--json`: `--json=1` is not the option, as today. This changes FEATURE-11 spec decision 22 ("`--json` before the first `--`"). That rule was correct before this spec, because no option took a value that starts with `-`. The code of `json_requested` changes | DECISION-27 (only `--json` gives structured mode); system-design.md CV-1; `src/cli.rs` (`enum Mode`: "Only `--json` gives `Json`"; `json_requested`: "After `--`, `--json` is a term or a path, not the option"); FEATURE-11 spec decision 22; decisions 10 and 12 (`allow_hyphen_values`); PR #170 review (verifier-2, round 1, note 3); the jag binary of `main` eff47ff, built in `rust:1.99` (checked on 2026-10-14: `-e --json a.txt` runs in text mode, but `-e --json --nope a.txt`, `--regexp --json --nope a.txt`, `-C --json --nope a.txt`, and `-ie --json --nope a.txt` write the error document; `-e -- --json a.txt` writes a document, but `-e -- --json --nope a.txt` writes the text error; `-ei --json --nope a.txt` writes the document, because `-e` takes `i`) (inferred) |
 
 ## Design
 
@@ -480,9 +482,42 @@ jag: the option --nope is not valid.
 Run jag --help to see the options.
 ```
 
-With `--json` before the first `--`, the error document holds this cause
-and this fix, with `exit_code` 2. Each other kind of clap error keeps the
-fixed line or the argument error document of today.
+With the option `--json` (decision 38), the error document holds this
+cause and this fix, with `exit_code` 2. Each other kind of clap error keeps
+the fixed line or the argument error document of today.
+
+### The option `--json` in an argument error (C-cli)
+
+`json_requested` reads the words of the command line before clap gives
+the error, so it must find the same option `--json` that clap finds
+(decision 38):
+
+```rust
+/// True when clap reads `--json` as the option: not as the value of an
+/// option, and not after the `--` that ends the options (decision 38).
+fn json_requested(args: impl IntoIterator<Item = OsString>) -> bool
+```
+
+It reads each word from left to right, and it does not stop at an
+unknown option:
+
+- `--` ends the options, unless it is the value of the option before it.
+- `--NAME=VALUE` is one option with its value.
+- `--NAME` is one option. When the option takes a value, the next word is
+  its value if the option takes a value that starts with `-` (`--regexp`,
+  `--after-context`, `--before-context`, and `--context`), or if the next
+  word does not start with `-`, or if it is `-` alone.
+- `-XYZ` is a group of short options. A letter with no value is one
+  option. The first letter that takes a value (`e`, `A`, `B`, or `C`)
+  takes the rest of the word as its value. When the rest is empty, it
+  takes the next word, also a word that starts with `-`.
+- An unknown option is an option with no value.
+- `--color` takes its value only after `=`, so it never takes the next
+  word.
+
+The list of the options and their values can come from `Cli::command()`,
+so that it stays the same as `Cli`. The implementer checks the clap API in
+`rust:1.99`.
 
 ### The text (C-output)
 
@@ -577,6 +612,9 @@ The section comes after "In a terminal and in a pipe". It says:
   rules of ripgrep, for example `*.{rs,toml}`. They do not apply to
   folders or to piped text.
 - jag skips binary files, so `-l` and `-c` do not show them.
+- A short option takes its value after `=`, as in rg: `-e=foo` is the
+  same as `--regexp=foo`. grep reads `-e=foo` as the term `=foo`. To
+  search `=foo`, type `-e '=foo'` (decision 37).
 - The exit codes: 0 for a match, 1 for no match (with `--ask`, also for no
   good answer), and 2 for a usage error, as in grep. A path that does not
   exist gives a warning and exit 2, but `-q` with a match exits with 0, as
@@ -597,6 +635,13 @@ The section comes after "In a terminal and in a pipe". It says:
     `-e --ask q needle` gives the term `--ask` and the paths `q` and
     `needle`. With `-e`, a path that is not UTF-8 works. With no `-e`, a
     term that is not UTF-8 gives the failure of `argument_failure`.
+  - Unit (`src/cli.rs`, decision 37): `-e=foo` gives the terms `[foo]`.
+    `-ie=FOO` gives `ignore_case` and the terms `[FOO]`. `-e==foo` gives
+    `[=foo]`. `-e=` gives `[""]`. `-e -e=foo` gives `[-e=foo]`. `-A=2`
+    gives `after` `2`.
+  - End-to-end (`tests/grep_options.rs`, decision 37): `jag -e=foo a.txt`
+    on a file with the lines `foo` and `=foo` writes the two lines, exit 0.
+    `jag -e '=foo' a.txt` writes only the line `=foo`.
   - Unit (`src/cli.rs`): `build_matcher` with `ignore_case` matches
     `Needle` for `needle`. With `word`, it matches `the needle.` and not
     `needles` or `needle_x`. `build_matcher(&["one", "three"], ...)`
@@ -671,6 +716,19 @@ The section comes after "In a terminal and in a pipe". It says:
     characters after `--`) gives the fixed line. `--color=always`,
     `--colour`, `--json`, `--timeout 5`, and `--max-scored 10` are not
     unknown options.
+  - Unit (`src/cli.rs`, decision 38): `json_requested` is false for
+    `-e --json --nope`, `--regexp --json --nope`, `-ie --json --nope`,
+    `-A --json --nope`, `-B --json --nope`, `-C --json --nope`,
+    `-e--json --nope`, and `--regexp=--json --nope`. It is true for
+    `-e -- --json --nope`, `-ei --json --nope`, `--ask --json t p`,
+    `--include --json`, and `--nope --json`. The cases of
+    `json_requested_reads_the_option_before_the_first_double_dash` do not
+    change.
+  - End-to-end (`tests/grep_options.rs`, decision 38): `jag -e --json
+    --nope a.txt` writes nothing on standard output, writes the two lines
+    of decision 18 with `--nope` on the error stream, and exits with 2.
+    `jag -e -- --json --nope a.txt` writes the error document with the
+    cause of decision 18, and exits with 2.
   - `tests/usage.rs`: in `an_argument_error_writes_one_fixed_line_with_no_value`,
     the case `--SENTINEL-SENTINEL-SENTINEL` becomes
     `--SENTINEL-SENTINEL-SENTINEL-SENTINEL`: today the shorter text has the
@@ -737,6 +795,12 @@ The section comes after "In a terminal and in a pipe". It says:
    When the FEATURE-14 code merges after the FEATURE-13 code, the
    FEATURE-14 code adds them.
 7. The help, the usage line, and the README section "Grep options".
+8. After the FEATURE-13 code (PR #170), one more pull request: the tests
+   of decision 37, which record the code of today, and the README line of
+   decision 37. Then the code of decision 38: `json_requested` reads the
+   words as decision 38 says, and the tests of decision 38 pass. STORY-37
+   is `done` on `main` (#192), so the planner decides how the board
+   tracks this pull request.
 
 ## Assumptions
 
@@ -789,6 +853,12 @@ The section comes after "In a terminal and in a pipe". It says:
   system-design.md CV-1 (a cause and a fix); the texts of `src/cli.rs`.
 - The tests hold the expected bytes of GNU grep 3.12, and no test runs
   `grep` (decision 36). Source: FEATURE-11 and FEATURE-15 specs.
+- A short option takes its value after one `=`, as in rg, and not as in
+  grep (decision 37). Source: clap 4.6.7 and the jag binary of `main`
+  eff47ff; ripgrep 15.1.0; decision 26.
+- An argument error has the mode of the same command line with no error
+  (decision 38). Source: DECISION-27; FEATURE-11 spec decision 22;
+  `src/cli.rs` (`enum Mode`).
 
 ## Risks
 
@@ -837,6 +907,17 @@ The section comes after "In a terminal and in a pipe". It says:
     report of a missed typo with `-q`. Mitigation: jag writes the warning
     of the missing path on the error stream, as `grep -q` writes its
     error.
+11. A grep script with `-e=x` searches `x` in jag and `=x` in grep, with
+    no error, and `-e=` matches each line in jag (decision 37). Signal: a
+    report that compares jag and grep with `-e=`. Mitigation: the README
+    tells the difference. Before the first release, a change to the form
+    of grep is cheap. After the first release, it is a changed option and
+    needs a new major version (IF-3).
+12. The words that `json_requested` reads as values must stay the same as
+    the options of `Cli` (decision 38). A new option that takes a value
+    that starts with `-` changes the rule. Signal: an error document with
+    no option `--json`, or a text error with it. Mitigation: the list of
+    options comes from `Cli::command()`, and the unit tests of decision 38.
 
 ## Out of scope
 
