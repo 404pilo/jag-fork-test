@@ -13,6 +13,7 @@ github:
   pushed_hash: ebbf20
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-35-common-grep-options-and-exit-codes-design.md
 parent: /features/FEATURE-13.md
 milestone: /milestones/MILESTONE-02.md
 traces:

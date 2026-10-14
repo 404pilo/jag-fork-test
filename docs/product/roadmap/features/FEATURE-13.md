@@ -13,6 +13,8 @@ github:
   synced:
     state: backlog
 parent: /epics/EPIC-04.md
+blocked_by:
+- /features/FEATURE-12.md
 milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/capabilities/CAPABILITY-06.md
@@ -48,6 +50,7 @@ jag keeps the grep options that people use most and the grep exit codes 0, 1, an
 ## Links
 
 - parent: [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md)
+- blocked by: [FEATURE-12: Plain grep with no question](FEATURE-12.md)
 - milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
 - traces: [CAPABILITY-06: Feels like grep](../../prd/capabilities/CAPABILITY-06.md)
 - traces: [DECISION-05: jag keeps grep exit codes and adds one code for each model failure](../../prd/decisions/DECISION-05.md)

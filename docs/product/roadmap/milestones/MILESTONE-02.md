@@ -34,7 +34,7 @@ This milestone holds the capabilities that make jag better to use and easier to 
 | [FEATURE-02: Readiness check](../features/FEATURE-02.md) | done | 3/3 (100%) | - | FEATURE-01 | - |
 | [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md) | done | 4/4 (100%) | - | FEATURE-01 | - |
 | [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md) | done | 2/2 (100%) | - | - | - |
-| [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md) | backlog | 0/4 (0%) | - | - | - |
+| [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md) | backlog | 0/4 (0%) | - | FEATURE-12 | - |
 | [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md) | backlog | 0/3 (0%) | - | FEATURE-05 | - |
 | [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md) | done | 3/3 (100%) | - | FEATURE-04 | - |
 | [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](../features/FEATURE-18.md) | backlog | 0/4 (0%) | - | FEATURE-01, FEATURE-17, FEATURE-19 | - |
