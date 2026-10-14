@@ -13,7 +13,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/87
   pushed_hash: 31996f
   synced:
-    state: ready
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-25-size-limit-on-the-text-that-jag-returns-design.md
 parent: /features/FEATURE-09.md
 milestone: /milestones/MILESTONE-01.md
