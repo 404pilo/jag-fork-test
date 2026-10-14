@@ -42,8 +42,9 @@ fn help_and_version_exit_0() {
         .assert()
         .success()
         .stdout(predicate::str::contains(
-            "jag [--timeout SECONDS] [--retry-wait SECONDS] TERM \"QUESTION\" [PATH...]",
+            "jag [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]",
         ))
+        .stdout(predicate::str::contains("--max-scored <COUNT>"))
         .stdout(predicate::str::contains("--timeout <SECONDS>"))
         .stdout(predicate::str::contains("--retry-wait <SECONDS>"));
     jag_bare(home.path())
@@ -295,6 +296,72 @@ fn a_time_option_with_setup_or_forget_key_gives_the_fixed_line() {
     for args in [
         ["--setup", "--timeout", "5"],
         ["--forget-key", "--retry-wait", "5"],
+    ] {
+        let home = home();
+        jag_bare(home.path())
+            .args(args)
+            .assert()
+            .code(2)
+            .stdout(predicate::str::is_empty())
+            .stderr(FIXED_LINE);
+    }
+}
+
+// FEATURE-06: the cost limit option and variable.
+#[test]
+fn a_bad_limit_exits_2_with_the_exact_text_and_no_value() {
+    let bad = "SENTINEL-SENTINEL-SENTINEL";
+    let option = time_search(&["--max-scored", bad], &[]);
+    assert_eq!(option.status.code(), Some(2));
+    assert!(option.stdout.is_empty());
+    assert_eq!(
+        String::from_utf8_lossy(&option.stderr),
+        "jag: the value of --max-scored is not a whole number from 1 to 2,000.\n\
+         Use a number such as --max-scored 400.\n"
+    );
+    let variable = time_search(&[], &[("JAG_MAX_SCORED", bad)]);
+    assert_eq!(variable.status.code(), Some(2));
+    assert!(variable.stdout.is_empty());
+    assert_eq!(
+        String::from_utf8_lossy(&variable.stderr),
+        "jag: JAG_MAX_SCORED is not a whole number from 1 to 2,000.\n\
+         Set JAG_MAX_SCORED to a number such as 400, or unset it.\n"
+    );
+}
+
+#[test]
+fn a_limit_out_of_range_exits_2() {
+    for value in ["0", "2001", "02000", "1.5", "-1", "2,000"] {
+        let output = time_search(&["--max-scored", value], &[]);
+        assert_eq!(output.status.code(), Some(2), "{value}");
+        let output = time_search(&[], &[("JAG_MAX_SCORED", value)]);
+        assert_eq!(output.status.code(), Some(2), "{value}");
+    }
+}
+
+#[test]
+fn a_bad_limit_option_comes_before_the_key_and_a_bad_variable_after() {
+    let dir = tempfile::tempdir().expect("temporary folder");
+    write(dir.path(), "a.txt", b"needle\n");
+    let home = home();
+    jag_bare(home.path())
+        .args(["--max-scored", "abc", "needle", "which line?"])
+        .arg(dir.path())
+        .assert()
+        .code(2);
+    jag_bare(home.path())
+        .env("JAG_MAX_SCORED", "abc")
+        .args(["needle", "which line?"])
+        .arg(dir.path())
+        .assert()
+        .code(3);
+}
+
+#[test]
+fn the_limit_option_with_setup_or_forget_key_gives_the_fixed_line() {
+    for args in [
+        ["--setup", "--max-scored", "5"],
+        ["--forget-key", "--max-scored", "5"],
     ] {
         let home = home();
         jag_bare(home.path())

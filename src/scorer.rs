@@ -19,8 +19,6 @@ use client::{Attempt, Client};
 pub const PROMPT_VERSION: &str = "jag-p1";
 /// A top score below this is "no good answer" (ADR-0003).
 pub const THRESHOLD: f64 = 0.4;
-/// Before FEATURE-06, jag scores this many results at most (ADR-0002).
-pub const MAX_SCORED: usize = 200;
 /// The calls that run at the same time.
 const MAX_THREADS: usize = 6;
 /// The page where the user adds credit (the docs give no page for it).

@@ -10,13 +10,14 @@ use clap::error::ErrorKind;
 use grep_regex::RegexMatcherBuilder;
 
 use crate::config::{
-    self, Env, RealFs, TimeSetting, TimeSource, TtyPrompter, find_key, model_settings,
-    parse_seconds,
+    self, Env, RealFs, SettingSource, TimeSetting, TtyPrompter, cost_limit, find_key,
+    model_settings, parse_cost_limit, parse_seconds,
 };
 use crate::failure::Failure;
 use crate::output::write_text;
-use crate::scorer::{MAX_SCORED, ScoreSettings, rank, score};
-use crate::search::snippet::{plan_windows, read_snippets};
+use crate::prerank;
+use crate::scorer::{ScoreSettings, rank, score};
+use crate::search::snippet::{match_texts, plan_windows, read_snippets};
 use crate::search::{ScanOptions, scan};
 
 /// The longest question, in UTF-8 bytes (decision 30).
@@ -32,7 +33,7 @@ const USAGE_ERROR: &str = "jag: the command line is not valid. Run jag --help to
     name = "jag",
     version,
     arg_required_else_help = true,
-    override_usage = "jag [--timeout SECONDS] [--retry-wait SECONDS] TERM \"QUESTION\" [PATH...]\n       jag --setup\n       jag --forget-key"
+    override_usage = "jag [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]\n       jag --setup\n       jag --forget-key"
 )]
 struct Cli {
     /// Store your TypeSafe API key, with no echo
@@ -50,6 +51,10 @@ struct Cli {
     /// Seconds to wait before the one retry, from 1 to 60 (default 1)
     #[arg(long = "retry-wait", value_name = "SECONDS", conflicts_with_all = ["setup", "forget_key"])]
     retry_wait: Option<String>,
+
+    /// The most results that the model scores, from 1 to 2,000 (default 200)
+    #[arg(long = "max-scored", value_name = "COUNT", conflicts_with_all = ["setup", "forget_key"])]
+    cost_limit: Option<String>,
 
     /// The regular expression that the lines must match
     #[arg(value_name = "TERM")]
@@ -145,6 +150,8 @@ struct SearchArgs<'a> {
     paths: &'a [PathBuf],
     /// The parsed `--timeout` and `--retry-wait`.
     times: (Option<Duration>, Option<Duration>),
+    /// The parsed `--max-scored`.
+    cost_limit: Option<usize>,
 }
 
 /// Step 1: the arguments of a search. No message shows a value.
@@ -183,16 +190,23 @@ fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
     // (decision 11). The timeout is checked first.
     let timeout = parse_option(cli.timeout.as_deref(), TimeSetting::Timeout)?;
     let retry_wait = parse_option(cli.retry_wait.as_deref(), TimeSetting::RetryWait)?;
+    let cost_limit = cli
+        .cost_limit
+        .as_deref()
+        .map(|text| parse_cost_limit(text, SettingSource::Option))
+        .transpose()
+        .map_err(Failure::from)?;
     Ok(SearchArgs {
         term,
         question,
         paths: &cli.paths,
         times: (timeout, retry_wait),
+        cost_limit,
     })
 }
 
 fn parse_option(text: Option<&str>, setting: TimeSetting) -> Result<Option<Duration>, Failure> {
-    text.map(|text| parse_seconds(text, setting, TimeSource::Option))
+    text.map(|text| parse_seconds(text, setting, SettingSource::Option))
         .transpose()
         .map_err(Failure::from)
 }
@@ -209,6 +223,7 @@ fn search(
     // The key comes before any file read (decision 18).
     let (key, _source) = find_key(env, &RealFs).map_err(Failure::from)?;
     let settings = model_settings(env, args.times).map_err(Failure::from)?;
+    let limit = cost_limit(env, args.cost_limit).map_err(Failure::from)?;
 
     let matcher = RegexMatcherBuilder::new()
         .line_terminator(Some(b'\n'))
@@ -222,9 +237,20 @@ fn search(
 
     let report = scan(args.paths, &matcher, &ScanOptions::default());
     let windows = plan_windows(&report.files);
-    let planned = windows.len();
-    let kept = &windows[..planned.min(MAX_SCORED)];
-    let (snippets, read_warnings) = read_snippets(kept);
+    let total = windows.len();
+    // Only a search with more results than the limit pre-ranks them, from
+    // the text of the scan, with no file read (decisions 8 and 15).
+    let kept: Vec<_> = if total > limit {
+        let texts = match_texts(&report.files, &windows);
+        let best = prerank::best(&texts, args.question, limit);
+        let mut windows: Vec<Option<_>> = windows.into_iter().map(Some).collect();
+        best.into_iter()
+            .filter_map(|index| windows[index].take())
+            .collect()
+    } else {
+        windows
+    };
+    let (snippets, read_warnings) = read_snippets(&kept);
 
     // CRITERION-85: the notice and the warnings go to the error stream.
     if let Some(notice) = report.skipped.notice() {
@@ -237,8 +263,14 @@ fn search(
     if snippets.is_empty() {
         return Ok(1);
     }
-    if planned > MAX_SCORED {
-        let _ = writeln!(stderr, "jag: scored {MAX_SCORED} of {planned} results");
+    let cost_limit_reached = total > limit;
+    if cost_limit_reached {
+        let _ = writeln!(
+            stderr,
+            "jag: cost limit reached: scored {} of {total} results, skipped {}.",
+            kept.len(),
+            total - kept.len()
+        );
     }
 
     let score_settings = ScoreSettings::new(settings.base_url, settings.model, settings.times);
@@ -256,7 +288,32 @@ fn search(
         Err(error) if error.kind() == io::ErrorKind::BrokenPipe => {}
         Err(_) => return Err(write_failure()),
     }
-    Ok(u8::from(no_good_answer))
+    Ok(search_exit_code(SearchOutcome {
+        no_good_answer,
+        cost_limit_reached,
+        left_out: false,
+    }))
+}
+
+/// What a search that got its scores found.
+struct SearchOutcome {
+    no_good_answer: bool,
+    cost_limit_reached: bool,
+    /// FEATURE-09 sets this when the size limit leaves out results.
+    left_out: bool,
+}
+
+/// IF-4 order: 1 wins, then 7, then 8, then 0 (DECISION-13, DECISION-47).
+fn search_exit_code(outcome: SearchOutcome) -> u8 {
+    if outcome.no_good_answer {
+        1
+    } else if outcome.cost_limit_reached {
+        7
+    } else if outcome.left_out {
+        8
+    } else {
+        0
+    }
 }
 
 fn write_failure() -> Failure {
@@ -264,4 +321,30 @@ fn write_failure() -> Failure {
         "jag could not write the results.",
         "Check where the output goes.",
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn code(no_good_answer: bool, cost_limit_reached: bool, left_out: bool) -> u8 {
+        search_exit_code(SearchOutcome {
+            no_good_answer,
+            cost_limit_reached,
+            left_out,
+        })
+    }
+
+    #[test]
+    fn the_exit_code_follows_the_order_1_7_8_0() {
+        for cost_limit_reached in [false, true] {
+            for left_out in [false, true] {
+                assert_eq!(code(true, cost_limit_reached, left_out), 1);
+            }
+        }
+        assert_eq!(code(false, true, true), 7);
+        assert_eq!(code(false, true, false), 7);
+        assert_eq!(code(false, false, true), 8);
+        assert_eq!(code(false, false, false), 0);
+    }
 }

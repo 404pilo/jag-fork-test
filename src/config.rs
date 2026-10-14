@@ -6,6 +6,7 @@
 
 mod change;
 mod fs;
+mod limit;
 mod model;
 mod setup;
 
@@ -19,7 +20,11 @@ use crate::failure::Failure;
 
 pub use change::{ChangeState, load_for_change, write_key_file};
 pub use fs::{Fs, OpenFile, RealFs};
-pub use model::{ModelSettings, TimeSetting, TimeSource, Times, model_settings, parse_seconds};
+pub use limit::{
+    COST_LIMIT_OPTION, COST_LIMIT_VARIABLE, DEFAULT_COST_LIMIT, MAX_COST_LIMIT, cost_limit,
+    parse_cost_limit,
+};
+pub use model::{ModelSettings, SettingSource, TimeSetting, Times, model_settings, parse_seconds};
 pub use setup::{Prompter, TtyPrompter, forget_key, setup};
 
 /// The page where a user gets a key (DECISION-09).
@@ -153,7 +158,12 @@ pub enum ConfigError {
     /// from 1 to 60. The text never shows the value.
     TimeBad {
         setting: TimeSetting,
-        source: TimeSource,
+        source: SettingSource,
+    },
+    /// The cost limit is not a whole number from 1 to 2,000. The text never
+    /// shows the value.
+    CostLimitBad {
+        source: SettingSource,
     },
 }
 
@@ -274,24 +284,38 @@ impl From<ConfigError> for Failure {
                 "Set JAG_MODEL to a model name, or unset it.".to_owned(),
                 2,
             ),
+            ConfigError::CostLimitBad { source } => match source {
+                SettingSource::Option => (
+                    format!(
+                        "the value of {COST_LIMIT_OPTION} is not a whole number from 1 to 2,000."
+                    ),
+                    format!("Use a number such as {COST_LIMIT_OPTION} 400."),
+                    2,
+                ),
+                SettingSource::Variable => (
+                    format!("{COST_LIMIT_VARIABLE} is not a whole number from 1 to 2,000."),
+                    format!("Set {COST_LIMIT_VARIABLE} to a number such as 400, or unset it."),
+                    2,
+                ),
+            },
             ConfigError::TimeBad { setting, source } => {
                 let (name, option, example) = match (setting, source) {
-                    (TimeSetting::Timeout, TimeSource::Option) => {
+                    (TimeSetting::Timeout, SettingSource::Option) => {
                         ("the value of --timeout", "--timeout", 10)
                     }
-                    (TimeSetting::Timeout, TimeSource::Variable) => {
+                    (TimeSetting::Timeout, SettingSource::Variable) => {
                         ("JAG_TIMEOUT", "JAG_TIMEOUT", 10)
                     }
-                    (TimeSetting::RetryWait, TimeSource::Option) => {
+                    (TimeSetting::RetryWait, SettingSource::Option) => {
                         ("the value of --retry-wait", "--retry-wait", 2)
                     }
-                    (TimeSetting::RetryWait, TimeSource::Variable) => {
+                    (TimeSetting::RetryWait, SettingSource::Variable) => {
                         ("JAG_RETRY_WAIT", "JAG_RETRY_WAIT", 2)
                     }
                 };
                 let fix = match source {
-                    TimeSource::Option => format!("Use a number such as {option} {example}."),
-                    TimeSource::Variable => {
+                    SettingSource::Option => format!("Use a number such as {option} {example}."),
+                    SettingSource::Variable => {
                         format!("Set {option} to a number such as {example}, or unset it.")
                     }
                 };

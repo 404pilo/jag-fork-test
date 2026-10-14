@@ -34,7 +34,8 @@ pub fn jag_bare(home: &Path) -> Command {
         .env_remove("JAG_BASE_URL")
         .env_remove("JAG_MODEL")
         .env_remove("JAG_TIMEOUT")
-        .env_remove("JAG_RETRY_WAIT");
+        .env_remove("JAG_RETRY_WAIT")
+        .env_remove("JAG_MAX_SCORED");
     for name in PROXY_VARIABLES {
         command.env_remove(name);
     }

@@ -37,6 +37,18 @@ impl Request {
         serde_json::from_slice(&self.body).unwrap_or(serde_json::Value::Null)
     }
 
+    /// The `path` of each snippet of the request, in order.
+    pub fn snippet_paths(&self) -> Vec<String> {
+        self.json()["state"]["snippets"]
+            .as_array()
+            .map(|list| {
+                list.iter()
+                    .map(|item| item["path"].as_str().unwrap_or_default().to_owned())
+                    .collect()
+            })
+            .unwrap_or_default()
+    }
+
     /// The `lines` text of each snippet of the request, in order.
     pub fn snippet_texts(&self) -> Vec<String> {
         self.json()["state"]["snippets"]

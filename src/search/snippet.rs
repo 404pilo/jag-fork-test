@@ -85,6 +85,33 @@ fn open_window(path: &std::path::Path, m: u64, first_free: u64) -> Window {
     }
 }
 
+/// The text of the matching lines of each window, in the order of `windows`.
+///
+/// `windows` must be the output of `plan_windows(files)`. That function puts
+/// each matching line of `files` in exactly one window, in order. So window
+/// k holds the next `windows[k].matches.len()` matching lines. This reads no
+/// file.
+pub fn match_texts<'a>(files: &'a [FileMatches], windows: &[Window]) -> Vec<Vec<&'a [u8]>> {
+    let mut lines = files.iter().flat_map(|file| file.lines.iter());
+    windows
+        .iter()
+        .map(|window| {
+            window
+                .matches
+                .iter()
+                .map(|number| {
+                    let line = lines.next().expect("a matching line for each window line");
+                    assert_eq!(
+                        line.line_number, *number,
+                        "windows must come from plan_windows"
+                    );
+                    line.text.as_slice()
+                })
+                .collect()
+        })
+        .collect()
+}
+
 /// Read each file of the windows one time and give the lines of each window.
 ///
 /// A file that jag cannot read gives a warning and no result. The file can
@@ -254,6 +281,41 @@ mod tests {
         let windows = plan_windows(&[file("a", &[1]), file("b", &[1])]);
         assert_eq!(windows[0].path, PathBuf::from("a"));
         assert_eq!(windows[1].path, PathBuf::from("b"));
+    }
+
+    #[test]
+    fn match_texts_gives_the_matching_lines_of_each_window() {
+        let mut first = file("a", &[10, 14, 30]);
+        first.lines[0].text = b"ten".to_vec();
+        first.lines[1].text = b"fourteen".to_vec();
+        first.lines[2].text = b"thirty".to_vec();
+        let mut second = file("b", &[2]);
+        second.lines[0].text = b"two".to_vec();
+        let files = [first, second];
+        let windows = plan_windows(&files);
+        assert_eq!(windows.len(), 3);
+        let texts = match_texts(&files, &windows);
+        assert_eq!(
+            texts,
+            [
+                vec![&b"ten"[..], &b"fourteen"[..]],
+                vec![&b"thirty"[..]],
+                vec![&b"two"[..]]
+            ]
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "windows must come from plan_windows")]
+    fn match_texts_refuses_windows_that_do_not_match_the_files() {
+        let files = [file("a", &[10])];
+        let windows = [Window {
+            path: PathBuf::from("a"),
+            start: 1,
+            end: 5,
+            matches: vec![3],
+        }];
+        let _ = match_texts(&files, &windows);
     }
 
     fn folder_with(name: &str, text: &[u8]) -> (TempDir, PathBuf) {

@@ -31,7 +31,7 @@ pub enum TimeSetting {
 
 /// Where a time value came from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TimeSource {
+pub enum SettingSource {
     Option,
     Variable,
 }
@@ -57,7 +57,7 @@ impl Default for Times {
 pub fn parse_seconds(
     text: &str,
     setting: TimeSetting,
-    source: TimeSource,
+    source: SettingSource,
 ) -> Result<Duration, ConfigError> {
     let text = text.trim();
     let bad = ConfigError::TimeBad { setting, source };
@@ -139,13 +139,13 @@ fn time(
         Some(value) => {
             let bad = ConfigError::TimeBad {
                 setting,
-                source: TimeSource::Variable,
+                source: SettingSource::Variable,
             };
             let text = value.to_str().ok_or(bad)?;
             if text.trim().is_empty() {
                 return Ok(default);
             }
-            parse_seconds(text, setting, TimeSource::Variable)
+            parse_seconds(text, setting, SettingSource::Variable)
         }
     }
 }
@@ -296,7 +296,7 @@ mod tests {
         for (text, seconds) in [("1", 1), ("4", 4), ("60", 60), ("01", 1), (" 10 ", 10)] {
             for setting in BOTH {
                 assert_eq!(
-                    parse_seconds(text, setting, TimeSource::Option),
+                    parse_seconds(text, setting, SettingSource::Option),
                     Ok(Duration::from_secs(seconds)),
                     "should accept {text:?}"
                 );
@@ -310,7 +310,7 @@ mod tests {
             "0", "61", "0.5", "1.5", "-1", "+1", "1e1", "4s", "1000", "abc", "", "  ",
         ] {
             for setting in BOTH {
-                for source in [TimeSource::Option, TimeSource::Variable] {
+                for source in [SettingSource::Option, SettingSource::Variable] {
                     assert_eq!(
                         parse_seconds(text, setting, source),
                         Err(ConfigError::TimeBad { setting, source }),
@@ -365,21 +365,21 @@ mod tests {
             settings(&[(TIMEOUT_VARIABLE, "abc")]),
             Err(ConfigError::TimeBad {
                 setting: TimeSetting::Timeout,
-                source: TimeSource::Variable
+                source: SettingSource::Variable
             })
         );
         assert_eq!(
             settings(&[(RETRY_WAIT_VARIABLE, "61")]),
             Err(ConfigError::TimeBad {
                 setting: TimeSetting::RetryWait,
-                source: TimeSource::Variable
+                source: SettingSource::Variable
             })
         );
         assert_eq!(
             settings(&[(TIMEOUT_VARIABLE, "0"), (RETRY_WAIT_VARIABLE, "0")]),
             Err(ConfigError::TimeBad {
                 setting: TimeSetting::Timeout,
-                source: TimeSource::Variable
+                source: SettingSource::Variable
             })
         );
     }
@@ -401,7 +401,7 @@ mod tests {
             result,
             Err(ConfigError::TimeBad {
                 setting: TimeSetting::RetryWait,
-                source: TimeSource::Variable
+                source: SettingSource::Variable
             })
         );
     }

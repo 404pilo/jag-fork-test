@@ -254,15 +254,17 @@ fn a_search_in_several_paths_scores_the_results_of_each() {
 }
 
 #[test]
-fn only_the_first_200_results_are_scored() {
+fn the_default_limit_scores_200_results() {
     let server = FakeServer::constant(0.8);
     let dir = folder();
     for number in 0..250 {
         write(dir.path(), &format!("f{number:03}.txt"), b"needle\n");
     }
     let output = search(&server, "needle", dir.path(), &[]);
-    assert_eq!(output.status.code(), Some(0));
-    assert!(stderr(&output).contains("jag: scored 200 of 250 results"));
+    assert_eq!(output.status.code(), Some(7));
+    assert!(
+        stderr(&output).contains("jag: cost limit reached: scored 200 of 250 results, skipped 50.")
+    );
     let sent: usize = server
         .requests()
         .iter()
