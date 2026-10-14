@@ -5,7 +5,7 @@ description: As a shell power user (PERSONA-04), I want -A, -B, and -C to set th
   lines around each match in a question search, so that I choose how much context
   I read.
 status: draft
-state: backlog
+state: ready
 github:
   number: 97
   node_id: I_kwDOVDCdD88AAAABXCBPlA

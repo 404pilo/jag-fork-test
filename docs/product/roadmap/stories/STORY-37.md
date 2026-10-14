@@ -5,7 +5,7 @@ description: As a shell power user (PERSONA-04), I want any other option to give
   usage error that names the option and exit code 2, so that a typo does not pass
   without a notice.
 status: draft
-state: backlog
+state: ready
 github:
   number: 98
   node_id: I_kwDOVDCdD88AAAABXCBTsg

@@ -39,10 +39,10 @@ jag keeps the grep options that people use most and the grep exit codes 0, 1, an
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-35: Use the common grep options](../stories/STORY-35.md) | backlog | - | - | - | - |
-| [STORY-36: Set the lines around a match](../stories/STORY-36.md) | backlog | - | - | - | - |
-| [STORY-37: Get a usage error for an unknown option](../stories/STORY-37.md) | backlog | - | - | - | - |
-| [STORY-38: Keep the grep exit codes](../stories/STORY-38.md) | backlog | - | - | - | - |
+| [STORY-35: Use the common grep options](../stories/STORY-35.md) | ready | - | - | - | - |
+| [STORY-36: Set the lines around a match](../stories/STORY-36.md) | ready | - | - | - | - |
+| [STORY-37: Get a usage error for an unknown option](../stories/STORY-37.md) | ready | - | - | - | - |
+| [STORY-38: Keep the grep exit codes](../stories/STORY-38.md) | ready | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

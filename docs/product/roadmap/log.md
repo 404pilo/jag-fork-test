@@ -1,6 +1,14 @@
 # Log
 
 ## 2026-10-14
+* **Plan**: [STORY-38](stories/STORY-38.md) backlog -> ready by rule 11 (docs/adlc.md): its spec is merged (PR #153), its feature FEATURE-13 is not blocked (FEATURE-12 is done), and no open ASK blocks it; user approval RULE11-01 ("Always, for each rule change"), by agent:planner, at 2026-10-14T13:06:59Z
+* **State**: [STORY-38](stories/STORY-38.md) backlog -> ready, by human:404pilo, at 2026-10-14T13:06:59Z
+* **Plan**: [STORY-37](stories/STORY-37.md) backlog -> ready by rule 11 (docs/adlc.md): its spec is merged (PR #153), its feature FEATURE-13 is not blocked (FEATURE-12 is done), and no open ASK blocks it; user approval RULE11-01 ("Always, for each rule change"), by agent:planner, at 2026-10-14T13:06:58Z
+* **State**: [STORY-37](stories/STORY-37.md) backlog -> ready, by human:404pilo, at 2026-10-14T13:06:58Z
+* **Plan**: [STORY-36](stories/STORY-36.md) backlog -> ready by rule 11 (docs/adlc.md): its spec is merged (PR #153), its feature FEATURE-13 is not blocked (FEATURE-12 is done), and no open ASK blocks it; user approval RULE11-01 ("Always, for each rule change"), by agent:planner, at 2026-10-14T13:06:58Z
+* **State**: [STORY-36](stories/STORY-36.md) backlog -> ready, by human:404pilo, at 2026-10-14T13:06:58Z
+* **Plan**: [STORY-35](stories/STORY-35.md) backlog -> ready by rule 11 (docs/adlc.md): its spec is merged (PR #153), its feature FEATURE-13 is not blocked (FEATURE-12 is done), and no open ASK blocks it; user approval RULE11-01 ("Always, for each rule change"), by agent:planner, at 2026-10-14T13:06:58Z
+* **State**: [STORY-35](stories/STORY-35.md) backlog -> ready, by human:404pilo, at 2026-10-14T13:06:58Z
 * **Sync**: [FEATURE-13](features/FEATURE-13.md) pushed to GitHub, by system:github, at 2026-10-14T13:06:57Z
 * **Sync**: [STORY-34](stories/STORY-34.md) pushed to GitHub, by system:github, at 2026-10-14T12:57:54Z
 * **Sync**: [STORY-33](stories/STORY-33.md) pushed to GitHub, by system:github, at 2026-10-14T12:57:54Z
