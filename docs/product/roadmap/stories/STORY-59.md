@@ -4,8 +4,8 @@ title: Limit guesses through the check results of fork pull requests
 description: As an agent builder (PERSONA-01), I want a guard against guesses through
   the pass or fail of the private-data check on fork pull requests, so that no one
   can find private data by many tries.
-status: draft
-state: backlog
+status: deprecated
+state: cancelled
 github:
   number: 121
   node_id: I_kwDOVDCdD88AAAABXCCyPA

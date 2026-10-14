@@ -51,3 +51,4 @@ generated:
 * [STORY-41: See progress only in a terminal](STORY-41.md) - As a shell power user (PERSONA-04), I want a progress line on the error stream only when that stream is a terminal, so that a pipe or a log holds no progress noise.
 * [STORY-42: Color the matches as grep does](STORY-42.md) - As a shell power user (PERSONA-04), I want jag to color the matching text only in a terminal, with --color=never and --color=always to change that, so that color works as grep --color=auto.
 * [STORY-43: Stop at once when stopped](STORY-43.md) - As a shell power user (PERSONA-04), I want jag to stop at once on Ctrl-C or a closed pipe, so that a stopped search wastes no more credit.
+* [STORY-59: Limit guesses through the check results of fork pull requests](STORY-59.md) - As an agent builder (PERSONA-01), I want a guard against guesses through the pass or fail of the private-data check on fork pull requests, so that no one can find private data by many tries.

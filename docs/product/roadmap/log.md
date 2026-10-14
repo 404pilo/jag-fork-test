@@ -1,6 +1,9 @@
 # Log
 
 ## 2026-10-14
+* **Plan**: [CRITERION-98](criteria/CRITERION-98.md) page status deprecated (removed from the roadmap with STORY-59): user answer (human:404pilo, hitl, 2026-10-14), card "The story of the private-data guard": remove the story; the user rejected the guard earlier ("Do not check on this. Not a concern atm."), by agent:planner, at 2026-10-14T16:31:12Z
+* **Plan**: [STORY-59](stories/STORY-59.md) backlog -> cancelled, page status deprecated (removed from the roadmap): user answer (human:404pilo, hitl, 2026-10-14), card "The story of the private-data guard": remove the story; the user rejected the guard earlier ("Do not check on this. Not a concern atm."), by agent:planner, at 2026-10-14T16:31:12Z
+* **State**: [STORY-59](stories/STORY-59.md) backlog -> cancelled, by human:404pilo, at 2026-10-14T16:31:12Z
 * **Sync**: [STORY-58](stories/STORY-58.md) pushed to GitHub, by system:github, at 2026-10-14T14:21:59Z
 * **Sync**: [STORY-57](stories/STORY-57.md) pushed to GitHub, by system:github, at 2026-10-14T14:21:59Z
 * **Plan**: [STORY-56](stories/STORY-56.md) backlog -> ready by rule 11 (docs/adlc.md): the spec is in this PR (FEATURE-20 spec PR #178), FEATURE-20 is not blocked (FEATURE-04 and FEATURE-11 are done), and no ASK of the spec is open, by agent:specifier-2, at 2026-10-14T14:18:09Z
