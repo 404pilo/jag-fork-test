@@ -34,7 +34,7 @@ impl Run {
     }
 }
 
-/// Run `jag needle QUESTION PATH...` from the folder `cwd`, with the key in
+/// Run `jag --ask QUESTION needle PATH...` from the folder `cwd`, with the key in
 /// a variable. No output holds the key.
 fn run(
     server: &FakeServer,
@@ -51,7 +51,7 @@ fn run(
     let output = command
         .current_dir(cwd)
         .args(options)
-        .args(["needle", QUESTION])
+        .args(["--ask", QUESTION, "needle"])
         .args(paths)
         .output()
         .expect("run jag");
@@ -435,13 +435,13 @@ fn criterion_51_an_invalid_term_gives_an_error_document_with_exit_2() {
     let home = folder();
     let text = jag(home.path(), &server.base_url())
         .current_dir(root.path())
-        .args(["(", QUESTION, "dir"])
+        .args(["--ask", QUESTION, "(", "dir"])
         .output()
         .expect("run jag");
     let text = finish(text);
     let json = jag(home.path(), &server.base_url())
         .current_dir(root.path())
-        .args(["--json", "(", QUESTION, "dir"])
+        .args(["--json", "--ask", QUESTION, "(", "dir"])
         .output()
         .expect("run jag");
     assert_error_document(&finish(json), 2, &text.stderr);
@@ -458,7 +458,7 @@ fn criterion_51_no_key_gives_an_error_document_with_exit_3() {
                 .env("JAG_BASE_URL", server.base_url())
                 .current_dir(root.path())
                 .args(options)
-                .args(["needle", QUESTION, "dir"])
+                .args(["--ask", QUESTION, "needle", "dir"])
                 .output()
                 .expect("run jag"),
         )
@@ -534,7 +534,7 @@ fn criterion_51_a_document_that_cannot_be_written_gives_the_text_failure_and_exi
         .env("JAG_TYPESAFE_API_KEY", KEY)
         .env("JAG_BASE_URL", server.base_url())
         .current_dir(root.path())
-        .args(["--json", "needle", QUESTION, "dir"])
+        .args(["--json", "--ask", QUESTION, "needle", "dir"])
         .stdout(std::process::Stdio::from(full))
         .output()
         .expect("run jag");

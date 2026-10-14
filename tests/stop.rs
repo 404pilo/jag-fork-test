@@ -37,14 +37,14 @@ fn two_hundred_files() -> tempfile::TempDir {
     root
 }
 
-/// Start `jag OPTIONS needle QUESTION dir` with its output in pipes.
+/// Start `jag OPTIONS --ask QUESTION needle dir` with its output in pipes.
 fn start(server: &FakeServer, root: &Path, options: &[&str]) -> Child {
     let home = tempfile::tempdir().expect("home");
     jag_std(home.path(), &server.base_url())
         .current_dir(root)
         .args(["--timeout", "60", "--retry-wait", "60"])
         .args(options)
-        .args(["needle", QUESTION, "dir"])
+        .args(["--ask", QUESTION, "needle", "dir"])
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())

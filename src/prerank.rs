@@ -104,7 +104,9 @@ pub fn best(texts: &[Vec<&[u8]>], question: &str, limit: usize) -> Vec<usize> {
     }
     let scores = scores(texts, question);
     let mut order: Vec<usize> = (0..texts.len()).collect();
-    // A stable sort keeps the path and line order of equal scores.
+    // A stable sort keeps the scan order of equal scores: the order of the
+    // paths on the command line, then the byte order of the path, then the
+    // line number.
     order.sort_by(|a, b| scores[*b].total_cmp(&scores[*a]));
     order.truncate(limit);
     order.sort_unstable();

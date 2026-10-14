@@ -23,7 +23,7 @@ fn folder_with_a_match() -> TempDir {
     dir
 }
 
-/// Run `jag [extra] needle QUESTION <dir>` against the server.
+/// Run `jag [extra] --ask QUESTION needle <dir>` against the server.
 fn search(server: &FakeServer, dir: &Path, extra: &[&str], environment: &[(&str, &str)]) -> Output {
     search_at(&server.base_url(), dir, extra, environment)
 }
@@ -36,7 +36,7 @@ fn search_at(base_url: &str, dir: &Path, extra: &[&str], environment: &[(&str, &
     }
     let output = command
         .args(extra)
-        .args(["needle", QUESTION])
+        .args(["--ask", QUESTION, "needle"])
         .arg(dir)
         .output()
         .expect("run jag");
@@ -79,7 +79,7 @@ fn no_key_gives_exit_3_and_the_setup_fix() {
     let dir = folder_with_a_match();
     let home = tempfile::tempdir().expect("temporary folder");
     let output = jag_bare(home.path())
-        .args(["needle", QUESTION])
+        .args(["--ask", QUESTION, "needle"])
         .arg(dir.path())
         .output()
         .expect("run jag");
@@ -232,14 +232,14 @@ fn a_search_with_results_exits_0_no_match_exits_1_and_a_bad_term_exits_2() {
 
     let home = tempfile::tempdir().expect("temporary folder");
     let no_match = jag(home.path(), &server.base_url())
-        .args(["absent", QUESTION])
+        .args(["--ask", QUESTION, "absent"])
         .arg(dir.path())
         .output()
         .expect("run jag");
     assert_eq!(no_match.status.code(), Some(1));
 
     let bad_term = jag(home.path(), &server.base_url())
-        .args(["(", QUESTION])
+        .args(["--ask", QUESTION, "("])
         .arg(dir.path())
         .output()
         .expect("run jag");

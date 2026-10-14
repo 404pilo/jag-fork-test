@@ -166,6 +166,22 @@ fn open_window(path: &std::path::Path, m: u64, first_free: u64) -> Window {
     }
 }
 
+/// One window for each matching line, with no line around it (FEATURE-12,
+/// decision 6). The windows are in the order of `files`, then in line order.
+pub fn line_windows(files: &[FileMatches]) -> Vec<Window> {
+    files
+        .iter()
+        .flat_map(|file| {
+            file.lines.iter().map(|line| Window {
+                path: file.path.clone(),
+                start: line.line_number,
+                end: line.line_number,
+                matches: vec![line.line_number],
+            })
+        })
+        .collect()
+}
+
 /// The text of the matching lines of each window, in the order of `windows`.
 ///
 /// `windows` must be the output of `plan_windows(files)`. That function puts
@@ -316,6 +332,57 @@ mod tests {
                 })
                 .collect(),
         }
+    }
+
+    #[test]
+    fn line_windows_gives_one_window_for_each_matching_line() {
+        let windows = line_windows(&[file("a", &[1, 3]), file("b", &[2])]);
+        let got: Vec<_> = windows
+            .iter()
+            .map(|window| {
+                (
+                    window.path.to_str().expect("text"),
+                    window.start,
+                    window.end,
+                    window.matches.clone(),
+                )
+            })
+            .collect();
+        assert_eq!(
+            got,
+            [
+                ("a", 1, 1, vec![1]),
+                ("a", 3, 3, vec![3]),
+                ("b", 2, 2, vec![2])
+            ]
+        );
+    }
+
+    #[test]
+    fn line_windows_read_as_one_line_snippets_that_keep_a_carriage_return() {
+        let dir = tempfile::tempdir().expect("folder");
+        fs::write(dir.path().join("a.txt"), b"one\r\ntwo\nthree\n").expect("write");
+        let path = dir.path().join("a.txt");
+        let files = [FileMatches {
+            path,
+            lines: vec![
+                MatchLine {
+                    line_number: 1,
+                    text: b"one".to_vec(),
+                },
+                MatchLine {
+                    line_number: 3,
+                    text: b"three".to_vec(),
+                },
+            ],
+        }];
+        let (snippets, warnings) = read_snippets(&line_windows(&files));
+        assert!(warnings.is_empty());
+        assert_eq!(snippets.len(), 2);
+        assert_eq!(snippets[0].lines.len(), 1);
+        assert_eq!(snippets[0].lines[0].text, b"one\r");
+        assert!(snippets[0].lines[0].is_match);
+        assert_eq!(snippets[1].lines[0].number, 3);
     }
 
     /// The `(start, end)` of each window for one file.

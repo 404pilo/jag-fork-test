@@ -41,9 +41,11 @@ fn help_and_version_exit_0() {
         .arg("--help")
         .assert()
         .success()
+        .stdout(predicate::str::contains("jag [OPTIONS] TERM [PATH...]"))
         .stdout(predicate::str::contains(
-            "jag [--json] [--color[=WHEN]] [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]",
+            "jag [OPTIONS] --ask QUESTION TERM [PATH...]",
         ))
+        .stdout(predicate::str::contains("--ask <QUESTION>"))
         .stdout(predicate::str::contains("--json"))
         .stdout(predicate::str::contains("--color[=<WHEN>]"))
         .stdout(predicate::str::contains("--max-scored <COUNT>"))
@@ -67,7 +69,7 @@ fn no_argument_shows_the_help_and_exits_2() {
 }
 
 #[test]
-fn a_term_with_no_question_exits_2_and_makes_no_call() {
+fn a_term_with_no_path_exits_2_and_makes_no_call() {
     let server = FakeServer::constant(0.8);
     let home = home();
     jag(home.path(), &server.base_url())
@@ -75,7 +77,7 @@ fn a_term_with_no_question_exits_2_and_makes_no_call() {
         .assert()
         .code(2)
         .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains("needs a question"))
+        .stderr(predicate::str::contains("needs a path"))
         .stderr(predicate::str::contains("needle").not());
     assert!(server.requests().is_empty());
 }
@@ -85,7 +87,7 @@ fn a_term_and_a_question_with_no_path_exit_2_and_make_no_call() {
     let server = FakeServer::constant(0.8);
     let home = home();
     jag(home.path(), &server.base_url())
-        .args(["needle", "which line?"])
+        .args(["--ask", "which line?", "needle"])
         .assert()
         .code(2)
         .stdout(predicate::str::is_empty())
@@ -96,9 +98,15 @@ fn a_term_and_a_question_with_no_path_exit_2_and_make_no_call() {
 
 #[test]
 fn a_usage_error_comes_before_the_key_lookup() {
-    // No key at all, and still exit 2 for a missing question.
+    // No key at all, and still exit 2 for a blank question.
     let home = home();
-    jag_bare(home.path()).arg("needle").assert().code(2);
+    let dir = tempfile::tempdir().expect("temporary folder");
+    write(dir.path(), "a.txt", b"needle\n");
+    jag_bare(home.path())
+        .args(["--ask", "   ", "needle"])
+        .arg(dir.path())
+        .assert()
+        .code(2);
 }
 
 #[test]
@@ -108,7 +116,7 @@ fn a_blank_question_exits_2() {
     let dir = tempfile::tempdir().expect("temporary folder");
     write(dir.path(), "a.txt", b"needle\n");
     jag(home.path(), &server.base_url())
-        .args(["needle", "   "])
+        .args(["--ask", "   ", "needle"])
         .arg(dir.path())
         .assert()
         .code(2)
@@ -124,7 +132,7 @@ fn the_question_limit_is_12000_bytes() {
 
     let server = FakeServer::constant(0.8);
     jag(home.path(), &server.base_url())
-        .args(["needle", &"a".repeat(12_000)])
+        .args(["--ask", &"a".repeat(12_000), "needle"])
         .arg(dir.path())
         .assert()
         .success();
@@ -133,8 +141,9 @@ fn the_question_limit_is_12000_bytes() {
     for question in ["a".repeat(12_001), "漢".repeat(4_001)] {
         let server = FakeServer::constant(0.8);
         jag(home.path(), &server.base_url())
-            .args(["needle"])
+            .arg("--ask")
             .arg(&question)
+            .arg("needle")
             .arg(dir.path())
             .assert()
             .code(2)
@@ -152,7 +161,7 @@ fn a_bad_regular_expression_exits_2_and_the_term_is_not_repeated() {
     let dir = tempfile::tempdir().expect("temporary folder");
     write(dir.path(), "a.txt", b"needle\n");
     jag(home.path(), &server.base_url())
-        .args(["SENTINEL-SENTINEL-SENTINEL(", "which line?"])
+        .args(["--ask", "which line?", "SENTINEL-SENTINEL-SENTINEL("])
         .arg(dir.path())
         .assert()
         .code(2)
@@ -174,7 +183,7 @@ fn a_base_url_that_is_not_safe_exits_2_and_is_not_repeated() {
     ] {
         let home = home();
         jag(home.path(), bad)
-            .args(["needle", "which line?"])
+            .args(["--ask", "which line?", "needle"])
             .arg(dir.path())
             .assert()
             .code(2)
@@ -192,7 +201,7 @@ fn a_slash_at_the_end_of_the_base_url_is_removed() {
     let dir = tempfile::tempdir().expect("temporary folder");
     write(dir.path(), "a.txt", b"needle\n");
     jag(home.path(), &format!("{}/", server.base_url()))
-        .args(["needle", "which line?"])
+        .args(["--ask", "which line?", "needle"])
         .arg(dir.path())
         .assert()
         .success();
@@ -210,7 +219,7 @@ fn localhost_is_an_allowed_plain_http_host() {
         home.path(),
         &format!("http://localhost:{}/v1", server.port()),
     )
-    .args(["needle", "which line?"])
+    .args(["--ask", "which line?", "needle"])
     .arg(dir.path())
     .output()
     .expect("run jag");
@@ -232,7 +241,7 @@ fn time_search(extra: &[&str], environment: &[(&str, &str)]) -> std::process::Ou
     }
     let output = command
         .args(extra)
-        .args(["needle", "which line?"])
+        .args(["--ask", "which line?", "needle"])
         .arg(dir.path())
         .output()
         .expect("run jag");
@@ -277,7 +286,7 @@ fn a_bad_time_option_comes_before_the_key_and_a_bad_variable_comes_after() {
     for option in ["--timeout", "--retry-wait"] {
         let home = home();
         jag_bare(home.path())
-            .args([option, "abc", "needle", "which line?"])
+            .args([option, "abc", "--ask", "which line?", "needle"])
             .arg(dir.path())
             .assert()
             .code(2);
@@ -286,7 +295,7 @@ fn a_bad_time_option_comes_before_the_key_and_a_bad_variable_comes_after() {
         let home = home();
         jag_bare(home.path())
             .env(variable, "abc")
-            .args(["needle", "which line?"])
+            .args(["--ask", "which line?", "needle"])
             .arg(dir.path())
             .assert()
             .code(3);
@@ -347,13 +356,13 @@ fn a_bad_limit_option_comes_before_the_key_and_a_bad_variable_after() {
     write(dir.path(), "a.txt", b"needle\n");
     let home = home();
     jag_bare(home.path())
-        .args(["--max-scored", "abc", "needle", "which line?"])
+        .args(["--max-scored", "abc", "--ask", "which line?", "needle"])
         .arg(dir.path())
         .assert()
         .code(2);
     jag_bare(home.path())
         .env("JAG_MAX_SCORED", "abc")
-        .args(["needle", "which line?"])
+        .args(["--ask", "which line?", "needle"])
         .arg(dir.path())
         .assert()
         .code(3);
@@ -441,9 +450,6 @@ fn json_with_no_term_gives_an_error_document() {
     assert_eq!(output.status.code(), Some(2));
     assert!(output.stderr.is_empty());
     let document: serde_json::Value = serde_json::from_slice(&output.stdout).expect("a document");
-    assert_eq!(
-        document["error"]["cause"],
-        "a search needs a term and a question."
-    );
+    assert_eq!(document["error"]["cause"], "a search needs a term.");
     assert_eq!(document["exit_code"], 2);
 }

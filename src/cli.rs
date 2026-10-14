@@ -12,7 +12,7 @@ use std::time::Duration;
 use clap::Parser;
 use clap::error::ErrorKind;
 use grep_matcher::Matcher;
-use grep_regex::RegexMatcherBuilder;
+use grep_regex::{RegexMatcher, RegexMatcherBuilder};
 
 use crate::check;
 use crate::config::{
@@ -21,11 +21,11 @@ use crate::config::{
 };
 use crate::failure::Failure;
 use crate::output::progress::Progress;
-use crate::output::{Paint, Summary, is_no_good_answer, write_json, write_text};
+use crate::output::{Paint, Summary, is_no_good_answer, write_json, write_lines, write_text};
 use crate::prerank;
 use crate::scorer::{ScoreError, ScoreSettings, probe, rank, score};
-use crate::search::snippet::{match_texts, plan_windows, read_snippets};
-use crate::search::{ScanOptions, scan};
+use crate::search::snippet::{Snippet, line_windows, match_texts, plan_windows, read_snippets};
+use crate::search::{ScanOptions, ScanReport, WalkWarning, scan};
 use stop::Stop;
 
 /// The longest question, in UTF-8 bytes (decision 30).
@@ -41,7 +41,7 @@ const USAGE_ERROR: &str = "jag: the command line is not valid. Run jag --help to
     name = "jag",
     version,
     arg_required_else_help = true,
-    override_usage = "jag [--json] [--color[=WHEN]] [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]\n       jag --check [--timeout SECONDS] [--retry-wait SECONDS]\n       jag --setup\n       jag --forget-key"
+    override_usage = "jag [OPTIONS] TERM [PATH...]\n       jag [OPTIONS] --ask QUESTION TERM [PATH...]\n       jag --check [--timeout SECONDS] [--retry-wait SECONDS]\n       jag --setup\n       jag --forget-key"
 )]
 struct Cli {
     /// Write one JSON document for an agent, in place of text
@@ -63,15 +63,15 @@ struct Cli {
     color: Option<String>,
 
     /// Check that jag is ready: the key, the service, and the key file
-    #[arg(long, conflicts_with_all = ["setup", "forget_key", "cost_limit", "term", "question", "paths"])]
+    #[arg(long, conflicts_with_all = ["setup", "forget_key", "cost_limit", "term", "ask", "paths"])]
     check: bool,
 
     /// Store your TypeSafe API key, with no echo
-    #[arg(long, conflicts_with_all = ["forget_key", "term", "question", "paths"])]
+    #[arg(long, conflicts_with_all = ["forget_key", "term", "ask", "paths"])]
     setup: bool,
 
     /// Remove the stored TypeSafe API key
-    #[arg(long = "forget-key", conflicts_with_all = ["term", "question", "paths"])]
+    #[arg(long = "forget-key", conflicts_with_all = ["term", "ask", "paths"])]
     forget_key: bool,
 
     /// Seconds to wait for one model call, from 1 to 60 (default 4)
@@ -86,13 +86,13 @@ struct Cli {
     #[arg(long = "max-scored", value_name = "COUNT", conflicts_with_all = ["setup", "forget_key"])]
     cost_limit: Option<String>,
 
+    /// What you look for: the model ranks the matches by this question. With no --ask, jag works as grep: no model call, no cost, and no key
+    #[arg(long, value_name = "QUESTION")]
+    ask: Option<String>,
+
     /// The regular expression that the lines must match
     #[arg(value_name = "TERM")]
     term: Option<String>,
-
-    /// What you look for: the model ranks the matches by this question
-    #[arg(value_name = "QUESTION")]
-    question: Option<String>,
 
     /// The files and folders to search
     #[arg(value_name = "PATH")]
@@ -323,7 +323,8 @@ fn usage_failure(cause: &str, fix: &str) -> Failure {
 /// What the user typed for a search, after the checks of step 1.
 struct SearchArgs<'a> {
     term: &'a str,
-    question: &'a str,
+    /// `None` for a search with no question (FEATURE-12).
+    question: Option<&'a str>,
     paths: &'a [PathBuf],
     /// The parsed `--timeout` and `--retry-wait`.
     times: (Option<Duration>, Option<Duration>),
@@ -335,14 +336,8 @@ struct SearchArgs<'a> {
 fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
     let Some(term) = cli.term.as_deref() else {
         return Err(usage_failure(
-            "a search needs a term and a question.",
-            "Use: jag TERM \"QUESTION\" PATH...",
-        ));
-    };
-    let Some(question) = cli.question.as_deref() else {
-        return Err(usage_failure(
-            "a search needs a question.",
-            "Use: jag TERM \"QUESTION\" PATH...",
+            "a search needs a term.",
+            "Use: jag [OPTIONS] TERM PATH...",
         ));
     };
     if cli.paths.is_empty() {
@@ -351,17 +346,20 @@ fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
             "Searching standard input comes later.",
         ));
     }
-    if question.trim().is_empty() {
-        return Err(usage_failure(
-            "the question is blank.",
-            "Give a question that says what you look for.",
-        ));
-    }
-    if question.len() > MAX_QUESTION_BYTES {
-        return Err(usage_failure(
-            "the question is longer than 12,000 bytes.",
-            "Use a shorter question.",
-        ));
+    let question = cli.ask.as_deref();
+    if let Some(question) = question {
+        if question.trim().is_empty() {
+            return Err(usage_failure(
+                "the question is blank.",
+                "Give a question that says what you look for.",
+            ));
+        }
+        if question.len() > MAX_QUESTION_BYTES {
+            return Err(usage_failure(
+                "the question is longer than 12,000 bytes.",
+                "Use a shorter question.",
+            ));
+        }
     }
     // The time options come after the other checks and before the key
     // (decision 11). The timeout is checked first.
@@ -405,20 +403,17 @@ fn search(
         stdout_is_terminal,
     } = *context;
     let args = search_args(cli)?;
+    // With no question, jag works as grep: no key, no model setting, and no
+    // model call (FEATURE-12, decision 4).
+    let Some(question) = args.question else {
+        return plain(cli, &args, env, context, summary, stdout, stderr);
+    };
     // The key comes before any file read (decision 18).
     let (key, _source) = find_key(env, &RealFs).map_err(Failure::from)?;
     let settings = model_settings(env, args.times).map_err(Failure::from)?;
     let limit = cost_limit(env, args.cost_limit).map_err(Failure::from)?;
 
-    let matcher = RegexMatcherBuilder::new()
-        .line_terminator(Some(b'\n'))
-        .build(args.term)
-        .map_err(|_| {
-            usage_failure(
-                "the term is not a valid regular expression.",
-                "Check the term. It uses the regular expression rules of ripgrep.",
-            )
-        })?;
+    let matcher = build_matcher(args.term)?;
 
     let report = scan(args.paths, &matcher, &ScanOptions::default());
     let windows = plan_windows(&report.files);
@@ -427,7 +422,7 @@ fn search(
     // the text of the scan, with no file read (decisions 8 and 15).
     let kept: Vec<_> = if total > limit {
         let texts = match_texts(&report.files, &windows);
-        let best = prerank::best(&texts, args.question, limit);
+        let best = prerank::best(&texts, question, limit);
         let mut windows: Vec<Option<_>> = windows.into_iter().map(Some).collect();
         best.into_iter()
             .filter_map(|index| windows[index].take())
@@ -438,37 +433,17 @@ fn search(
     let (snippets, read_warnings) = read_snippets(&kept);
 
     // A failure after this point finds in the summary what jag counted.
-    summary.files_skipped = report.skipped;
-    summary.warnings = report
-        .warnings
-        .iter()
-        .chain(&read_warnings)
-        .cloned()
-        .collect();
-    summary.results_found = total as u64;
-    summary.results_scored = kept.len() as u64;
-    summary.results_skipped = (total - kept.len()) as u64;
-    stop.count(summary);
-
-    // CRITERION-85: in text mode, the notice and the warnings go to the error
-    // stream. In JSON mode they are fields of the document.
-    if mode == Mode::Text {
-        if let Some(notice) = report.skipped.notice() {
-            stop.notice(stderr, &notice);
-        }
-        for warning in &summary.warnings {
-            stop.notice(stderr, &warning.message());
-        }
-    }
+    record(
+        summary,
+        &report,
+        &read_warnings,
+        (total, kept.len(), total - kept.len()),
+        context,
+        stderr,
+    );
 
     if snippets.is_empty() {
-        if mode == Mode::Json {
-            summary.exit_code = 1;
-            let mut buffer = Vec::new();
-            write_json(&mut buffer, summary, &[]).map_err(|_| write_failure())?;
-            return Ok(emit_claimed(stop, stdout, stderr, &buffer, 1));
-        }
-        return Ok(1);
+        return no_result(context, summary, stdout, stderr);
     }
     let cost_limit_reached = total > limit;
     if cost_limit_reached && mode == Mode::Text {
@@ -488,7 +463,7 @@ fn search(
         let _clear = ClearOnDrop(progress);
         score(
             &snippets,
-            args.question,
+            question,
             &key,
             &score_settings,
             stop.flag(),
@@ -515,29 +490,149 @@ fn search(
     let mut buffer = Vec::new();
     match mode {
         Mode::Text => {
-            // A `RegexMatcher` gives no error (`NoError`).
-            let find = |line: &[u8]| {
-                let mut ranges = Vec::new();
-                let _ = matcher.find_iter(line, |found| {
-                    ranges.push(found.start()..found.end());
-                    true
-                });
-                ranges
-            };
-            let term = (env.vars)("TERM");
-            let colored = color_on(cli.color_when(), stdout_is_terminal, term.as_deref());
-            let paint: Option<Paint> = if colored { Some(&find) } else { None };
+            let find = |line: &[u8]| find_ranges(&matcher, line);
+            let paint = colored(cli, env, stdout_is_terminal).then_some(&find as Paint);
             write_text(&mut buffer, &ranked, paint).map_err(|_| write_failure())?;
         }
         Mode::Json => {
             summary.no_good_answer = no_good_answer;
             summary.exit_code = code;
-            write_json(&mut buffer, summary, &ranked).map_err(|_| write_failure())?;
+            let results: Vec<&Snippet> = ranked.iter().map(|(snippet, _)| snippet).collect();
+            write_json(&mut buffer, summary, &results).map_err(|_| write_failure())?;
         }
     }
     // A reader that closed the pipe gives no message and the code of the
     // search (CV-4).
     Ok(emit_claimed(stop, stdout, stderr, &buffer, code))
+}
+
+/// The flow with no question (FEATURE-12): the matching lines as grep gives
+/// them, with no key, no model setting, and no model call.
+fn plain(
+    cli: &Cli,
+    args: &SearchArgs,
+    env: &Env,
+    context: &Context,
+    summary: &mut Summary,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> Result<u8, Failure> {
+    let Context {
+        mode,
+        stop,
+        stdout_is_terminal,
+        ..
+    } = *context;
+    let matcher = build_matcher(args.term)?;
+    let report = scan(args.paths, &matcher, &ScanOptions::default());
+    let windows = line_windows(&report.files);
+    let (lines, read_warnings) = read_snippets(&windows);
+    record(
+        summary,
+        &report,
+        &read_warnings,
+        (windows.len(), 0, 0),
+        context,
+        stderr,
+    );
+
+    if lines.is_empty() {
+        return no_result(context, summary, stdout, stderr);
+    }
+    let mut buffer = Vec::new();
+    match mode {
+        Mode::Text => {
+            let find = |line: &[u8]| find_ranges(&matcher, line);
+            let paint = colored(cli, env, stdout_is_terminal).then_some(&find as Paint);
+            write_lines(&mut buffer, &lines, paint).map_err(|_| write_failure())?;
+        }
+        Mode::Json => {
+            summary.exit_code = 0;
+            let results: Vec<&Snippet> = lines.iter().collect();
+            write_json(&mut buffer, summary, &results).map_err(|_| write_failure())?;
+        }
+    }
+    Ok(emit_claimed(stop, stdout, stderr, &buffer, 0))
+}
+
+fn build_matcher(term: &str) -> Result<RegexMatcher, Failure> {
+    RegexMatcherBuilder::new()
+        .line_terminator(Some(b'\n'))
+        .build(term)
+        .map_err(|_| {
+            usage_failure(
+                "the term is not a valid regular expression.",
+                "Check the term. It uses the regular expression rules of ripgrep.",
+            )
+        })
+}
+
+/// The byte ranges of the matches in one line, for the color.
+fn find_ranges(matcher: &RegexMatcher, line: &[u8]) -> Vec<std::ops::Range<usize>> {
+    let mut ranges = Vec::new();
+    // A `RegexMatcher` gives no error (`NoError`).
+    let _ = matcher.find_iter(line, |found| {
+        ranges.push(found.start()..found.end());
+        true
+    });
+    ranges
+}
+
+/// True when the text output gets color (decisions 5 and 6 of FEATURE-15).
+fn colored(cli: &Cli, env: &Env, stdout_is_terminal: bool) -> bool {
+    let term = (env.vars)("TERM");
+    color_on(cli.color_when(), stdout_is_terminal, term.as_deref())
+}
+
+/// Put what the scan counted in the summary, and write the notices of text
+/// mode. `counts` is the results found, scored, and skipped.
+fn record(
+    summary: &mut Summary,
+    report: &ScanReport,
+    read_warnings: &[WalkWarning],
+    counts: (usize, usize, usize),
+    context: &Context,
+    stderr: &mut dyn Write,
+) {
+    let (found, scored, skipped) = counts;
+    summary.files_skipped = report.skipped;
+    summary.warnings = report
+        .warnings
+        .iter()
+        .chain(read_warnings)
+        .cloned()
+        .collect();
+    summary.results_found = found as u64;
+    summary.results_scored = scored as u64;
+    summary.results_skipped = skipped as u64;
+    context.stop.count(summary);
+
+    // CRITERION-85: in text mode, the notice and the warnings go to the error
+    // stream. In JSON mode they are fields of the document.
+    if context.mode == Mode::Text {
+        if let Some(notice) = report.skipped.notice() {
+            context.stop.notice(stderr, &notice);
+        }
+        for warning in &summary.warnings {
+            context.stop.notice(stderr, &warning.message());
+        }
+    }
+}
+
+/// A search with no result: exit 1, and in structured mode the document.
+fn no_result(
+    context: &Context,
+    summary: &mut Summary,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> Result<u8, Failure> {
+    if context.mode == Mode::Json {
+        summary.exit_code = 1;
+        let mut buffer = Vec::new();
+        write_json(&mut buffer, summary, &[]).map_err(|_| write_failure())?;
+        return Ok(emit_claimed(context.stop, stdout, stderr, &buffer, 1));
+    }
+    Ok(1)
 }
 
 /// `emit` for the search flow: it takes the output first. When a stop owns
@@ -654,6 +749,66 @@ mod tests {
         assert!(!color_on(ColorWhen::Auto, true, term("dumb")));
         assert!(!color_on(ColorWhen::Auto, true, None));
         assert!(!color_on(ColorWhen::Auto, false, term("xterm")));
+    }
+
+    type Parts = (Option<String>, Option<String>, Vec<String>);
+
+    /// The question, the term and the paths of a command line.
+    fn parts(list: &[&str]) -> Result<Parts, clap::Error> {
+        let mut all = vec!["jag"];
+        all.extend_from_slice(list);
+        Cli::try_parse_from(all).map(|cli| {
+            let paths = cli
+                .paths
+                .iter()
+                .map(|path| path.display().to_string())
+                .collect();
+            (cli.ask, cli.term, paths)
+        })
+    }
+
+    fn some(text: &str) -> Option<String> {
+        Some(text.to_string())
+    }
+
+    #[test]
+    fn the_option_ask_gives_the_question_in_each_form() {
+        for list in [
+            &["--ask", "q", "t", "p"][..],
+            &["--ask=q", "t", "p"],
+            &["t", "--ask", "q", "p"],
+            &["t", "p", "--ask=q"],
+        ] {
+            let (ask, term, paths) = parts(list).expect("parse");
+            assert_eq!((ask, term), (some("q"), some("t")), "{list:?}");
+            assert_eq!(paths, ["p"], "{list:?}");
+        }
+        let (ask, term, paths) = parts(&["t", "p"]).expect("parse");
+        assert_eq!((ask, term, paths), (None, some("t"), vec!["p".to_string()]));
+    }
+
+    #[test]
+    fn a_question_that_starts_with_a_dash_needs_an_equals_sign() {
+        let (ask, ..) = parts(&["--ask=-x", "t", "p"]).expect("parse");
+        assert_eq!(ask, some("-x"));
+        assert!(parts(&["--ask", "-x", "t", "p"]).is_err());
+        assert!(parts(&["--ask", "--json", "t", "p"]).is_err());
+    }
+
+    #[test]
+    fn the_option_ask_is_refused_when_it_is_wrong() {
+        assert!(parts(&["--ask"]).is_err());
+        assert!(parts(&["--ask", "a", "--ask", "b", "t", "p"]).is_err());
+        assert!(parts(&["--check", "--ask", "q"]).is_err());
+        assert!(parts(&["--setup", "--ask", "q"]).is_err());
+        assert!(parts(&["--forget-key", "--ask", "q"]).is_err());
+    }
+
+    #[test]
+    fn after_a_double_dash_the_word_ask_is_a_term() {
+        let (ask, term, paths) = parts(&["--", "--ask", "dir"]).expect("parse");
+        assert_eq!((ask, term), (None, some("--ask")));
+        assert_eq!(paths, ["dir"]);
     }
 
     fn color_of(list: &[&str]) -> Result<ColorWhen, clap::Error> {

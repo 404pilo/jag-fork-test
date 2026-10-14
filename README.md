@@ -85,6 +85,37 @@ Exit codes:
 When more than one item fails, the code is the code of the first item that
 fails.
 
+## Plain grep with no question
+
+With no question, jag works as `grep -rnH` does:
+
+```
+$ jag TERM PATH...
+```
+
+jag shows each matching line as `path:N:text`. It makes no call to the model
+and reads no key.
+
+To rank the matches by a question, add `--ask`:
+
+```
+$ jag --ask "how long is the wait" retry src
+```
+
+A question that starts with `-` needs `=`:
+
+```
+$ jag --ask="-v or --verbose?" verbose src
+```
+
+- jag cuts a line after 300 characters and adds ` [+N chars]`. `grep` does not
+  cut a line.
+- The files come in the order of the paths on the command line. Inside one
+  path, the files come in byte order of their names.
+- jag skips binary files, hidden files, and ignored files.
+- With no question, `--timeout`, `--retry-wait`, and `--max-scored` have no
+  effect. jag still checks their values.
+
 ## Output for an agent
 
 By default, jag writes text, also when the output goes to a pipe. The
@@ -93,7 +124,7 @@ results go to standard output. The notices go to the error stream.
 For an agent, add `--json`:
 
 ```
-$ jag --json TERM "QUESTION" PATH...
+$ jag --json --ask "QUESTION" TERM PATH...
 ```
 
 jag then writes one JSON document on one line, with `\n` at the end, on
@@ -112,7 +143,7 @@ Each document has these fields:
 | `exit_code` | The exit code of jag |
 | `error` | `null`, or an object with `cause` and `fix` |
 | `no_good_answer` | `true` when the text mode shows the no-good-answer label |
-| `results_found`, `results_scored`, `results_skipped` | The three numbers of the cost-limit notice |
+| `results_found`, `results_scored`, `results_skipped` | The three numbers of the cost-limit notice. With no question, `results_found` is the count of matching lines, and the other two are `0` |
 | `left_out`, `top_result_cut`, `size_limit_fix`, `warnings_left_out` | The size limit of the output. They are `0`, `0`, `""`, and `0` until jag has a size limit |
 | `files_skipped` | An object with `total`, `binary`, `hidden`, and `ignored` |
 | `warnings` | A list of objects with `path` (text or `null`) and `text` |
@@ -121,7 +152,8 @@ Each document has these fields:
 Each result has `rank` (1 for the best result), `path` (`null` for standard
 input), `first_line`, `last_line`, and `lines`. Each line has `number`,
 `text`, `is_match`, and `cut` (the count of characters that jag cut from the
-end of the line, or `0`). The document has no score.
+end of the line, or `0`). The document has no score. With no question, each
+result has one line, and the results come in the order of the text output.
 
 When no line matches, the document has an empty `results` list and `exit_code`
 1. When jag fails, `error` holds the cause and the fix, `results` is empty,

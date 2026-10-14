@@ -50,7 +50,7 @@ fn search(server: &FakeServer, dir: &Path, extra: &[&str], environment: &[(&str,
     }
     let output = command
         .args(extra)
-        .args(["needle", QUESTION])
+        .args(["--ask", QUESTION, "needle"])
         .arg(dir)
         .output()
         .expect("run jag");

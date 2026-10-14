@@ -11,7 +11,7 @@ use serde::Serialize;
 
 use crate::failure::Failure;
 use crate::scorer::{PROMPT_VERSION, THRESHOLD};
-use crate::search::snippet::{Snippet, Source};
+use crate::search::snippet::{Snippet, SnippetLine, Source};
 use crate::search::walk::{SkipCounts, WalkWarning};
 
 /// The first line on standard output when no result answers well.
@@ -106,17 +106,13 @@ struct LineField<'a> {
     cut: u64,
 }
 
-/// Write the document, with `ranked` as its results in that order, on one
-/// line with `\n` at the end. The score is never written.
-pub fn write_json(
-    out: &mut dyn Write,
-    summary: &Summary,
-    ranked: &[(Snippet, f64)],
-) -> io::Result<()> {
-    let results = ranked
+/// Write the document, with `results` in that order, on one line with `\n` at
+/// the end. The document has no score.
+pub fn write_json(out: &mut dyn Write, summary: &Summary, results: &[&Snippet]) -> io::Result<()> {
+    let results = results
         .iter()
         .enumerate()
-        .map(|(index, (snippet, _))| ResultField {
+        .map(|(index, snippet)| ResultField {
             rank: index + 1,
             path: match &snippet.source {
                 Source::File(path) => Some(path.to_string_lossy()),
@@ -238,24 +234,53 @@ pub fn write_text(
         }
         let label = snippet.source.label();
         for line in &snippet.lines {
-            let separator: &[u8] = if line.is_match { b":" } else { b"-" };
-            item(out, colored, PATH, label)?;
-            item(out, colored, SEPARATOR, separator)?;
-            item(out, colored, NUMBER, line.number.to_string().as_bytes())?;
-            item(out, colored, SEPARATOR, separator)?;
-            match paint {
-                Some(paint) if line.is_match => {
-                    write_painted(out, &line.text, line.cut > 0, paint)?;
-                }
-                _ => out.write_all(&line.text)?,
-            }
-            if line.cut > 0 {
-                write!(out, " [+{} chars]", line.cut)?;
-            }
-            out.write_all(b"\n")?;
+            write_line(out, label, line, paint)?;
         }
     }
     Ok(no_good_answer)
+}
+
+/// Write the lines of a search with no question (FEATURE-12): one
+/// `path:N:text` line for each line of `results`, in that order. No `--` and
+/// no label line, as grep with no context option.
+pub fn write_lines(
+    out: &mut dyn Write,
+    results: &[Snippet],
+    paint: Option<Paint>,
+) -> io::Result<()> {
+    for snippet in results {
+        let label = snippet.source.label();
+        for line in &snippet.lines {
+            write_line(out, label, line, paint)?;
+        }
+    }
+    Ok(())
+}
+
+/// Write one line of a result: `path:N:text` for a matching line, and
+/// `path-N-text` for another line. A cut line ends with ` [+N chars]`.
+fn write_line(
+    out: &mut dyn Write,
+    label: &[u8],
+    line: &SnippetLine,
+    paint: Option<Paint>,
+) -> io::Result<()> {
+    let colored = paint.is_some();
+    let separator: &[u8] = if line.is_match { b":" } else { b"-" };
+    item(out, colored, PATH, label)?;
+    item(out, colored, SEPARATOR, separator)?;
+    item(out, colored, NUMBER, line.number.to_string().as_bytes())?;
+    item(out, colored, SEPARATOR, separator)?;
+    match paint {
+        Some(paint) if line.is_match => {
+            write_painted(out, &line.text, line.cut > 0, paint)?;
+        }
+        _ => out.write_all(&line.text)?,
+    }
+    if line.cut > 0 {
+        write!(out, " [+{} chars]", line.cut)?;
+    }
+    out.write_all(b"\n")
 }
 
 #[cfg(test)]
@@ -392,7 +417,8 @@ mod tests {
 
     fn json(summary: &Summary, ranked: &[(Snippet, f64)]) -> String {
         let mut out = Vec::new();
-        write_json(&mut out, summary, ranked).expect("write");
+        let results: Vec<&Snippet> = ranked.iter().map(|(snippet, _)| snippet).collect();
+        write_json(&mut out, summary, &results).expect("write");
         String::from_utf8(out).expect("text")
     }
 
@@ -747,5 +773,78 @@ mod tests {
     fn the_label_line_has_no_color() {
         let ranked = [(snippet("a", &[(1, "needle", true)]), 0.1)];
         assert!(colored(&ranked).starts_with(&format!("{NO_GOOD_ANSWER}\n")));
+    }
+
+    fn lines_text(results: &[Snippet], paint: Option<Paint>) -> String {
+        let mut out = Vec::new();
+        write_lines(&mut out, results, paint).expect("write");
+        String::from_utf8(out).expect("text")
+    }
+
+    #[test]
+    fn write_lines_gives_one_line_for_each_result_with_no_separator() {
+        let results = [
+            snippet("a.txt", &[(1, "x", true)]),
+            snippet("a.txt", &[(3, "y", true)]),
+            snippet("b.txt", &[(2, "z", true)]),
+        ];
+        assert_eq!(
+            lines_text(&results, None),
+            "a.txt:1:x\na.txt:3:y\nb.txt:2:z\n"
+        );
+        assert_eq!(lines_text(&[], None), "");
+    }
+
+    #[test]
+    fn write_lines_names_standard_input_and_marks_a_cut() {
+        let mut input = snippet("a", &[(1, "x", true)]);
+        input.source = Source::StandardInput;
+        assert_eq!(lines_text(&[input], None), "(standard input):1:x\n");
+        let mut cut = snippet("a", &[(1, "xxx", true)]);
+        cut.lines[0].cut = 7;
+        assert_eq!(lines_text(&[cut], None), "a:1:xxx [+7 chars]\n");
+    }
+
+    #[test]
+    fn write_lines_gives_the_bytes_of_write_text_for_the_same_result() {
+        let find = |line: &[u8]| {
+            line.iter()
+                .enumerate()
+                .filter(|(_, byte)| **byte == b'x')
+                .map(|(at, _)| at..at + 1)
+                .collect::<Vec<_>>()
+        };
+        let result = snippet("a.txt", &[(1, "axb", true)]);
+        let mut text = Vec::new();
+        write_text(&mut text, &[(result.clone(), 0.9)], Some(&find)).expect("write");
+        let lines = lines_text(&[result], Some(&find));
+        assert_eq!(lines.as_bytes(), text);
+        assert!(lines.contains("\x1b[01;31m"));
+    }
+
+    #[test]
+    fn write_json_gives_the_results_in_the_order_it_gets_them() {
+        let results = [
+            snippet("a.txt", &[(1, "x", true)]),
+            snippet("a.txt", &[(3, "y", true)]),
+            snippet("b.txt", &[(2, "z", true)]),
+        ];
+        let summary = Summary {
+            results_found: 3,
+            ..Summary::default()
+        };
+        let refs: Vec<&Snippet> = results.iter().collect();
+        let mut out = Vec::new();
+        write_json(&mut out, &summary, &refs).expect("write");
+        let document: serde_json::Value = serde_json::from_slice(&out).expect("json");
+        assert_eq!(document["results_found"], 3);
+        assert_eq!(document["results_scored"], 0);
+        let items = document["results"].as_array().expect("a list");
+        assert_eq!(items.len(), 3);
+        for (index, item) in items.iter().enumerate() {
+            assert_eq!(item["rank"], index + 1);
+        }
+        assert_eq!(items[1]["first_line"], 3);
+        assert_eq!(items[2]["path"], "b.txt");
     }
 }

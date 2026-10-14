@@ -3,6 +3,7 @@
 //! `scan` walks each root with the `ignore` crate, searches each regular file
 //! with `grep-searcher`, and counts the entries that the walk skips.
 
+use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -132,10 +133,15 @@ impl WalkWarning {
 /// The result of a scan.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ScanReport {
-    /// Only the files with a match, sorted by path.
+    /// Only the files with a match, in the order of the paths on the command
+    /// line, then in the byte order of the path. A path that the command line
+    /// gives two times, or a path under another path, gives its files at each
+    /// place of the root, as `grep` does.
     pub files: Vec<FileMatches>,
     pub skipped: SkipCounts,
-    /// Sorted by path (`None` first), then by message.
+    /// By the place of the first root that holds the path (a warning with no
+    /// path, or with a path under no root, takes place 0), then by path, then
+    /// by message.
     pub warnings: Vec<WalkWarning>,
 }
 
@@ -147,7 +153,8 @@ struct Shared {
     children: AtomicU64,
     yielded: AtomicU64,
     yielded_hidden: AtomicU64,
-    files: Mutex<Vec<FileMatches>>,
+    /// Each file with the root that the walk found it under.
+    files: Mutex<Vec<(PathBuf, FileMatches)>>,
     warnings: Mutex<Vec<WalkWarning>>,
     /// Paths of errors for entries at depth 1 or more.
     error_paths: Mutex<Vec<PathBuf>>,
@@ -192,7 +199,7 @@ where
             WalkState::Continue
         })
     });
-    finish(shared)
+    finish(shared, roots)
 }
 
 fn visit_entry<M: Matcher>(
@@ -217,7 +224,9 @@ fn visit_entry<M: Matcher>(
         count_children(shared, entry.path());
         push(&shared.folder_paths, entry.path().to_path_buf());
     } else if file_type.is_file() {
-        search_file(shared, matcher, searcher, entry.path());
+        let path = entry.path();
+        let root = path.ancestors().nth(entry.depth()).unwrap_or(path);
+        search_file(shared, matcher, searcher, root, path);
     }
 }
 
@@ -247,7 +256,13 @@ fn count_children(shared: &Shared, folder: &Path) {
     shared.hidden_children.fetch_add(hidden, Ordering::Relaxed);
 }
 
-fn search_file<M: Matcher>(shared: &Shared, matcher: &M, searcher: &mut Searcher, path: &Path) {
+fn search_file<M: Matcher>(
+    shared: &Shared,
+    matcher: &M,
+    searcher: &mut Searcher,
+    root: &Path,
+    path: &Path,
+) {
     let mut sink = LineSink::default();
     match searcher.search_path(matcher, path, &mut sink) {
         Err(error) => push(
@@ -262,10 +277,13 @@ fn search_file<M: Matcher>(shared: &Shared, matcher: &M, searcher: &mut Searcher
         }
         Ok(()) if !sink.lines.is_empty() => push(
             &shared.files,
-            FileMatches {
-                path: path.to_path_buf(),
-                lines: sink.lines,
-            },
+            (
+                root.to_path_buf(),
+                FileMatches {
+                    path: path.to_path_buf(),
+                    lines: sink.lines,
+                },
+            ),
         ),
         Ok(()) => {}
     }
@@ -308,7 +326,7 @@ impl Sink for LineSink {
 }
 
 /// Combine the counters and the lists after the walk.
-fn finish(shared: Shared) -> ScanReport {
+fn finish(shared: Shared, roots: &[PathBuf]) -> ScanReport {
     let mut yielded = shared.yielded.into_inner();
     let mut yielded_hidden = shared.yielded_hidden.into_inner();
     let folder_paths = shared.folder_paths.into_inner().unwrap_or_default();
@@ -329,11 +347,14 @@ fn finish(shared: Shared) -> ScanReport {
         .saturating_sub(yielded_hidden);
     let ignored = children.saturating_sub(yielded).saturating_sub(hidden);
 
-    let mut files = shared.files.into_inner().unwrap_or_default();
-    files.sort_by(|a, b| path_key(&a.path).cmp(path_key(&b.path)));
+    let files = order_files(shared.files.into_inner().unwrap_or_default(), roots);
     let mut warnings = shared.warnings.into_inner().unwrap_or_default();
     warnings.sort_by_cached_key(|warning| {
         (
+            warning
+                .path
+                .as_deref()
+                .map_or(0, |path| warning_place(roots, path)),
             warning.path.as_deref().map(|path| path_key(path).to_vec()),
             warning.message(),
         )
@@ -353,6 +374,49 @@ fn push<T>(list: &Mutex<Vec<T>>, item: T) {
     if let Ok(mut list) = list.lock() {
         list.push(item);
     }
+}
+
+/// Sort the files by the place of their root on the command line, then by the
+/// bytes of the path. A root that the command line gives two times has two
+/// places. The walk gives its files two times, and the copies of one file take
+/// the places of that root, one each. The copies are equal, so the order of
+/// the threads does not change the report.
+fn order_files(found: Vec<(PathBuf, FileMatches)>, roots: &[PathBuf]) -> Vec<FileMatches> {
+    let mut places: HashMap<&Path, Vec<usize>> = HashMap::new();
+    for (place, root) in roots.iter().enumerate() {
+        places.entry(root.as_path()).or_default().push(place);
+    }
+    let mut found = found;
+    found.sort_by(|(root_a, a), (root_b, b)| {
+        (root_a, path_key(&a.path)).cmp(&(root_b, path_key(&b.path)))
+    });
+    let mut placed: Vec<(usize, FileMatches)> = Vec::with_capacity(found.len());
+    let mut copy = 0;
+    for (index, (root, file)) in found.iter().enumerate() {
+        let same = index > 0 && found[index - 1].0 == *root && found[index - 1].1.path == file.path;
+        copy = if same { copy + 1 } else { 0 };
+        let own = places.get(root.as_path()).map_or(&[][..], Vec::as_slice);
+        // A root that the table does not know goes to place 0.
+        let place = if own.is_empty() {
+            0
+        } else {
+            own[copy % own.len()]
+        };
+        placed.push((place, file.clone()));
+    }
+    placed.sort_by(|(place_a, a), (place_b, b)| {
+        (place_a, path_key(&a.path)).cmp(&(place_b, path_key(&b.path)))
+    });
+    placed.into_iter().map(|(_, file)| file).collect()
+}
+
+/// The place of the first root, in the order of the command line, that holds
+/// `path`. A path under no root takes place 0.
+fn warning_place(roots: &[PathBuf], path: &Path) -> usize {
+    roots
+        .iter()
+        .position(|root| path.starts_with(root))
+        .unwrap_or(0)
 }
 
 fn path_key(path: &Path) -> &[u8] {
@@ -431,7 +495,7 @@ mod tests {
         ] {
             push(&shared.warnings, made_up);
         }
-        let report = finish(shared);
+        let report = finish(shared, &[]);
         // "jag: a rule in a ..." < "jag: cannot read a: ..." < "jag: cannot walk a"
         assert_eq!(
             report.warnings,
@@ -441,6 +505,94 @@ mod tests {
                 warning(Some("a"), read),
                 warning(Some("a"), WarningKind::Other),
                 warning(Some("b"), WarningKind::Other),
+            ]
+        );
+    }
+
+    fn found(root: &str, path: &str) -> (PathBuf, FileMatches) {
+        (
+            PathBuf::from(root),
+            FileMatches {
+                path: PathBuf::from(path),
+                lines: Vec::new(),
+            },
+        )
+    }
+
+    fn order(found: Vec<(PathBuf, FileMatches)>, roots: &[&str]) -> Vec<String> {
+        let roots: Vec<PathBuf> = roots.iter().map(PathBuf::from).collect();
+        order_files(found, &roots)
+            .iter()
+            .map(|file| file.path.display().to_string())
+            .collect()
+    }
+
+    // Decision 6 of FEATURE-14: a path that the command line gives two times
+    // has two places, and the copies of a file take them one each.
+    #[test]
+    fn a_path_that_is_given_two_times_gives_its_files_at_each_place() {
+        let got = order(
+            vec![found("b", "b"), found("a", "a"), found("b", "b")],
+            &["b", "a", "b"],
+        );
+        assert_eq!(got, ["b", "a", "b"]);
+    }
+
+    #[test]
+    fn a_path_under_another_path_gives_its_files_at_the_place_of_each_root() {
+        // `d d/sub d`, with the files d/a and d/sub/c.
+        let roots = ["d", "d/sub", "d"];
+        let got = order(
+            vec![
+                found("d", "d/a"),
+                found("d", "d/a"),
+                found("d", "d/sub/c"),
+                found("d", "d/sub/c"),
+                found("d/sub", "d/sub/c"),
+            ],
+            &roots,
+        );
+        assert_eq!(got, ["d/a", "d/sub/c", "d/sub/c", "d/a", "d/sub/c"]);
+    }
+
+    #[test]
+    fn a_file_inside_a_root_is_ordered_by_its_bytes() {
+        let got = order(
+            vec![found("d", "d/b"), found("d", "d/a"), found("d", "d/B")],
+            &["d"],
+        );
+        assert_eq!(got, ["d/B", "d/a", "d/b"]);
+    }
+
+    #[test]
+    fn a_warning_takes_the_place_of_the_first_root_that_holds_its_path() {
+        let roots = [PathBuf::from("b"), PathBuf::from("a"), PathBuf::from("a/x")];
+        assert_eq!(warning_place(&roots, Path::new("b/f")), 0);
+        assert_eq!(warning_place(&roots, Path::new("a/x/f")), 1);
+        assert_eq!(warning_place(&roots, Path::new("/elsewhere")), 0);
+    }
+
+    #[test]
+    fn a_warning_with_no_root_above_it_comes_with_place_0() {
+        let shared = Shared::default();
+        for made_up in [
+            warning(Some("a/f"), WarningKind::Other),
+            warning(Some("/up"), WarningKind::Other),
+            warning(None, WarningKind::Other),
+            warning(Some("b/f"), WarningKind::Other),
+        ] {
+            push(&shared.warnings, made_up);
+        }
+        let roots = [PathBuf::from("b"), PathBuf::from("a")];
+        let report = finish(shared, &roots);
+        let got: Vec<_> = report.warnings.iter().map(|w| w.path.clone()).collect();
+        assert_eq!(
+            got,
+            [
+                None,
+                Some(PathBuf::from("/up")),
+                Some(PathBuf::from("b/f")),
+                Some(PathBuf::from("a/f")),
             ]
         );
     }

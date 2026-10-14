@@ -424,3 +424,16 @@ mod unix {
         }
     }
 }
+
+#[test]
+fn files_come_in_the_order_of_the_paths_on_the_command_line() {
+    let dir = TempDir::new().expect("temporary folder");
+    let root = dir.path();
+    write(root, "a/2.txt", b"needle\n");
+    write(root, "a/10.txt", b"needle\n");
+    write(root, "b/1.txt", b"needle\n");
+    let report = run_roots(&[root.join("b"), root.join("a")]);
+    assert_eq!(names(&report, root), ["b/1.txt", "a/10.txt", "a/2.txt"]);
+    let report = run_roots(&[root.join("a"), root.join("b")]);
+    assert_eq!(names(&report, root), ["a/10.txt", "a/2.txt", "b/1.txt"]);
+}

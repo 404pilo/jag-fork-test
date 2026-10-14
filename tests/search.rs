@@ -1,4 +1,4 @@
-//! End-to-end tests of `jag TERM "QUESTION" PATH...` against the fake server.
+//! End-to-end tests of `jag --ask "QUESTION" TERM PATH...` against the fake server.
 //!
 //! Each test sets HOME to a temporary folder, uses the made-up key of
 //! `common::KEY`, and calls only the fake server on 127.0.0.1.
@@ -34,7 +34,7 @@ fn search(
         command.env(name, value);
     }
     let output = command
-        .args([term, QUESTION])
+        .args(["--ask", QUESTION, term])
         .arg(root)
         .output()
         .expect("run jag");
@@ -188,7 +188,7 @@ fn criterion_71_with_no_key_and_no_match_the_exit_is_3() {
     write(dir.path(), "a.txt", b"nothing here\n");
     let home = folder();
     jag_bare(home.path())
-        .args(["needle", QUESTION])
+        .args(["--ask", QUESTION, "needle"])
         .arg(dir.path())
         .assert()
         .code(3)
@@ -240,7 +240,7 @@ fn a_search_in_several_paths_scores_the_results_of_each() {
     write(second.path(), "b.txt", b"needle two\n");
     let home = folder();
     let output = jag(home.path(), &server.base_url())
-        .args(["needle", QUESTION])
+        .args(["--ask", QUESTION, "needle"])
         .arg(first.path())
         .arg(second.path())
         .output()
@@ -299,7 +299,7 @@ fn search_from(server: &FakeServer, cwd: &Path, paths: &[&str]) -> std::process:
     let home = folder();
     let output = jag(home.path(), &server.base_url())
         .current_dir(cwd)
-        .args(["needle", QUESTION])
+        .args(["--ask", QUESTION, "needle"])
         .args(paths)
         .output()
         .expect("run jag");
@@ -543,7 +543,7 @@ fn an_https_address_that_closes_the_connection_gives_exit_6_and_no_panic() {
     write(dir.path(), "a.txt", b"needle\n");
     let home = folder();
     let output = jag(home.path(), &format!("https://127.0.0.1:{port}/v1"))
-        .args(["needle", QUESTION])
+        .args(["--ask", QUESTION, "needle"])
         .arg(dir.path())
         .output()
         .expect("run jag");

@@ -27,12 +27,17 @@ struct Run {
     stderr: String,
 }
 
-/// Run `jag OPTIONS needle QUESTION a.txt` in a folder that holds `a.txt`
+/// Run `jag OPTIONS --ask QUESTION needle a.txt` in a folder that holds `a.txt`
 /// (the line `x needle y`).
 fn run(server: &FakeServer, args: &[&str]) -> Run {
     let root = tempfile::tempdir().expect("folder");
     write(root.path(), "a.txt", b"x needle y\n");
-    run_in(server, root.path(), args, &["needle", QUESTION, "a.txt"])
+    run_in(
+        server,
+        root.path(),
+        args,
+        &["--ask", QUESTION, "needle", "a.txt"],
+    )
 }
 
 fn run_in(server: &FakeServer, cwd: &Path, options: &[&str], rest: &[&str]) -> Run {
@@ -65,7 +70,12 @@ fn seventy_results() -> TempDir {
 fn criterion_62_a_pipe_gets_no_progress_line() {
     let server = FakeServer::constant(0.9);
     let root = seventy_results();
-    let run = run_in(&server, root.path(), &[], &["needle", QUESTION, "dir"]);
+    let run = run_in(
+        &server,
+        root.path(),
+        &[],
+        &["--ask", QUESTION, "needle", "dir"],
+    );
     assert_eq!(run.code, Some(0));
     assert!(!run.stderr.contains('\r'), "{:?}", run.stderr);
     assert!(!run.stderr.contains("the model scored"), "{:?}", run.stderr);
@@ -80,7 +90,7 @@ fn criterion_62_structured_mode_gets_no_progress_line() {
         &server,
         root.path(),
         &["--json"],
-        &["needle", QUESTION, "dir"],
+        &["--ask", QUESTION, "needle", "dir"],
     );
     assert_eq!(run.code, Some(0));
     assert_eq!(run.stderr, "");
