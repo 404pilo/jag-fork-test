@@ -38,13 +38,76 @@ config:
   api-key: <your key>
 ```
 
-jag refuses a key file that other users can read. Run `chmod 600` on it.
+jag refuses a config file that other users can read. Run `chmod 600` on it.
 jag never shows the key.
+
+This order is for the TypeSafe key. To use an AI gateway in place of the
+TypeSafe API, see "Use an AI gateway".
+
+## Use an AI gateway
+
+jag can send the model calls to an AI gateway. Set the address of the gateway
+and the model name that the gateway uses. For each of the two settings, jag
+uses the first source that is set:
+
+| Setting | Option | Variable | Config file |
+|---|---|---|---|
+| The address | `--base-url URL` | `JAG_BASE_URL` | `config.base-url` |
+| The model name | `--model NAME` | `JAG_MODEL` | `config.model` |
+
+The default address is `https://api.typesafe.ai/v1`. The default model is
+`jev-1.13.0`. A blank value counts as not set. The address must be an `https`
+address, with no user name and no `?` or `#`. `http` is allowed only for
+`127.0.0.1`, `localhost`, and `[::1]`. jag adds `/v1` when the path of the
+address does not end with `/v1`.
+
+These gateways take the TypeSafe model:
+
+| Gateway | `JAG_BASE_URL` | `JAG_MODEL` |
+|---|---|---|
+| OpenRouter | `https://openrouter.ai/api` | `~typesafe/jev-latest` |
+| Vercel AI Gateway | `https://ai-gateway.vercel.sh/typesafe` | `typesafe-ai/jev` |
+| Pydantic AI Gateway | `https://gateway-us.pydantic.dev/proxy/typesafe` | `jev-latest` |
+
+The TypeSafe key goes only to the TypeSafe API. For any other address, jag
+sends a gateway key, and it never sends the TypeSafe key. jag uses the first
+gateway key that it finds:
+
+1. the variable `JAG_GATEWAY_API_KEY`
+2. `config.gateway-api-key` in `~/.config/jag/config.yml`
+
+```yaml
+config:
+  api-key: <your TypeSafe key>
+  gateway-api-key: <your gateway key>
+  base-url: https://openrouter.ai/api
+  model: "~typesafe/jev-latest"
+```
+
+Put a model name that starts with `~` in quotes, in the shell and in the file.
+An example search through a gateway:
+
+```
+$ jag --base-url https://openrouter.ai/api --model "~typesafe/jev-latest" --ask "how long is the wait" retry src
+```
+
+When `JAG_BASE_URL` or `config.base-url` names a gateway, `jag --setup` and
+`jag --forget-key` work on the gateway key. They keep the other values of the
+file. With no gateway key, a search stops with exit 3 before the call.
+`--check` follows the same settings and the same key as a search, and it
+accepts `--base-url` and `--model`.
+
+To store or remove the key of the other route, name that route for the one
+command. For example, to store the TypeSafe key while a gateway is set:
+
+```
+$ JAG_BASE_URL=https://api.typesafe.ai jag --setup
+```
 
 ## Check that jag is ready
 
 ```
-$ jag --check
+$ jag --check [--base-url URL] [--model NAME]
 ```
 
 The check shows `pass` or `fail` for five items, in this order:
@@ -58,7 +121,8 @@ The check shows `pass` or `fail` for five items, in this order:
 An item that jag cannot examine, because an earlier item failed, shows
 `not checked`. Each item that fails has its cause and its fix on the error
 stream. The check makes one small call to the model service. The call costs
-less than $0.00001. `--timeout` and `--retry-wait` apply to the call.
+less than $0.00001. `--timeout`, `--retry-wait`, `--base-url`, and `--model` apply to the call. On a
+gateway, item 1 names the gateway key, and the texts say "gateway".
 
 When all five items pass, the check shows this and exits with 0:
 
@@ -77,7 +141,7 @@ Exit codes:
 |---|---|
 | 0 | All five items pass |
 | 2 | The command line or a setting is not valid |
-| 3 | No key, a bad key, or a key file that others can read |
+| 3 | No key, a bad key, or a config file that others can read or that jag cannot use |
 | 4 | The service does not accept the key |
 | 5 | The account has no credit |
 | 6 | The service is not reachable |
@@ -94,7 +158,7 @@ $ jag TERM PATH...
 ```
 
 jag shows each matching line as `path:N:text`. It makes no call to the model
-and reads no key.
+and reads no key and no setting of the model service.
 
 To rank the matches by a question, add `--ask`:
 
@@ -113,8 +177,10 @@ $ jag --ask="-v or --verbose?" verbose src
 - The files come in the order of the paths on the command line. Inside one
   path, the files come in byte order of their names.
 - jag skips binary files, hidden files, and ignored files.
-- With no question, `--timeout`, `--retry-wait`, and `--max-scored` have no
-  effect. jag still checks their values.
+- With no question, `--timeout`, `--retry-wait`, `--max-scored`, `--max-chars`,
+  `--base-url`, and `--model` have no effect on the search, except that
+  `--max-chars` still limits the output. jag still checks the values of the
+  options.
 
 ## The size limit
 
@@ -252,7 +318,9 @@ repository of about 15,000 files, while the model service works.
   `target/release/jag` after `cargo build --release --locked`. The script
   clones Go 1.25.0 (a download of about 36 MB) and runs 5 searches 6 times
   each: 30 searches. Each search costs at most about $0.02, so the measure
-  costs at most about $0.60. jag finds your key as it always does. The script
+  costs at most about $0.60. jag finds your TypeSafe key as it always does: the
+  script sets `JAG_BASE_URL` to the TypeSafe address and removes the other
+  settings of the model service, so it never uses a gateway. The script
   exits with 0 when each search returns in under 5 seconds, with 1 when it
   does not, and with 2 when jag fails or an argument is wrong.
 - A test in the CI (`tests/speed.rs`, a release build) keeps the local part

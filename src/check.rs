@@ -6,9 +6,9 @@
 //! examines items 2, 3, and 4. The exit code is the code of the first item
 //! that fails.
 
-use crate::config::{ApiKey, ConfigError, Env, Fs, KeySource, find_key, key_file_mode};
+use crate::config::{ApiKey, ConfigError, ConfigFile, Env, KeySource, find_key, key_file_mode};
 use crate::failure::Failure;
-use crate::scorer::ScoreError;
+use crate::scorer::{ScoreError, ScoreSettings};
 
 const ITEM_1: &str = "a key is present";
 const ITEM_2: &str = "the service accepts the key";
@@ -114,14 +114,24 @@ fn source_note(source: &KeySource) -> String {
     match source {
         KeySource::JagVariable => format!(" ({})", crate::config::JAG_VARIABLE),
         KeySource::TypeSafeVariable => format!(" ({})", crate::config::TYPESAFE_VARIABLE),
-        KeySource::ConfigFile(path) => format!(" ({})", path.display()),
+        KeySource::GatewayVariable => format!(" ({})", crate::config::GATEWAY_VARIABLE),
+        KeySource::ConfigFile(path) | KeySource::GatewayConfigFile(path) => {
+            format!(" ({})", path.display())
+        }
     }
 }
 
-/// Examine the five items. `call` makes the one call to the service.
-pub fn run(env: &Env, fs: &dyn Fs, call: &dyn Fn(&ApiKey) -> Result<(), ScoreError>) -> Report {
+/// Examine the five items. `settings` is the result of the read of the
+/// settings: a file error shows on item 1 or item 5. `call` makes the one
+/// call to the service.
+pub fn run(
+    env: &Env,
+    file: &ConfigFile,
+    settings: Result<ScoreSettings, ConfigError>,
+    call: &dyn Fn(&ApiKey, &ScoreSettings) -> Result<(), ScoreError>,
+) -> Report {
     // Item 5.
-    let (item_5, key_file_failed) = match key_file_mode(env, fs) {
+    let (item_5, key_file_failed) = match key_file_mode(env, file.fs()) {
         Ok(None) => (Item::pass(ITEM_5, " (no key file)"), false),
         Ok(Some((_, mode))) if mode & 0o077 == 0 => (Item::pass(ITEM_5, ""), false),
         Ok(Some((path, mode))) => (
@@ -132,27 +142,33 @@ pub fn run(env: &Env, fs: &dyn Fs, call: &dyn Fn(&ApiKey) -> Result<(), ScoreErr
     };
 
     // Item 1. jag does not read a key file that it refuses (decision 10).
-    let key = if key_file_failed && env.set_variable().is_none() {
-        Err(Item::not_checked(ITEM_1, KEY_FILE_NOTE))
-    } else {
-        match find_key(env, fs) {
-            Ok((key, source)) => Ok((key, source_note(&source))),
-            Err(error) => Err(Item::fail(ITEM_1, error.into())),
-        }
+    // With a file error of the settings, jag does not know the route.
+    let no_key = |item| {
+        let not_checked = |text| Item::not_checked(text, NO_KEY_NOTE);
+        (
+            item,
+            [
+                not_checked(ITEM_2),
+                not_checked(ITEM_3),
+                not_checked(ITEM_4),
+            ],
+        )
     };
-
-    let (item_1, items_234) = match key {
-        Ok((key, note)) => (Item::pass(ITEM_1, &note), call_items(&key, call)),
-        Err(item) => {
-            let not_checked = |text| Item::not_checked(text, NO_KEY_NOTE);
-            (
-                item,
-                [
-                    not_checked(ITEM_2),
-                    not_checked(ITEM_3),
-                    not_checked(ITEM_4),
-                ],
-            )
+    let (item_1, items_234) = match settings {
+        Err(_) if key_file_failed => no_key(Item::not_checked(ITEM_1, KEY_FILE_NOTE)),
+        Err(error) => no_key(Item::fail(ITEM_1, error.into())),
+        Ok(settings) => {
+            if key_file_failed && env.set_key_variable(settings.route).is_none() {
+                no_key(Item::not_checked(ITEM_1, KEY_FILE_NOTE))
+            } else {
+                match find_key(env, file, settings.route, &settings.base_url_origin) {
+                    Ok((key, source)) => (
+                        Item::pass(ITEM_1, &source_note(&source)),
+                        call_items(&key, &settings, call),
+                    ),
+                    Err(error) => no_key(Item::fail(ITEM_1, error.into())),
+                }
+            }
         }
     };
     let [item_2, item_3, item_4] = items_234;
@@ -163,27 +179,32 @@ pub fn run(env: &Env, fs: &dyn Fs, call: &dyn Fn(&ApiKey) -> Result<(), ScoreErr
 
 /// Items 2, 3, and 4 from the one call (see "The call results" of the spec).
 /// A 401 or a 402 comes from the service, so the service is reachable.
-fn call_items(key: &ApiKey, call: &dyn Fn(&ApiKey) -> Result<(), ScoreError>) -> [Item; 3] {
-    match call(key) {
+fn call_items(
+    key: &ApiKey,
+    settings: &ScoreSettings,
+    call: &dyn Fn(&ApiKey, &ScoreSettings) -> Result<(), ScoreError>,
+) -> [Item; 3] {
+    let failure = |error: ScoreError| error.failure(settings);
+    match call(key, settings) {
         Ok(()) => [
             Item::pass(ITEM_2, ""),
             Item::pass(ITEM_3, ""),
             Item::pass(ITEM_4, ""),
         ],
         Err(error @ ScoreError::KeyNotAccepted { .. }) => [
-            Item::fail(ITEM_2, error.into()),
+            Item::fail(ITEM_2, failure(error)),
             Item::not_checked(ITEM_3, KEY_REFUSED_NOTE),
             Item::pass(ITEM_4, ""),
         ],
         Err(ScoreError::NoCredit) => [
             Item::pass(ITEM_2, ""),
-            Item::fail(ITEM_3, ScoreError::NoCredit.into()),
+            Item::fail(ITEM_3, failure(ScoreError::NoCredit)),
             Item::pass(ITEM_4, ""),
         ],
         Err(error) => [
             Item::not_checked(ITEM_2, CALL_FAILED_NOTE),
             Item::not_checked(ITEM_3, CALL_FAILED_NOTE),
-            Item::fail(ITEM_4, error.into()),
+            Item::fail(ITEM_4, failure(error)),
         ],
     }
 }
@@ -196,7 +217,7 @@ mod tests {
 
     use super::*;
     use crate::config::testing::{SENTINEL_KEY, vars};
-    use crate::config::{OpenFile, RealFs};
+    use crate::config::{Fs, OpenFile, SettingOptions, model_settings};
 
     /// A key file that is a fake. `mode` is `None` for no file.
     struct FakeFs {
@@ -274,7 +295,10 @@ mod tests {
             home: home.then(|| PathBuf::from("/home/user")),
         };
         let calls = Cell::new(0);
-        let report = run(&env, fs, &|_| {
+        let file = ConfigFile::new(&env, fs);
+        let settings =
+            model_settings(&env, &file, &SettingOptions::default()).map(ScoreSettings::new);
+        let report = run(&env, &file, settings, &|_, _| {
             calls.set(calls.get() + 1);
             result.clone()
         });
@@ -287,7 +311,19 @@ mod tests {
 
     use Status::{Fail, NotChecked, Pass};
 
-    const GOOD: &[(&str, &str)] = &[("JAG_TYPESAFE_API_KEY", SENTINEL_KEY)];
+    /// The key, and the two settings that need no file read.
+    const GOOD: &[(&str, &str)] = &[
+        ("JAG_TYPESAFE_API_KEY", SENTINEL_KEY),
+        ("JAG_BASE_URL", "https://api.typesafe.ai/v1"),
+        ("JAG_MODEL", "jev-1.13.0"),
+    ];
+
+    /// A gateway, the gateway key, and the model: no file read.
+    const GATEWAY: &[(&str, &str)] = &[
+        ("JAG_GATEWAY_API_KEY", SENTINEL_KEY),
+        ("JAG_BASE_URL", "https://openrouter.ai/api"),
+        ("JAG_MODEL", "~typesafe/jev-latest"),
+    ];
 
     #[test]
     fn a_key_in_a_variable_and_no_key_file_pass_all_items() {
@@ -314,7 +350,11 @@ mod tests {
 
     #[test]
     fn the_other_variable_is_named_as_the_source() {
-        let pairs = [("TYPESAFE_API_KEY", SENTINEL_KEY)];
+        let pairs = [
+            ("TYPESAFE_API_KEY", SENTINEL_KEY),
+            ("JAG_BASE_URL", "https://api.typesafe.ai/v1"),
+            ("JAG_MODEL", "jev-1.13.0"),
+        ];
         let (report, _) = check(&pairs, true, &no_file(), Ok(()));
         assert_eq!(report.items[0].text, "a key is present (TYPESAFE_API_KEY)");
     }
@@ -366,7 +406,11 @@ mod tests {
 
     #[test]
     fn a_bad_key_in_a_variable_and_an_open_key_file_fail_items_1_and_5() {
-        let pairs = [("JAG_TYPESAFE_API_KEY", "has a space")];
+        let pairs = [
+            ("JAG_TYPESAFE_API_KEY", "has a space"),
+            ("JAG_BASE_URL", "https://api.typesafe.ai/v1"),
+            ("JAG_MODEL", "jev-1.13.0"),
+        ];
         let (report, calls) = check(&pairs, true, &file(0o644, KEY_FILE_TEXT), Ok(()));
         assert_eq!(
             statuses(&report),
@@ -542,6 +586,91 @@ mod tests {
         assert_eq!(codes, [5, 3]);
     }
 
+    #[test]
+    fn a_gateway_key_variable_is_the_source_on_the_gateway_route() {
+        let (report, calls) = check(GATEWAY, true, &no_file(), Ok(()));
+        assert_eq!(statuses(&report), [Pass; 5]);
+        assert_eq!(calls, 1);
+        assert_eq!(
+            report.items[0].text,
+            "a key is present (JAG_GATEWAY_API_KEY)"
+        );
+    }
+
+    #[test]
+    fn the_key_of_the_other_route_is_not_a_key_of_the_gateway() {
+        let pairs = [
+            ("JAG_TYPESAFE_API_KEY", SENTINEL_KEY),
+            ("JAG_BASE_URL", "https://openrouter.ai/api"),
+            ("JAG_MODEL", "~typesafe/jev-latest"),
+        ];
+        let (report, calls) = check(&pairs, true, &no_file(), Ok(()));
+        assert_eq!(
+            statuses(&report),
+            [Fail, NotChecked, NotChecked, NotChecked, Pass]
+        );
+        assert_eq!(calls, 0);
+        assert_eq!(report.exit_code(), 3);
+        let failure = report.items[0].failure.as_ref().expect("a failure");
+        assert!(failure.cause.contains("no gateway key found"));
+    }
+
+    #[test]
+    fn a_gateway_key_in_the_file_names_the_file() {
+        let text = "config:\n  gateway-api-key: SENTINEL-SENTINEL-SENTINEL\n  base-url: https://openrouter.ai/api\n  model: m\n";
+        let (report, calls) = check(&[], true, &file(0o600, text), Ok(()));
+        assert_eq!(statuses(&report), [Pass; 5]);
+        assert_eq!(calls, 1);
+        assert_eq!(
+            report.items[0].text,
+            "a key is present (/home/user/.config/jag/config.yml)"
+        );
+    }
+
+    #[test]
+    fn a_failure_of_the_gateway_has_the_text_of_the_gateway() {
+        let (report, _) = check(
+            GATEWAY,
+            true,
+            &no_file(),
+            Err(ScoreError::KeyNotAccepted { status: 401 }),
+        );
+        let failure = report.items[1].failure.as_ref().expect("a failure");
+        assert!(failure.cause.contains("the gateway did not accept the key"));
+    }
+
+    #[test]
+    fn a_file_error_of_the_settings_fails_item_1_when_item_5_passes() {
+        // The key variable is set, but the route needs the file, and the YAML
+        // is not valid.
+        let pairs = [("JAG_TYPESAFE_API_KEY", SENTINEL_KEY)];
+        let (report, calls) = check(&pairs, true, &file(0o600, "a: b: ["), Ok(()));
+        assert_eq!(
+            statuses(&report),
+            [Fail, NotChecked, NotChecked, NotChecked, Pass]
+        );
+        assert_eq!(calls, 0);
+        assert_eq!(report.exit_code(), 3);
+        assert!(report.items[1].text.ends_with("(jag has no key to send)"));
+    }
+
+    #[test]
+    fn a_file_error_of_the_settings_shows_on_item_5_when_the_file_is_open() {
+        let pairs = [("JAG_TYPESAFE_API_KEY", SENTINEL_KEY)];
+        let (report, calls) = check(&pairs, true, &file(0o644, KEY_FILE_TEXT), Ok(()));
+        assert_eq!(
+            statuses(&report),
+            [NotChecked, NotChecked, NotChecked, NotChecked, Fail]
+        );
+        assert_eq!(calls, 0);
+        assert_eq!(report.failures().count(), 1);
+        assert!(
+            report.items[0]
+                .text
+                .ends_with("(jag cannot use the key file: see the last item)")
+        );
+    }
+
     fn item(status: Status, failure_code: Option<u8>) -> Item {
         Item {
             status,
@@ -627,7 +756,10 @@ mod tests {
             vars: &vars,
             home: Some(home.path().to_owned()),
         };
-        let report = run(&env, &RealFs, &|_| Ok(()));
+        let file = ConfigFile::new(&env, &crate::config::RealFs);
+        let settings =
+            model_settings(&env, &file, &SettingOptions::default()).map(ScoreSettings::new);
+        let report = run(&env, &file, settings, &|_, _| Ok(()));
         assert_eq!(statuses(&report), [Pass; 5]);
     }
 }

@@ -7,7 +7,7 @@ use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
 use assert_cmd::Command;
-use jag::config::{ConfigError, Env, RealFs, find_key};
+use jag::config::{ConfigError, ConfigFile, Env, Origin, RealFs, Route, find_key};
 use predicates::prelude::*;
 
 fn jag(home: &Path) -> Command {
@@ -15,7 +15,9 @@ fn jag(home: &Path) -> Command {
     command
         .env("HOME", home)
         .env_remove("JAG_TYPESAFE_API_KEY")
-        .env_remove("TYPESAFE_API_KEY");
+        .env_remove("TYPESAFE_API_KEY")
+        .env_remove("JAG_GATEWAY_API_KEY")
+        .env_remove("JAG_BASE_URL");
     command
 }
 
@@ -77,8 +79,9 @@ fn forget_key_removes_the_stored_key() {
         vars: &vars,
         home: Some(home.path().to_owned()),
     };
+    let file = ConfigFile::new(&env, &RealFs);
     assert_eq!(
-        find_key(&env, &RealFs).unwrap_err(),
+        find_key(&env, &file, Route::Direct, &Origin::Default).unwrap_err(),
         ConfigError::KeyMissing
     );
 }
@@ -150,4 +153,49 @@ fn no_option_takes_the_key() {
         .assert()
         .code(2)
         .stderr(predicate::str::contains("SENTINEL").not());
+}
+
+// FEATURE-21: `--forget-key` on the direct route keeps the two settings.
+#[test]
+fn forget_key_keeps_the_two_settings_on_the_direct_route() {
+    let home = tempfile::tempdir().unwrap();
+    write_key_file(
+        home.path(),
+        "config:\n  api-key: SENTINEL-SENTINEL-SENTINEL\n  base-url: \"https://api.typesafe.ai\"\n  model: jev-1.13.0\n",
+    );
+    jag(home.path()).arg("--forget-key").assert().code(0);
+    let text = std::fs::read_to_string(key_path(home.path())).unwrap();
+    assert_eq!(
+        text,
+        "config:\n  base-url: \"https://api.typesafe.ai\"\n  model: jev-1.13.0\n"
+    );
+    assert_eq!(
+        std::fs::metadata(key_path(home.path()))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777,
+        0o600
+    );
+}
+
+// FEATURE-21: on a gateway, `--forget-key` removes the gateway key only.
+#[test]
+fn forget_key_removes_the_gateway_key_only_on_a_gateway() {
+    let home = tempfile::tempdir().unwrap();
+    write_key_file(
+        home.path(),
+        "config:\n  api-key: SENTINEL-SENTINEL-SENTINEL\n  gateway-api-key: another-made-up-key\n",
+    );
+    jag(home.path())
+        .env("JAG_BASE_URL", "https://openrouter.ai/api")
+        .arg("--forget-key")
+        .assert()
+        .code(0)
+        .stdout(predicate::str::contains(format!(
+            "Removed the stored gateway key from {}.",
+            key_path(home.path()).display()
+        )));
+    let text = std::fs::read_to_string(key_path(home.path())).unwrap();
+    assert_eq!(text, "config:\n  api-key: SENTINEL-SENTINEL-SENTINEL\n");
 }

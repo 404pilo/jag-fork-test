@@ -100,8 +100,8 @@ fn http_401_and_403_give_exit_4() {
         assert_failure(
             &output,
             4,
-            &format!("the TypeSafe API did not accept the key (HTTP {status})."),
-            &format!("Check the key at {KEYS}, then run jag --setup."),
+            &format!("the gateway did not accept the key (HTTP {status})."),
+            "Check that the key is a key of the gateway, then run jag --setup.",
         );
         assert_eq!(server.requests().len(), 1);
     }
@@ -115,8 +115,8 @@ fn http_402_gives_exit_5() {
     assert_failure(
         &output,
         5,
-        "the TypeSafe account has no credit (HTTP 402).",
-        "Add credit at https://console.typesafe.ai, then try again.",
+        "the gateway account has no credit (HTTP 402).",
+        "Add credit at the gateway, then try again.",
     );
     assert_eq!(server.requests().len(), 1);
 }
@@ -129,7 +129,7 @@ fn a_timeout_gives_exit_6_after_one_retry() {
     assert_failure(
         &output,
         6,
-        "the TypeSafe API did not answer in time.",
+        "the gateway did not answer in time.",
         "Try again later, or give each call more time with --timeout.",
     );
     assert_eq!(server.requests().len(), 2);
@@ -147,7 +147,7 @@ fn no_connection_gives_exit_6() {
     assert_failure(
         &output,
         6,
-        "jag cannot connect to the model service.",
+        "jag cannot connect to the gateway.",
         "Check the network connection and JAG_BASE_URL, then try again.",
     );
 }
@@ -160,7 +160,7 @@ fn http_429_gives_exit_6_after_one_retry() {
     assert_failure(
         &output,
         6,
-        "the TypeSafe API refused more calls (HTTP 429).",
+        "the gateway refused more calls (HTTP 429).",
         "Wait one minute, then try again.",
     );
     assert_eq!(server.requests().len(), 2);
@@ -174,7 +174,7 @@ fn http_5xx_gives_exit_6_after_one_retry() {
     assert_failure(
         &output,
         6,
-        "the TypeSafe API failed (HTTP 503).",
+        "the gateway failed (HTTP 503).",
         "Try again later.",
     );
     assert_eq!(server.requests().len(), 2);
@@ -188,8 +188,8 @@ fn a_redirect_gives_exit_6() {
     assert_failure(
         &output,
         6,
-        "the model service sent a redirect.",
-        "Check JAG_BASE_URL, or unset it.",
+        "the gateway sent a redirect.",
+        "Check JAG_BASE_URL.",
     );
     assert_eq!(server.requests().len(), 1);
 }
@@ -202,8 +202,8 @@ fn another_status_gives_exit_6() {
     assert_failure(
         &output,
         6,
-        "the TypeSafe API gave HTTP 422.",
-        "Check JAG_BASE_URL and JAG_MODEL, or unset them.",
+        "the gateway gave HTTP 422.",
+        "Check JAG_BASE_URL, and set the model name of the gateway with --model, JAG_MODEL, or config.model.",
     );
     assert_eq!(server.requests().len(), 1);
 }
@@ -216,8 +216,8 @@ fn a_body_that_jag_cannot_read_gives_exit_6() {
     assert_failure(
         &output,
         6,
-        "the TypeSafe API gave a response that jag cannot read.",
-        "Check JAG_BASE_URL, or unset it.",
+        "the gateway gave a response that jag cannot read.",
+        "Check JAG_BASE_URL.",
     );
 }
 
@@ -417,8 +417,8 @@ fn a_402_during_the_search_fails_the_full_search() {
     assert_failure(
         &output,
         5,
-        "the TypeSafe account has no credit (HTTP 402).",
-        "Add credit at https://console.typesafe.ai, then try again.",
+        "the gateway account has no credit (HTTP 402).",
+        "Add credit at the gateway, then try again.",
     );
     assert!(server.requests().len() >= 2);
 }
@@ -431,7 +431,7 @@ fn a_500_during_the_search_fails_the_full_search() {
     assert_failure(
         &output,
         6,
-        "the TypeSafe API failed (HTTP 500).",
+        "the gateway failed (HTTP 500).",
         "Try again later.",
     );
 }

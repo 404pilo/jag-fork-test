@@ -16,7 +16,9 @@ fn jag(home: &Path) -> Command {
     command
         .env("HOME", home)
         .env_remove("JAG_TYPESAFE_API_KEY")
-        .env_remove("TYPESAFE_API_KEY");
+        .env_remove("TYPESAFE_API_KEY")
+        .env_remove("JAG_GATEWAY_API_KEY")
+        .env_remove("JAG_BASE_URL");
     command
 }
 
@@ -134,4 +136,95 @@ fn a_wrong_use_with_a_key_variable_set() {
         .env("TYPESAFE_API_KEY", "SENTINEL-SENTINEL-SENTINEL")
         .args(["--setup", "--forget-key"]);
     assert_never_shows_the_key(command, 2);
+}
+
+#[test]
+fn a_base_url_with_the_key_in_its_user_name_gives_exit_2() {
+    let address = "https://SENTINEL-SENTINEL-SENTINEL@openrouter.ai/api";
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::write(dir.path().join("a.txt"), "needle\n").unwrap();
+    let search = |command: &mut Command| {
+        command
+            .env("JAG_GATEWAY_API_KEY", "SENTINEL-SENTINEL-SENTINEL")
+            .args(["--ask", "which line?", "needle"])
+            .arg(dir.path());
+    };
+    // As an option.
+    let home = tempfile::tempdir().unwrap();
+    let mut command = jag(home.path());
+    command.args(["--base-url", address]);
+    search(&mut command);
+    assert_never_shows_the_key(command, 2);
+    // As a variable.
+    let home = tempfile::tempdir().unwrap();
+    let mut command = jag(home.path());
+    command.env("JAG_BASE_URL", address);
+    search(&mut command);
+    assert_never_shows_the_key(command, 2);
+    // In the file.
+    let home = tempfile::tempdir().unwrap();
+    write_key_file(
+        home.path(),
+        &format!("config:\n  base-url: \"{address}\"\n"),
+        0o600,
+    );
+    let mut command = jag(home.path());
+    search(&mut command);
+    assert_never_shows_the_key(command, 2);
+}
+
+#[test]
+fn a_bad_gateway_key_in_a_variable_or_in_the_file_gives_exit_3() {
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::write(dir.path().join("a.txt"), "needle\n").unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let mut command = jag(home.path());
+    command
+        .env("JAG_BASE_URL", "https://openrouter.ai/api")
+        .env("JAG_GATEWAY_API_KEY", "SENTINEL has a space")
+        .args(["--ask", "which line?", "needle"])
+        .arg(dir.path());
+    assert_never_shows_the_key(command, 3);
+    let home = tempfile::tempdir().unwrap();
+    write_key_file(
+        home.path(),
+        "config:\n  gateway-api-key: \"SENTINEL has a space\"\n",
+        0o600,
+    );
+    let mut command = jag(home.path());
+    command
+        .env("JAG_BASE_URL", "https://openrouter.ai/api")
+        .args(["--ask", "which line?", "needle"])
+        .arg(dir.path());
+    assert_never_shows_the_key(command, 3);
+}
+
+#[test]
+fn a_model_name_that_is_the_key_is_never_shown() {
+    use std::io::{Read, Write};
+    // A server that answers 422 to each call.
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let handle = std::thread::spawn(move || {
+        for stream in listener.incoming().take(1) {
+            let mut stream = stream.unwrap();
+            let mut buffer = [0u8; 8192];
+            let _ = stream.read(&mut buffer);
+            let _ = stream.write_all(
+                b"HTTP/1.1 422 Unprocessable Entity\r\nContent-Length: 0\r\nConnection: close\r\n\r\n",
+            );
+        }
+    });
+    let dir = tempfile::tempdir().unwrap();
+    std::fs::write(dir.path().join("a.txt"), "needle\n").unwrap();
+    let home = tempfile::tempdir().unwrap();
+    let mut command = jag(home.path());
+    command
+        .env("JAG_GATEWAY_API_KEY", "made-up-key")
+        .args(["--base-url", &format!("http://127.0.0.1:{port}")])
+        .args(["--model", "SENTINEL-SENTINEL-SENTINEL"])
+        .args(["--ask", "which line?", "needle"])
+        .arg(dir.path());
+    assert_never_shows_the_key(command, 6);
+    let _ = handle.join();
 }

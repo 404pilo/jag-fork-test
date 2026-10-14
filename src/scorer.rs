@@ -11,7 +11,7 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-use crate::config::{ApiKey, KEYS_PAGE, Times};
+use crate::config::{ApiKey, KEYS_PAGE, ModelSettings, Origin, Route};
 use crate::failure::Failure;
 use crate::search::snippet::{Snippet, SnippetLine, Source};
 use client::{Attempt, Client};
@@ -30,6 +30,12 @@ const CONSOLE_PAGE: &str = "https://console.typesafe.ai";
 pub struct ScoreSettings {
     pub base_url: String,
     pub model: String,
+    /// Where the calls go.
+    pub route: Route,
+    /// The source of the base URL, for the fixes.
+    pub base_url_origin: Origin,
+    /// The source of the model, for the fixes.
+    pub model_origin: Origin,
     /// The time of one attempt.
     pub timeout: Duration,
     /// The wait before the one retry.
@@ -43,10 +49,14 @@ impl ScoreSettings {
     /// The times of CV-5. The deadline is `2 x timeout + retry_wait`: 9
     /// seconds with the defaults (4 s and 1 s), 180 seconds with the largest
     /// values (decision 5 of FEATURE-03).
-    pub fn new(base_url: String, model: String, times: Times) -> Self {
+    pub fn new(settings: ModelSettings) -> Self {
+        let times = settings.times;
         Self {
-            base_url,
-            model,
+            base_url: settings.base_url,
+            model: settings.model,
+            route: settings.route,
+            base_url_origin: settings.base_url_origin,
+            model_origin: settings.model_origin,
             timeout: times.timeout,
             retry_wait: times.retry_wait,
             deadline: 2 * times.timeout + times.retry_wait,
@@ -80,11 +90,27 @@ pub enum ScoreError {
     Stopped,
 }
 
-impl From<ScoreError> for Failure {
-    /// One cause text and one fix text for each cause (FEATURE-03, decision
-    /// 12). No text holds the key, an address, or a body.
-    fn from(error: ScoreError) -> Failure {
-        let (cause, fix, exit_code) = match error {
+impl ScoreError {
+    /// One cause text and one fix text for each cause, for the route and the
+    /// sources of the settings (FEATURE-03, decision 12; FEATURE-21, decision
+    /// 17). No text holds the key, an address, a model name, or a body.
+    pub fn failure(self, settings: &ScoreSettings) -> Failure {
+        let (cause, fix, exit_code) = match settings.route {
+            Route::Direct => self.direct_text(settings),
+            Route::Gateway => self.gateway_text(settings),
+        };
+        Failure {
+            cause,
+            fix,
+            exit_code,
+        }
+    }
+
+    /// The texts of the direct route.
+    fn direct_text(self, settings: &ScoreSettings) -> (String, String, u8) {
+        let base = settings.base_url_origin.base_url_name();
+        let model = settings.model_origin.model_name();
+        match self {
             ScoreError::KeyNotAccepted { status } => (
                 format!("the TypeSafe API did not accept the key (HTTP {status})."),
                 format!("Check the key at {KEYS_PAGE}, then run jag --setup."),
@@ -102,7 +128,12 @@ impl From<ScoreError> for Failure {
             ),
             ScoreError::CannotConnect => (
                 "jag cannot connect to the model service.".to_owned(),
-                "Check the network connection and JAG_BASE_URL, then try again.".to_owned(),
+                match base {
+                    Some(base) => {
+                        format!("Check the network connection and {base}, then try again.")
+                    }
+                    None => "Check the network connection, then try again.".to_owned(),
+                },
                 6,
             ),
             ScoreError::RateLimited => (
@@ -117,29 +148,111 @@ impl From<ScoreError> for Failure {
             ),
             ScoreError::Redirect => (
                 "the model service sent a redirect.".to_owned(),
-                "Check JAG_BASE_URL, or unset it.".to_owned(),
+                match base {
+                    Some(base) => format!("Check {base}."),
+                    None => "Update jag, then try again.".to_owned(),
+                },
                 6,
             ),
             ScoreError::UnexpectedStatus { status } => (
                 format!("the TypeSafe API gave HTTP {status}."),
-                "Check JAG_BASE_URL and JAG_MODEL, or unset them.".to_owned(),
+                match (base, model) {
+                    (Some(base), Some(model)) => format!("Check {base} and {model}."),
+                    (Some(name), None) | (None, Some(name)) => format!("Check {name}."),
+                    (None, None) => "Update jag, then try again.".to_owned(),
+                },
                 6,
             ),
             ScoreError::BadResponse => (
                 "the TypeSafe API gave a response that jag cannot read.".to_owned(),
-                "Check JAG_BASE_URL, or unset it.".to_owned(),
+                match base {
+                    Some(base) => format!("Check {base}."),
+                    None => "Update jag, then try again.".to_owned(),
+                },
                 6,
             ),
-            ScoreError::Stopped => (
-                "the search was stopped.".to_owned(),
-                "To get the results, run the search again.".to_owned(),
-                130,
+            ScoreError::Stopped => self.stopped_text(),
+        }
+    }
+
+    /// The texts of the gateway route. The base URL always has a source,
+    /// because the default address is the direct route.
+    fn gateway_text(self, settings: &ScoreSettings) -> (String, String, u8) {
+        let base = settings
+            .base_url_origin
+            .base_url_name()
+            .unwrap_or_else(|| "the base URL".to_owned());
+        match self {
+            ScoreError::KeyNotAccepted { status } => (
+                format!("the gateway did not accept the key (HTTP {status})."),
+                if settings.base_url_origin == Origin::Option {
+                    "Check that the key is a key of the gateway.".to_owned()
+                } else {
+                    "Check that the key is a key of the gateway, then run jag --setup.".to_owned()
+                },
+                4,
             ),
-        };
+            ScoreError::NoCredit => (
+                "the gateway account has no credit (HTTP 402).".to_owned(),
+                "Add credit at the gateway, then try again.".to_owned(),
+                5,
+            ),
+            ScoreError::TimedOut => (
+                "the gateway did not answer in time.".to_owned(),
+                "Try again later, or give each call more time with --timeout.".to_owned(),
+                6,
+            ),
+            ScoreError::CannotConnect => (
+                "jag cannot connect to the gateway.".to_owned(),
+                format!("Check the network connection and {base}, then try again."),
+                6,
+            ),
+            ScoreError::RateLimited => (
+                "the gateway refused more calls (HTTP 429).".to_owned(),
+                "Wait one minute, then try again.".to_owned(),
+                6,
+            ),
+            ScoreError::ServerFailed { status } => (
+                format!("the gateway failed (HTTP {status})."),
+                "Try again later.".to_owned(),
+                6,
+            ),
+            ScoreError::Redirect => (
+                "the gateway sent a redirect.".to_owned(),
+                format!("Check {base}."),
+                6,
+            ),
+            ScoreError::UnexpectedStatus { status } => (
+                format!("the gateway gave HTTP {status}."),
+                match settings.model_origin.model_name() {
+                    Some(model) => format!("Check {base} and {model}."),
+                    None => format!(
+                        "Check {base}, and set the model name of the gateway with --model, JAG_MODEL, or config.model."
+                    ),
+                },
+                6,
+            ),
+            ScoreError::BadResponse => (
+                "the gateway gave a response that jag cannot read.".to_owned(),
+                format!("Check {base}."),
+                6,
+            ),
+            ScoreError::Stopped => self.stopped_text(),
+        }
+    }
+
+    fn stopped_text(self) -> (String, String, u8) {
+        let failure = Self::stopped();
+        (failure.cause, failure.fix, failure.exit_code)
+    }
+
+    /// The failure of a stop. It holds no setting, so it is the same on each
+    /// route.
+    pub fn stopped() -> Failure {
         Failure {
-            cause,
-            fix,
-            exit_code,
+            cause: "the search was stopped.".to_owned(),
+            fix: "To get the results, run the search again.".to_owned(),
+            exit_code: 130,
         }
     }
 }
@@ -330,6 +443,7 @@ mod tests {
     use std::path::PathBuf;
 
     use super::*;
+    use crate::config::Times;
     use crate::search::snippet::{SnippetLine, Source};
 
     fn snippet(path: &str, first: u64) -> Snippet {
@@ -412,11 +526,238 @@ mod tests {
             (ScoreError::BadResponse, 6),
             (ScoreError::Stopped, 130),
         ];
-        for (error, code) in cases {
-            let failure = Failure::from(error);
-            assert_eq!(failure.exit_code, code);
-            assert!(!failure.cause.is_empty() && !failure.fix.is_empty());
+        for route in [Route::Direct, Route::Gateway] {
+            let settings = settings_of(route, Origin::Variable, Origin::Option);
+            for (error, code) in cases.clone() {
+                let failure = error.failure(&settings);
+                assert_eq!(failure.exit_code, code);
+                assert!(!failure.cause.is_empty() && !failure.fix.is_empty());
+                // No text holds an address or a model name.
+                let text = format!("{}{}", failure.cause, failure.fix);
+                assert!(!text.contains("example.test") && !text.contains("a-model"));
+            }
         }
+    }
+
+    fn settings_of(route: Route, base: Origin, model: Origin) -> ScoreSettings {
+        let mut settings = ScoreSettings::new(ModelSettings {
+            base_url: "https://example.test/v1".into(),
+            base_url_origin: base,
+            model: "a-model".into(),
+            model_origin: model,
+            route,
+            times: Times::default(),
+        });
+        settings.route = route;
+        settings
+    }
+
+    fn texts(error: ScoreError, settings: &ScoreSettings) -> (String, String) {
+        let failure = error.failure(settings);
+        (failure.cause, failure.fix)
+    }
+
+    #[test]
+    fn the_direct_route_keeps_the_texts_of_the_service() {
+        let settings = settings_of(Route::Direct, Origin::Default, Origin::Default);
+        assert_eq!(
+            texts(ScoreError::KeyNotAccepted { status: 401 }, &settings),
+            (
+                "the TypeSafe API did not accept the key (HTTP 401).".to_owned(),
+                format!("Check the key at {KEYS_PAGE}, then run jag --setup.")
+            )
+        );
+        assert_eq!(
+            texts(ScoreError::UnexpectedStatus { status: 422 }, &settings).1,
+            "Update jag, then try again."
+        );
+    }
+
+    #[test]
+    fn the_gateway_route_names_the_gateway_and_the_source_of_the_address() {
+        let settings = settings_of(Route::Gateway, Origin::Variable, Origin::Default);
+        assert_eq!(
+            texts(ScoreError::KeyNotAccepted { status: 401 }, &settings),
+            (
+                "the gateway did not accept the key (HTTP 401).".to_owned(),
+                "Check that the key is a key of the gateway, then run jag --setup.".to_owned()
+            )
+        );
+        assert_eq!(
+            texts(ScoreError::CannotConnect, &settings).1,
+            "Check the network connection and JAG_BASE_URL, then try again."
+        );
+        assert!(
+            texts(ScoreError::UnexpectedStatus { status: 404 }, &settings)
+                .1
+                .contains("set the model name of the gateway")
+        );
+        let option = settings_of(Route::Gateway, Origin::Option, Origin::Option);
+        assert_eq!(
+            texts(ScoreError::KeyNotAccepted { status: 401 }, &option).1,
+            "Check that the key is a key of the gateway."
+        );
+        assert_eq!(
+            texts(ScoreError::UnexpectedStatus { status: 404 }, &option).1,
+            "Check --base-url and --model."
+        );
+    }
+
+    /// Each cause and each fix of one route, for the origins of the settings.
+    fn all_texts(settings: &ScoreSettings) -> Vec<(String, String)> {
+        [
+            ScoreError::KeyNotAccepted { status: 401 },
+            ScoreError::NoCredit,
+            ScoreError::TimedOut,
+            ScoreError::CannotConnect,
+            ScoreError::RateLimited,
+            ScoreError::ServerFailed { status: 503 },
+            ScoreError::Redirect,
+            ScoreError::UnexpectedStatus { status: 422 },
+            ScoreError::BadResponse,
+        ]
+        .into_iter()
+        .map(|error| texts(error, settings))
+        .collect()
+    }
+
+    fn pairs(rows: &[(&str, &str)]) -> Vec<(String, String)> {
+        rows.iter()
+            .map(|(cause, fix)| ((*cause).to_owned(), (*fix).to_owned()))
+            .collect()
+    }
+
+    #[test]
+    fn the_direct_route_with_no_source_has_these_texts() {
+        let settings = settings_of(Route::Direct, Origin::Default, Origin::Default);
+        let add_credit = format!("Add credit at {CONSOLE_PAGE}, then try again.");
+        let check_key = format!("Check the key at {KEYS_PAGE}, then run jag --setup.");
+        assert_eq!(
+            all_texts(&settings),
+            pairs(&[
+                (
+                    "the TypeSafe API did not accept the key (HTTP 401).",
+                    &check_key
+                ),
+                (
+                    "the TypeSafe account has no credit (HTTP 402).",
+                    &add_credit
+                ),
+                (
+                    "the TypeSafe API did not answer in time.",
+                    "Try again later, or give each call more time with --timeout."
+                ),
+                (
+                    "jag cannot connect to the model service.",
+                    "Check the network connection, then try again."
+                ),
+                (
+                    "the TypeSafe API refused more calls (HTTP 429).",
+                    "Wait one minute, then try again."
+                ),
+                ("the TypeSafe API failed (HTTP 503).", "Try again later."),
+                (
+                    "the model service sent a redirect.",
+                    "Update jag, then try again."
+                ),
+                (
+                    "the TypeSafe API gave HTTP 422.",
+                    "Update jag, then try again."
+                ),
+                (
+                    "the TypeSafe API gave a response that jag cannot read.",
+                    "Update jag, then try again."
+                ),
+            ])
+        );
+    }
+
+    #[test]
+    fn the_direct_route_names_the_source_of_the_settings() {
+        let settings = settings_of(Route::Direct, Origin::Variable, Origin::Variable);
+        let rows = all_texts(&settings);
+        assert_eq!(
+            rows[3].1,
+            "Check the network connection and JAG_BASE_URL, then try again."
+        );
+        assert_eq!(rows[6].1, "Check JAG_BASE_URL.");
+        assert_eq!(rows[7].1, "Check JAG_BASE_URL and JAG_MODEL.");
+        assert_eq!(rows[8].1, "Check JAG_BASE_URL.");
+        let settings = settings_of(Route::Direct, Origin::Option, Origin::Default);
+        let rows = all_texts(&settings);
+        assert_eq!(
+            rows[3].1,
+            "Check the network connection and --base-url, then try again."
+        );
+        assert_eq!(rows[6].1, "Check --base-url.");
+        assert_eq!(rows[7].1, "Check --base-url.");
+    }
+
+    #[test]
+    fn the_gateway_route_has_these_texts() {
+        let settings = settings_of(Route::Gateway, Origin::Variable, Origin::Variable);
+        assert_eq!(
+            all_texts(&settings),
+            pairs(&[
+                (
+                    "the gateway did not accept the key (HTTP 401).",
+                    "Check that the key is a key of the gateway, then run jag --setup."
+                ),
+                (
+                    "the gateway account has no credit (HTTP 402).",
+                    "Add credit at the gateway, then try again."
+                ),
+                (
+                    "the gateway did not answer in time.",
+                    "Try again later, or give each call more time with --timeout."
+                ),
+                (
+                    "jag cannot connect to the gateway.",
+                    "Check the network connection and JAG_BASE_URL, then try again."
+                ),
+                (
+                    "the gateway refused more calls (HTTP 429).",
+                    "Wait one minute, then try again."
+                ),
+                ("the gateway failed (HTTP 503).", "Try again later."),
+                ("the gateway sent a redirect.", "Check JAG_BASE_URL."),
+                (
+                    "the gateway gave HTTP 422.",
+                    "Check JAG_BASE_URL and JAG_MODEL."
+                ),
+                (
+                    "the gateway gave a response that jag cannot read.",
+                    "Check JAG_BASE_URL."
+                ),
+            ])
+        );
+        let option = settings_of(Route::Gateway, Origin::Option, Origin::Option);
+        let rows = all_texts(&option);
+        assert_eq!(rows[0].1, "Check that the key is a key of the gateway.");
+        assert_eq!(
+            rows[3].1,
+            "Check the network connection and --base-url, then try again."
+        );
+        assert_eq!(rows[7].1, "Check --base-url and --model.");
+        let file = Origin::ConfigFile(PathBuf::from("/h/config.yml"));
+        let from_file = settings_of(Route::Gateway, file.clone(), file);
+        let rows = all_texts(&from_file);
+        assert_eq!(rows[6].1, "Check config.base-url in /h/config.yml.");
+        assert_eq!(
+            rows[7].1,
+            "Check config.base-url in /h/config.yml and config.model in /h/config.yml."
+        );
+    }
+
+    #[test]
+    fn a_stop_has_the_same_text_on_each_route() {
+        let direct = settings_of(Route::Direct, Origin::Default, Origin::Default);
+        let gateway = settings_of(Route::Gateway, Origin::Option, Origin::Option);
+        assert_eq!(
+            ScoreError::Stopped.failure(&direct),
+            ScoreError::Stopped.failure(&gateway)
+        );
+        assert_eq!(ScoreError::Stopped.failure(&direct).exit_code, 130);
     }
 
     fn deadline(timeout: u64, retry_wait: u64) -> Duration {
@@ -424,7 +765,15 @@ mod tests {
             timeout: Duration::from_secs(timeout),
             retry_wait: Duration::from_secs(retry_wait),
         };
-        ScoreSettings::new("u".into(), "m".into(), times).deadline
+        ScoreSettings::new(ModelSettings {
+            base_url: "u".into(),
+            base_url_origin: Origin::Default,
+            model: "m".into(),
+            model_origin: Origin::Default,
+            route: Route::Direct,
+            times,
+        })
+        .deadline
     }
 
     #[test]
@@ -443,7 +792,7 @@ mod tests {
 
     #[test]
     fn the_settings_hold_the_times() {
-        let settings = ScoreSettings::new("u".into(), "m".into(), Times::default());
+        let settings = settings_of(Route::Direct, Origin::Default, Origin::Default);
         assert_eq!(settings.timeout, Duration::from_secs(4));
         assert_eq!(settings.retry_wait, Duration::from_secs(1));
     }

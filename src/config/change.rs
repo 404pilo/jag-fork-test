@@ -5,10 +5,61 @@ use std::hash::{BuildHasher, Hasher};
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 
+use std::fmt;
+
 use super::{
-    ApiKey, ConfigError, Env, Fs, StrictFile, file_key_text, has_yaml_content, open_key_file,
-    parse_loose, read_open_file,
+    ConfigError, Env, File, Fs, StrictFile, has_yaml_content, open_key_file, parse_loose,
+    read_open_file,
 };
+
+/// The values of the file, to write them again. A blank or empty value counts
+/// as not set. `Debug` shows only which values are set, because two of them
+/// are keys (CV-6). There is no `Display` and no `Serialize`.
+#[derive(Clone, Default, PartialEq, Eq)]
+pub struct FileValues {
+    pub api_key: Option<String>,
+    pub gateway_api_key: Option<String>,
+    pub base_url: Option<String>,
+    pub model: Option<String>,
+}
+
+impl FileValues {
+    /// The values of a parse, as the file gives them: no trim and no check.
+    fn of(file: &File) -> FileValues {
+        let Some(section) = &file.config else {
+            return FileValues::default();
+        };
+        let kept = |value: &Option<String>| {
+            value
+                .as_ref()
+                .filter(|text| !text.trim().is_empty())
+                .cloned()
+        };
+        FileValues {
+            api_key: kept(&section.api_key),
+            gateway_api_key: kept(&section.gateway_api_key),
+            base_url: kept(&section.base_url),
+            model: kept(&section.model),
+        }
+    }
+
+    /// True when no value is set.
+    pub fn is_empty(&self) -> bool {
+        *self == FileValues::default()
+    }
+}
+
+impl fmt::Debug for FileValues {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let set = |value: &Option<String>| if value.is_some() { "set" } else { "not set" };
+        f.debug_struct("FileValues")
+            .field("api_key", &set(&self.api_key))
+            .field("gateway_api_key", &set(&self.gateway_api_key))
+            .field("base_url", &set(&self.base_url))
+            .field("model", &set(&self.model))
+            .finish()
+    }
+}
 
 /// What `--setup` and `--forget-key` find in the key file.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -17,8 +68,8 @@ pub struct ChangeState {
     pub exists: bool,
     /// The mode of the open file. `0` when there is no file.
     pub mode: u32,
-    /// The file holds a `config.api-key` that is not blank.
-    pub has_key: bool,
+    /// The values of the file.
+    pub values: FileValues,
 }
 
 /// Read the key file for a change. Each error stores nothing and changes
@@ -38,7 +89,7 @@ pub fn load_for_change(env: &Env, fs: &dyn Fs) -> Result<(PathBuf, ChangeState),
         let state = ChangeState {
             exists: false,
             mode: 0,
-            has_key: false,
+            values: FileValues::default(),
         };
         return Ok((path, state));
     };
@@ -55,13 +106,19 @@ pub fn load_for_change(env: &Env, fs: &dyn Fs) -> Result<(PathBuf, ChangeState),
     let state = ChangeState {
         exists: true,
         mode,
-        has_key: file_key_text(&loose).is_some(),
+        values: FileValues::of(&loose),
     };
     Ok((path, state))
 }
 
-/// The text of the YAML scalar for the key. A plain key goes as it is. Any
-/// other key goes in double quotes, so that it reads back as the same string.
+/// True for a character that goes as `\uXXXX` in a double-quoted scalar.
+fn needs_escape(c: char) -> bool {
+    matches!(c, '\u{0}'..='\u{1f}' | '\u{7f}'..='\u{9f}' | '\u{feff}' | '\u{fffe}' | '\u{ffff}')
+}
+
+/// The text of the YAML scalar for a value. A plain value goes as it is. Any
+/// other value goes in double quotes, so that it reads back as the same
+/// string.
 fn yaml_scalar(key: &str) -> String {
     const RESERVED: [&str; 10] = [
         "true", "false", "null", "yes", "no", "on", "off", "y", "n", "nan",
@@ -75,7 +132,18 @@ fn yaml_scalar(key: &str) -> String {
     if plain {
         key.to_owned()
     } else {
-        format!("\"{}\"", key.replace('\\', "\\\\").replace('"', "\\\""))
+        let mut text = String::with_capacity(key.len() + 2);
+        text.push('"');
+        for c in key.chars() {
+            match c {
+                '\\' => text.push_str("\\\\"),
+                '"' => text.push_str("\\\""),
+                c if needs_escape(c) => text.push_str(&format!("\\u{:04X}", u32::from(c))),
+                c => text.push(c),
+            }
+        }
+        text.push('"');
+        text
     }
 }
 
@@ -86,9 +154,30 @@ fn random_u64() -> u64 {
     RandomState::new().build_hasher().finish()
 }
 
+/// The text of the file: `config:`, then one line for each value that is
+/// set, in a fixed order.
+fn file_text(values: &FileValues) -> String {
+    let mut text = String::from("config:\n");
+    for (name, value) in [
+        ("api-key", &values.api_key),
+        ("gateway-api-key", &values.gateway_api_key),
+        ("base-url", &values.base_url),
+        ("model", &values.model),
+    ] {
+        if let Some(value) = value {
+            text.push_str(&format!("  {name}: {}\n", yaml_scalar(value)));
+        }
+    }
+    text
+}
+
 /// Write the key file (decision 8) through a temporary file and a rename.
 /// Returns the path of `config.yml`.
-pub fn write_key_file(fs: &dyn Fs, home: &Path, key: &ApiKey) -> Result<PathBuf, ConfigError> {
+pub fn write_key_file(
+    fs: &dyn Fs,
+    home: &Path,
+    values: &FileValues,
+) -> Result<PathBuf, ConfigError> {
     let write_error = |path: &Path, error: std::io::Error| ConfigError::KeyFileWrite {
         path: path.to_owned(),
         kind: error.kind(),
@@ -105,7 +194,7 @@ pub fn write_key_file(fs: &dyn Fs, home: &Path, key: &ApiKey) -> Result<PathBuf,
     // 3. A new temporary file with mode 0o600. The name holds the process id
     //    and a random part. When the name is taken, try again a few times, so
     //    that a stale temporary file does not block setup.
-    let text = format!("config:\n  api-key: {}\n", yaml_scalar(key.expose()));
+    let text = file_text(values);
     let mut attempt = 1;
     let temp = loop {
         let temp = jag_dir.join(format!(
@@ -142,7 +231,14 @@ mod tests {
 
     use super::*;
     use crate::config::testing::*;
-    use crate::config::{KeySource, RealFs, find_key};
+    use crate::config::{ConfigFile, KeySource, Origin, RealFs, Route, find_key};
+
+    fn only_key(text: &str) -> FileValues {
+        FileValues {
+            api_key: Some(text.to_owned()),
+            ..FileValues::default()
+        }
+    }
 
     fn load(home: Option<&Path>) -> Result<(PathBuf, ChangeState), ConfigError> {
         let vars = vars(&[]);
@@ -167,15 +263,15 @@ mod tests {
     fn no_file_and_no_key_and_a_key() {
         let home = tempfile::tempdir().unwrap();
         let (_, state) = load(Some(home.path())).unwrap();
-        assert!(!state.exists && !state.has_key);
+        assert!(!state.exists && state.values.is_empty());
 
         write_file(home.path(), "# comment only\n", 0o600);
         let (_, state) = load(Some(home.path())).unwrap();
-        assert!(state.exists && !state.has_key);
+        assert!(state.exists && state.values.is_empty());
 
         write_file(home.path(), "config:\n  api-key: k\n", 0o600);
         let (_, state) = load(Some(home.path())).unwrap();
-        assert!(state.exists && state.has_key);
+        assert!(state.exists && state.values.api_key.as_deref() == Some("k"));
         assert_eq!(state.mode & 0o777, 0o600);
     }
 
@@ -242,7 +338,7 @@ mod tests {
     #[test]
     fn write_creates_the_folders_and_a_private_file() {
         let home = tempfile::tempdir().unwrap();
-        let key = ApiKey::parse(SENTINEL_KEY).unwrap();
+        let key = only_key(SENTINEL_KEY);
         let path = write_key_file(&RealFs, home.path(), &key).unwrap();
         let mode = |p: &Path| std::fs::metadata(p).unwrap().permissions().mode() & 0o777;
         assert_eq!(mode(&path), 0o600);
@@ -261,7 +357,7 @@ mod tests {
         let dir = home.path().join(".config").join("jag");
         std::fs::create_dir_all(&dir).unwrap();
         std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o755)).unwrap();
-        write_key_file(&RealFs, home.path(), &ApiKey::parse("k").unwrap()).unwrap();
+        write_key_file(&RealFs, home.path(), &only_key("k")).unwrap();
         assert_eq!(
             std::fs::metadata(&dir).unwrap().permissions().mode() & 0o777,
             0o755
@@ -307,7 +403,7 @@ mod tests {
             ".nan",
         ] {
             let home = tempfile::tempdir().unwrap();
-            let key = ApiKey::parse(text).unwrap();
+            let key = only_key(text);
             let path = write_key_file(&RealFs, home.path(), &key).unwrap();
             assert_eq!(
                 std::fs::metadata(&path).unwrap().permissions().mode() & 0o777,
@@ -318,10 +414,88 @@ mod tests {
                 vars: &vars,
                 home: Some(home.path().to_owned()),
             };
-            let (found, source) = find_key(&env, &RealFs).unwrap();
+            let file = ConfigFile::new(&env, &RealFs);
+            let (found, source) = find_key(&env, &file, Route::Direct, &Origin::Default).unwrap();
             assert_eq!(found.expose(), text, "key {text:?}");
             assert_eq!(source, KeySource::ConfigFile(path));
         }
+    }
+
+    fn all_values() -> FileValues {
+        FileValues {
+            api_key: Some(SENTINEL_KEY.to_owned()),
+            gateway_api_key: Some("gateway-key".to_owned()),
+            base_url: Some("https://openrouter.ai/api".to_owned()),
+            model: Some("~typesafe/jev-latest".to_owned()),
+        }
+    }
+
+    #[test]
+    fn the_file_text_has_one_line_for_each_value_in_a_fixed_order() {
+        assert_eq!(
+            file_text(&all_values()),
+            format!(
+                "config:\n  api-key: {SENTINEL_KEY}\n  gateway-api-key: gateway-key\n  base-url: \"https://openrouter.ai/api\"\n  model: \"~typesafe/jev-latest\"\n"
+            )
+        );
+        assert_eq!(
+            file_text(&FileValues {
+                base_url: Some("https://openrouter.ai/api".to_owned()),
+                ..FileValues::default()
+            }),
+            "config:\n  base-url: \"https://openrouter.ai/api\"\n"
+        );
+    }
+
+    #[test]
+    fn every_value_reads_back_as_the_same_text() {
+        for text in [
+            "https://openrouter.ai/api",
+            "~typesafe/jev-latest",
+            "typesafe-ai/jev",
+            "jev-latest",
+            "null",
+            "a \"b\" \\c",
+            "tab\there",
+            "line\nfeed",
+            "\u{feff}mark",
+            "\u{7f}\u{85}",
+            "é",
+            "a: b",
+        ] {
+            for slot in 0..4 {
+                let mut values = FileValues::default();
+                let value = Some(text.to_owned());
+                match slot {
+                    0 => values.api_key = value,
+                    1 => values.gateway_api_key = value,
+                    2 => values.base_url = value,
+                    _ => values.model = value,
+                }
+                let home = tempfile::tempdir().unwrap();
+                write_key_file(&RealFs, home.path(), &values).unwrap();
+                let (_, state) = load(Some(home.path())).unwrap();
+                assert_eq!(state.values, values, "slot {slot} text {text:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn the_values_of_a_whole_file_read_back() {
+        let home = tempfile::tempdir().unwrap();
+        write_key_file(&RealFs, home.path(), &all_values()).unwrap();
+        let (_, state) = load(Some(home.path())).unwrap();
+        assert_eq!(state.values, all_values());
+    }
+
+    #[test]
+    fn debug_shows_which_values_are_set_and_no_value() {
+        let text = format!("{:?}", all_values());
+        assert!(!text.contains(SENTINEL_KEY) && !text.contains("gateway-key"));
+        assert!(!text.contains("openrouter") && !text.contains("jev-latest"));
+        assert!(text.contains("set"));
+        let empty = format!("{:?}", FileValues::default());
+        assert!(empty.contains("not set") && !empty.contains("\"set\""));
     }
 
     /// A file system with two faults: the rename fails, or the first
@@ -381,7 +555,7 @@ mod tests {
     #[test]
     fn a_taken_temporary_name_is_tried_again() {
         let home = tempfile::tempdir().unwrap();
-        let key = ApiKey::parse("k").unwrap();
+        let key = only_key("k");
         let fs = Faulty::new(false, TEMP_ATTEMPTS - 1);
         write_key_file(&fs, home.path(), &key).unwrap();
         assert_eq!(fs.creates.get(), TEMP_ATTEMPTS);
@@ -405,7 +579,7 @@ mod tests {
         std::fs::create_dir_all(&dir).unwrap();
         let stale = dir.join(format!("config.yml.tmp-{}", std::process::id()));
         std::fs::write(&stale, "stale").unwrap();
-        write_key_file(&RealFs, home.path(), &ApiKey::parse("k").unwrap()).unwrap();
+        write_key_file(&RealFs, home.path(), &only_key("k")).unwrap();
         assert_eq!(std::fs::read_to_string(&stale).unwrap(), "stale");
         assert!(dir.join("config.yml").exists());
     }
@@ -413,7 +587,7 @@ mod tests {
     #[test]
     fn a_failed_rename_gives_key_file_write_and_leaves_no_temporary_file() {
         let home = tempfile::tempdir().unwrap();
-        let key = ApiKey::parse(SENTINEL_KEY).unwrap();
+        let key = only_key(SENTINEL_KEY);
         let error = write_key_file(&Faulty::new(true, 0), home.path(), &key).unwrap_err();
         assert!(matches!(
             error,
@@ -434,7 +608,7 @@ mod tests {
         // `.config` is a file, so the folder cannot be made.
         let home = tempfile::tempdir().unwrap();
         std::fs::write(home.path().join(".config"), "x").unwrap();
-        let key = ApiKey::parse("k").unwrap();
+        let key = only_key("k");
         assert!(matches!(
             write_key_file(&RealFs, home.path(), &key).unwrap_err(),
             ConfigError::KeyFileWrite { .. }

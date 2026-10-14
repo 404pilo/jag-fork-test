@@ -233,7 +233,7 @@ fn a_model_failure_with_the_limit_gives_exit_6_and_the_notice() {
     assert!(stdout(&output).is_empty());
     let err = stderr(&output);
     assert!(err.contains(&notice(200, 255)), "{err}");
-    assert!(err.contains("the TypeSafe API failed (HTTP 500)."), "{err}");
+    assert!(err.contains("the gateway failed (HTTP 500)."), "{err}");
 }
 
 #[test]

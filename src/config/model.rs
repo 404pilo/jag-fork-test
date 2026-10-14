@@ -1,18 +1,20 @@
 //! The settings of the model service: the address, the model name, and the
 //! times of one call and of the retry.
 //!
-//! No message here shows a value of `JAG_BASE_URL`, `JAG_MODEL`,
-//! `JAG_TIMEOUT`, or `JAG_RETRY_WAIT`, because an address can hold a user
-//! name and a password (CV-6).
+//! No message here shows a value of a base URL, a model name, or a time,
+//! because an address can hold a user name and a password (CV-6).
 
+use std::path::PathBuf;
 use std::time::Duration;
 
 use ureq::http::Uri;
 
-use super::{ConfigError, Env};
+use super::{ConfigError, ConfigFile, Env};
 
 pub const BASE_URL_VARIABLE: &str = "JAG_BASE_URL";
 pub const MODEL_VARIABLE: &str = "JAG_MODEL";
+pub const BASE_URL_OPTION: &str = "--base-url";
+pub const MODEL_OPTION: &str = "--model";
 pub const DEFAULT_BASE_URL: &str = "https://api.typesafe.ai/v1";
 pub const DEFAULT_MODEL: &str = "jev-1.13.0";
 pub const TIMEOUT_VARIABLE: &str = "JAG_TIMEOUT";
@@ -21,6 +23,8 @@ pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(4);
 pub const DEFAULT_RETRY_WAIT: Duration = Duration::from_secs(1);
 pub const MIN_SECONDS: u64 = 1;
 pub const MAX_SECONDS: u64 = 60;
+/// The host of the TypeSafe API (decision 16).
+const TYPESAFE_HOST: &str = "api.typesafe.ai";
 
 /// Which of the two times a value is for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -29,11 +33,53 @@ pub enum TimeSetting {
     RetryWait,
 }
 
-/// Where a time value came from.
+/// Where a value of a setting came from, for a setting that has no file key.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SettingSource {
     Option,
     Variable,
+}
+
+/// Where the calls go.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Route {
+    /// The TypeSafe API (IF-1).
+    #[default]
+    Direct,
+    /// An AI gateway (IF-2).
+    Gateway,
+}
+
+/// Where the value of the base URL or of the model came from (CV-7).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub enum Origin {
+    Option,
+    Variable,
+    ConfigFile(PathBuf),
+    #[default]
+    Default,
+}
+
+impl Origin {
+    /// The name of the source of the base URL, for a fix. `None` for the
+    /// default.
+    pub fn base_url_name(&self) -> Option<String> {
+        self.name(BASE_URL_OPTION, BASE_URL_VARIABLE, "config.base-url")
+    }
+
+    /// The name of the source of the model, for a fix. `None` for the default.
+    pub fn model_name(&self) -> Option<String> {
+        self.name(MODEL_OPTION, MODEL_VARIABLE, "config.model")
+    }
+
+    fn name(&self, option: &str, variable: &str, key: &str) -> Option<String> {
+        match self {
+            Origin::Option => Some(option.to_owned()),
+            Origin::Variable => Some(variable.to_owned()),
+            Origin::ConfigFile(path) => Some(format!("{key} in {}", path.display())),
+            Origin::Default => None,
+        }
+    }
 }
 
 /// The time of one call, and the wait before the one retry.
@@ -72,55 +118,160 @@ pub fn parse_seconds(
     }
 }
 
+/// The options of step 1, after their checks.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct SettingOptions {
+    /// After the address rule.
+    pub base_url: Option<String>,
+    /// Trimmed. Not blank.
+    pub model: Option<String>,
+    /// `(timeout, retry wait)`.
+    pub times: (Option<Duration>, Option<Duration>),
+}
+
 /// Where jag sends the calls, and which model it asks.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ModelSettings {
-    /// With no `/` at the end. The call goes to `<base_url>/systemone`.
+    /// After the address rule, so it ends with `/v1`. The call goes to
+    /// `<base_url>/systemone`.
     pub base_url: String,
+    pub base_url_origin: Origin,
     pub model: String,
+    pub model_origin: Origin,
+    pub route: Route,
     pub times: Times,
 }
 
-/// Read `JAG_BASE_URL`, `JAG_MODEL`, `JAG_TIMEOUT`, and `JAG_RETRY_WAIT`. A
-/// blank variable counts as not set. A time option, already parsed, wins
-/// over its variable (decision 9). `options` is `(timeout, retry wait)`.
+/// The address rule (decisions 7 and 8). `None` when jag refuses the address.
+pub fn normalize_base_url(text: &str) -> Option<String> {
+    let text = text.trim().trim_end_matches('/');
+    if text.contains(['?', '#']) || !address_is_allowed(text) {
+        return None;
+    }
+    let uri = text.parse::<Uri>().ok()?;
+    if uri.path().trim_end_matches('/').ends_with("/v1") {
+        Some(text.to_owned())
+    } else {
+        Some(format!("{text}/v1"))
+    }
+}
+
+/// The route of a base URL that the address rule gave (decision 16).
+pub fn route_of(base_url: &str) -> Route {
+    let Ok(uri) = base_url.parse::<Uri>() else {
+        return Route::Gateway;
+    };
+    let direct = uri.scheme_str() == Some("https")
+        && uri
+            .host()
+            .is_some_and(|host| host.eq_ignore_ascii_case(TYPESAFE_HOST))
+        && uri.port_u16().is_none_or(|port| port == 443)
+        && uri.path() == "/v1";
+    if direct {
+        Route::Direct
+    } else {
+        Route::Gateway
+    }
+}
+
+/// Find the base URL, the model, the timeout, and the retry wait. For the
+/// base URL and the model, the first source that is set wins: the option, the
+/// variable, the config file, the default (decision 5). jag reads the file
+/// only when a setting needs it (decision 12). A blank variable, or a blank
+/// value in the file, counts as not set.
 pub fn model_settings(
     env: &Env,
-    options: (Option<Duration>, Option<Duration>),
+    file: &ConfigFile,
+    options: &SettingOptions,
 ) -> Result<ModelSettings, ConfigError> {
-    let base_url = match variable(env, BASE_URL_VARIABLE)? {
-        Some(text) => {
-            let text = text.trim_end_matches('/').to_owned();
-            if !address_is_allowed(&text) {
-                return Err(ConfigError::BaseUrlBad);
-            }
-            text
-        }
-        None => DEFAULT_BASE_URL.to_owned(),
-    };
-    let model = variable(env, MODEL_VARIABLE)?.unwrap_or_else(|| DEFAULT_MODEL.to_owned());
+    let (base_url, base_url_origin) = base_url(env, file, options)?;
+    let (model, model_origin) = model(env, file, options)?;
     let timeout = time(
         env,
-        options.0,
+        options.times.0,
         TIMEOUT_VARIABLE,
         TimeSetting::Timeout,
         DEFAULT_TIMEOUT,
     )?;
     let retry_wait = time(
         env,
-        options.1,
+        options.times.1,
         RETRY_WAIT_VARIABLE,
         TimeSetting::RetryWait,
         DEFAULT_RETRY_WAIT,
     )?;
+    let route = route_of(&base_url);
     Ok(ModelSettings {
         base_url,
+        base_url_origin,
         model,
+        model_origin,
+        route,
         times: Times {
             timeout,
             retry_wait,
         },
     })
+}
+
+fn base_url(
+    env: &Env,
+    file: &ConfigFile,
+    options: &SettingOptions,
+) -> Result<(String, Origin), ConfigError> {
+    if let Some(url) = &options.base_url {
+        return Ok((url.clone(), Origin::Option));
+    }
+    let bad = ConfigError::BaseUrlBad {
+        source: SettingSource::Variable,
+    };
+    if let Some(text) = variable(env, BASE_URL_VARIABLE, &bad)? {
+        return normalize_base_url(&text)
+            .map(|url| (url, Origin::Variable))
+            .ok_or(bad);
+    }
+    if let Some((path, parsed)) = file.get()?
+        && let Some(text) = parsed
+            .config
+            .as_ref()
+            .and_then(|section| section.base_url.as_deref())
+            .map(str::trim)
+            .filter(|text| !text.is_empty())
+    {
+        return normalize_base_url(text)
+            .map(|url| (url, Origin::ConfigFile(path.to_owned())))
+            .ok_or_else(|| ConfigError::FileBaseUrlBad {
+                path: path.to_owned(),
+            });
+    }
+    Ok((DEFAULT_BASE_URL.to_owned(), Origin::Default))
+}
+
+fn model(
+    env: &Env,
+    file: &ConfigFile,
+    options: &SettingOptions,
+) -> Result<(String, Origin), ConfigError> {
+    if let Some(name) = &options.model {
+        return Ok((name.clone(), Origin::Option));
+    }
+    let bad = ConfigError::ModelBad {
+        source: SettingSource::Variable,
+    };
+    if let Some(text) = variable(env, MODEL_VARIABLE, &bad)? {
+        return Ok((text, Origin::Variable));
+    }
+    if let Some((path, parsed)) = file.get()?
+        && let Some(text) = parsed
+            .config
+            .as_ref()
+            .and_then(|section| section.model.as_deref())
+            .map(str::trim)
+            .filter(|text| !text.is_empty())
+    {
+        return Ok((text.to_owned(), Origin::ConfigFile(path.to_owned())));
+    }
+    Ok((DEFAULT_MODEL.to_owned(), Origin::Default))
 }
 
 /// The option, else the variable, else the default.
@@ -150,16 +301,13 @@ fn time(
     }
 }
 
-/// The trimmed text of a variable, or `None` when it is not set or blank.
-fn variable(env: &Env, name: &str) -> Result<Option<String>, ConfigError> {
+/// The trimmed text of a variable, or `None` when it is not set or blank. A
+/// value that is not text gives `bad`.
+fn variable(env: &Env, name: &str, bad: &ConfigError) -> Result<Option<String>, ConfigError> {
     let Some(value) = (env.vars)(name) else {
         return Ok(None);
     };
-    let text = value.to_str().ok_or(if name == BASE_URL_VARIABLE {
-        ConfigError::BaseUrlBad
-    } else {
-        ConfigError::ModelBad
-    })?;
+    let text = value.to_str().ok_or_else(|| bad.clone())?;
     let text = text.trim();
     Ok((!text.is_empty()).then(|| text.to_owned()))
 }
@@ -185,27 +333,52 @@ fn address_is_allowed(text: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
+    use std::path::Path;
 
-    use super::super::testing::vars;
+    use super::super::RealFs;
+    use super::super::testing::{vars, write_file};
     use super::*;
 
+    fn run(
+        pairs: &[(&str, &str)],
+        home: Option<&Path>,
+        options: &SettingOptions,
+    ) -> Result<ModelSettings, ConfigError> {
+        let vars = vars(pairs);
+        let env = Env {
+            vars: &vars,
+            home: home.map(Path::to_owned),
+        };
+        let file = ConfigFile::new(&env, &RealFs);
+        model_settings(&env, &file, options)
+    }
+
     fn settings(pairs: &[(&str, &str)]) -> Result<ModelSettings, ConfigError> {
-        with_options(pairs, (None, None))
+        run(
+            pairs,
+            Some(Path::new("/nowhere")),
+            &SettingOptions::default(),
+        )
     }
 
     fn with_options(
         pairs: &[(&str, &str)],
         options: (Option<Duration>, Option<Duration>),
     ) -> Result<ModelSettings, ConfigError> {
-        let vars = vars(pairs);
-        model_settings(
-            &Env {
-                vars: &vars,
-                home: Some(PathBuf::from("/nowhere")),
-            },
-            options,
-        )
+        let options = SettingOptions {
+            times: options,
+            ..SettingOptions::default()
+        };
+        run(pairs, Some(Path::new("/nowhere")), &options)
+    }
+
+    /// A home with a config file of this text and mode 0600.
+    fn home_with(text: &str) -> tempfile::TempDir {
+        let home = tempfile::tempdir().expect("temporary folder");
+        write_file(home.path(), text, 0o600);
+        home
     }
 
     #[test]
@@ -213,6 +386,9 @@ mod tests {
         let settings = settings(&[]).expect("defaults");
         assert_eq!(settings.base_url, "https://api.typesafe.ai/v1");
         assert_eq!(settings.model, "jev-1.13.0");
+        assert_eq!(settings.base_url_origin, Origin::Default);
+        assert_eq!(settings.model_origin, Origin::Default);
+        assert_eq!(settings.route, Route::Direct);
     }
 
     #[test]
@@ -221,6 +397,7 @@ mod tests {
             settings(&[(BASE_URL_VARIABLE, "  "), (MODEL_VARIABLE, "\t")]).expect("defaults");
         assert_eq!(settings.base_url, DEFAULT_BASE_URL);
         assert_eq!(settings.model, DEFAULT_MODEL);
+        assert_eq!(settings.base_url_origin, Origin::Default);
     }
 
     #[test]
@@ -232,38 +409,123 @@ mod tests {
         .expect("settings");
         assert_eq!(settings.base_url, "https://gateway.example.net/v1");
         assert_eq!(settings.model, "jev-latest");
+        assert_eq!(settings.base_url_origin, Origin::Variable);
+        assert_eq!(settings.model_origin, Origin::Variable);
+    }
+
+    // The table of "The address rule".
+    #[test]
+    fn the_address_rule_gives_the_base_url_of_each_form() {
+        for (text, want) in [
+            ("https://api.typesafe.ai", "https://api.typesafe.ai/v1"),
+            ("https://api.typesafe.ai/", "https://api.typesafe.ai/v1"),
+            ("https://api.typesafe.ai/v1", "https://api.typesafe.ai/v1"),
+            ("https://openrouter.ai/api", "https://openrouter.ai/api/v1"),
+            (
+                "https://ai-gateway.vercel.sh/typesafe",
+                "https://ai-gateway.vercel.sh/typesafe/v1",
+            ),
+            (
+                "https://gateway-us.pydantic.dev/proxy/typesafe",
+                "https://gateway-us.pydantic.dev/proxy/typesafe/v1",
+            ),
+            (
+                "https://gateway-us.pydantic.dev/proxy/typesafe/",
+                "https://gateway-us.pydantic.dev/proxy/typesafe/v1",
+            ),
+            ("http://127.0.0.1:8080/v1", "http://127.0.0.1:8080/v1"),
+            ("http://127.0.0.1:8080", "http://127.0.0.1:8080/v1"),
+            (
+                "https://example.com/v1beta",
+                "https://example.com/v1beta/v1",
+            ),
+            ("https://example.com/V1", "https://example.com/V1/v1"),
+            (
+                "  https://example.com/api/v1/  ",
+                "https://example.com/api/v1",
+            ),
+        ] {
+            assert_eq!(normalize_base_url(text).as_deref(), Some(want), "{text}");
+        }
     }
 
     #[test]
-    fn plain_http_is_allowed_only_for_this_machine() {
+    fn the_address_rule_refuses_these_texts() {
+        for bad in [
+            "https://example.com/v1?a=1",
+            "https://example.com/#a",
+            "https://user@example.com",
+            "https://user:pass@example.com/v1",
+            "http://example.com",
+            "http://localhost.example.net/v1",
+            "http://127.0.0.1@example.net/v1",
+            "ftp://example.com",
+            "ftp://127.0.0.1/v1",
+            "example.com",
+            "example.com/v1",
+            "not an address",
+            "/v1",
+            "",
+            "   ",
+        ] {
+            assert_eq!(normalize_base_url(bad), None, "{bad:?}");
+        }
         for good in [
             "http://127.0.0.1:8080/v1",
             "http://localhost:8080/v1",
             "http://[::1]:8080/v1",
             "https://example.com/v1",
         ] {
-            assert!(
-                settings(&[(BASE_URL_VARIABLE, good)]).is_ok(),
-                "should accept {good}"
-            );
+            assert!(normalize_base_url(good).is_some(), "{good}");
         }
+    }
+
+    #[test]
+    fn each_source_refuses_a_bad_address_with_its_own_error() {
         for bad in [
-            "http://example.com/v1",
-            "http://localhost.example.net/v1",
-            "http://127.0.0.1@example.net/v1",
-            "https://user@example.com/v1",
-            "https://user:pass@example.com/v1",
-            "ftp://127.0.0.1/v1",
-            "example.com/v1",
-            "not an address",
-            "/v1",
+            "http://example.com",
+            "https://a@example.com",
+            "ftp://x",
+            "a?b",
         ] {
+            let variable = settings(&[(BASE_URL_VARIABLE, bad)]);
             assert_eq!(
-                settings(&[(BASE_URL_VARIABLE, bad)]),
-                Err(ConfigError::BaseUrlBad),
-                "should refuse {bad}"
+                variable,
+                Err(ConfigError::BaseUrlBad {
+                    source: SettingSource::Variable
+                }),
+                "{bad}"
             );
+            let home = home_with(&format!("config:\n  base-url: \"{bad}\"\n"));
+            let file = run(&[], Some(home.path()), &SettingOptions::default());
+            let path = home.path().join(".config/jag/config.yml");
+            assert_eq!(file, Err(ConfigError::FileBaseUrlBad { path }), "{bad}");
         }
+    }
+
+    #[test]
+    fn the_route_is_direct_only_for_the_typesafe_address() {
+        for direct in [
+            "https://api.typesafe.ai/v1",
+            "https://API.TypeSafe.ai/v1",
+            "https://api.typesafe.ai:443/v1",
+        ] {
+            assert_eq!(route_of(direct), Route::Direct, "{direct}");
+        }
+        for gateway in [
+            "https://api.typesafe.ai:8443/v1",
+            "https://openrouter.ai/api/v1",
+            "http://127.0.0.1:8080/v1",
+            "http://api.typesafe.ai/v1",
+            "https://api.typesafe.ai/other/v1",
+            "https://api.typesafe.ai.example.com/v1",
+        ] {
+            assert_eq!(route_of(gateway), Route::Gateway, "{gateway}");
+        }
+        let direct = settings(&[(BASE_URL_VARIABLE, "https://api.typesafe.ai")]).expect("direct");
+        assert_eq!(direct.route, Route::Direct);
+        let gateway = settings(&[(BASE_URL_VARIABLE, "https://openrouter.ai/api")]).expect("gw");
+        assert_eq!(gateway.route, Route::Gateway);
     }
 
     #[test]
@@ -276,17 +538,133 @@ mod tests {
 
     #[test]
     fn a_variable_that_is_not_text_is_refused() {
-        use std::ffi::OsString;
-        use std::os::unix::ffi::OsStringExt;
-        let vars = |name: &str| (name == MODEL_VARIABLE).then(|| OsString::from_vec(vec![0xff]));
-        let result = model_settings(
-            &Env {
+        for (name, want) in [
+            (
+                MODEL_VARIABLE,
+                ConfigError::ModelBad {
+                    source: SettingSource::Variable,
+                },
+            ),
+            (
+                BASE_URL_VARIABLE,
+                ConfigError::BaseUrlBad {
+                    source: SettingSource::Variable,
+                },
+            ),
+        ] {
+            let vars = |var: &str| (var == name).then(|| OsString::from_vec(vec![0xff]));
+            let env = Env {
                 vars: &vars,
                 home: None,
-            },
-            (None, None),
+            };
+            let file = ConfigFile::new(&env, &RealFs);
+            let result = model_settings(&env, &file, &SettingOptions::default());
+            assert_eq!(result, Err(want));
+        }
+    }
+
+    // CRITERION-96: each pair of sources, for each setting.
+    #[test]
+    fn the_option_wins_over_the_variable_and_the_variable_over_the_file() {
+        let home =
+            home_with("config:\n  base-url: \"https://file.example.com/api\"\n  model: m-file\n");
+        let file_path = home.path().join(".config/jag/config.yml");
+        let option = SettingOptions {
+            base_url: Some("https://option.example.com/v1".to_owned()),
+            model: Some("m-option".to_owned()),
+            ..SettingOptions::default()
+        };
+        let pairs = [
+            (BASE_URL_VARIABLE, "https://variable.example.com"),
+            (MODEL_VARIABLE, "m-variable"),
+        ];
+        let all = run(&pairs, Some(home.path()), &option).expect("option");
+        assert_eq!(all.base_url, "https://option.example.com/v1");
+        assert_eq!(all.model, "m-option");
+        assert_eq!(all.base_url_origin, Origin::Option);
+        assert_eq!(all.model_origin, Origin::Option);
+
+        let variable = run(&pairs, Some(home.path()), &SettingOptions::default()).expect("var");
+        assert_eq!(variable.base_url, "https://variable.example.com/v1");
+        assert_eq!(variable.model, "m-variable");
+        assert_eq!(variable.base_url_origin, Origin::Variable);
+        assert_eq!(variable.model_origin, Origin::Variable);
+
+        let file = run(&[], Some(home.path()), &SettingOptions::default()).expect("file");
+        assert_eq!(file.base_url, "https://file.example.com/api/v1");
+        assert_eq!(file.model, "m-file");
+        assert_eq!(file.base_url_origin, Origin::ConfigFile(file_path.clone()));
+        assert_eq!(file.model_origin, Origin::ConfigFile(file_path));
+    }
+
+    #[test]
+    fn each_setting_has_its_own_order() {
+        let home = home_with("config:\n  model: m-file\n");
+        let option = SettingOptions {
+            base_url: Some("https://option.example.com/v1".to_owned()),
+            ..SettingOptions::default()
+        };
+        let settings = run(&[], Some(home.path()), &option).expect("settings");
+        assert_eq!(settings.base_url_origin, Origin::Option);
+        assert_eq!(settings.model, "m-file");
+        assert!(matches!(settings.model_origin, Origin::ConfigFile(_)));
+        assert_eq!(
+            settings.base_url_origin.base_url_name().as_deref(),
+            Some("--base-url")
         );
-        assert_eq!(result, Err(ConfigError::ModelBad));
+    }
+
+    #[test]
+    fn a_source_that_wins_hides_a_bad_lower_value() {
+        let home = home_with("config:\n  base-url: \"ftp://example.com\"\n");
+        let option = SettingOptions {
+            base_url: Some("https://option.example.com/v1".to_owned()),
+            ..SettingOptions::default()
+        };
+        let pairs = [(BASE_URL_VARIABLE, "http://example.com")];
+        assert!(run(&pairs, Some(home.path()), &option).is_ok());
+        let pairs = [(BASE_URL_VARIABLE, "https://variable.example.com")];
+        assert!(run(&pairs, Some(home.path()), &SettingOptions::default()).is_ok());
+    }
+
+    #[test]
+    fn a_blank_value_in_the_file_counts_as_not_set() {
+        let home = home_with("config:\n  base-url: \"  \"\n  model: \"\"\n");
+        let settings = run(&[], Some(home.path()), &SettingOptions::default()).expect("settings");
+        assert_eq!(settings.base_url_origin, Origin::Default);
+        assert_eq!(settings.model_origin, Origin::Default);
+    }
+
+    #[test]
+    fn jag_reads_the_file_only_when_a_setting_needs_it() {
+        // A file that others can read gives an error only when it is read.
+        let home = tempfile::tempdir().expect("temporary folder");
+        write_file(home.path(), "config:\n  model: m\n", 0o644);
+        let both = [
+            (BASE_URL_VARIABLE, "https://gw.example.com"),
+            (MODEL_VARIABLE, "m"),
+        ];
+        assert!(run(&both, Some(home.path()), &SettingOptions::default()).is_ok());
+        let one = [(BASE_URL_VARIABLE, "https://gw.example.com")];
+        assert!(matches!(
+            run(&one, Some(home.path()), &SettingOptions::default()),
+            Err(ConfigError::KeyFileOpen { .. })
+        ));
+    }
+
+    #[test]
+    fn the_names_of_the_sources_are_for_the_fixes() {
+        let path = std::path::PathBuf::from("/h/config.yml");
+        assert_eq!(Origin::Default.base_url_name(), None);
+        assert_eq!(Origin::Variable.model_name().as_deref(), Some("JAG_MODEL"));
+        assert_eq!(
+            Origin::ConfigFile(path.clone()).base_url_name().as_deref(),
+            Some("config.base-url in /h/config.yml")
+        );
+        assert_eq!(
+            Origin::ConfigFile(path).model_name().as_deref(),
+            Some("config.model in /h/config.yml")
+        );
     }
 
     const BOTH: [TimeSetting; 2] = [TimeSetting::Timeout, TimeSetting::RetryWait];
@@ -386,17 +764,14 @@ mod tests {
 
     #[test]
     fn a_time_variable_that_is_not_text_is_refused() {
-        use std::ffi::OsString;
-        use std::os::unix::ffi::OsStringExt;
         let vars =
             |name: &str| (name == RETRY_WAIT_VARIABLE).then(|| OsString::from_vec(vec![0xff]));
-        let result = model_settings(
-            &Env {
-                vars: &vars,
-                home: None,
-            },
-            (None, None),
-        );
+        let env = Env {
+            vars: &vars,
+            home: None,
+        };
+        let file = ConfigFile::new(&env, &RealFs);
+        let result = model_settings(&env, &file, &SettingOptions::default());
         assert_eq!(
             result,
             Err(ConfigError::TimeBad {

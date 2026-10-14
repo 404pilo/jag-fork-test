@@ -10,8 +10,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use common::fake_server::{FakeServer, Reply};
-use jag::config::ApiKey;
-use jag::failure::Failure;
+use jag::config::{ApiKey, Origin, Route};
 use jag::scorer::{ScoreError, ScoreSettings, score};
 use jag::search::snippet::{Snippet, SnippetLine, Source};
 
@@ -35,6 +34,9 @@ fn settings(server: &FakeServer) -> ScoreSettings {
     ScoreSettings {
         base_url: server.base_url(),
         model: "jev-1.13.0".to_owned(),
+        route: Route::Direct,
+        base_url_origin: Origin::Default,
+        model_origin: Origin::Default,
         timeout: Duration::from_secs(2),
         retry_wait: Duration::from_millis(20),
         deadline: Duration::from_secs(5),
@@ -58,8 +60,21 @@ fn run(
     )
 }
 
+fn direct_settings() -> ScoreSettings {
+    ScoreSettings {
+        base_url: "http://127.0.0.1:9/v1".to_owned(),
+        model: "m".to_owned(),
+        route: Route::Direct,
+        base_url_origin: Origin::Default,
+        model_origin: Origin::Default,
+        timeout: Duration::from_secs(1),
+        retry_wait: Duration::from_millis(20),
+        deadline: Duration::from_secs(5),
+    }
+}
+
 fn exit_code(error: ScoreError) -> u8 {
-    Failure::from(error).exit_code
+    error.failure(&direct_settings()).exit_code
 }
 
 #[test]
@@ -201,7 +216,7 @@ fn a_body_that_jag_cannot_read_gives_exit_6_with_no_retry() {
 fn a_failure_text_never_holds_the_body_or_the_address() {
     let server = FakeServer::start(|_| Reply::status(500).body("SECRET-BODY-TEXT"));
     let error = run(&server, &snippets(1), &settings(&server)).expect_err("a failure");
-    let text = Failure::from(error).render();
+    let text = error.failure(&settings(&server)).render();
     assert!(!text.contains("SECRET-BODY-TEXT"));
     assert!(!text.contains("127.0.0.1"));
     assert!(!text.contains("SENTINEL"));
@@ -234,6 +249,9 @@ fn no_connection_gives_exit_6() {
     let settings = ScoreSettings {
         base_url: format!("http://127.0.0.1:{port}/v1"),
         model: "m".to_owned(),
+        route: Route::Direct,
+        base_url_origin: Origin::Default,
+        model_origin: Origin::Default,
         timeout: Duration::from_secs(1),
         retry_wait: Duration::from_millis(20),
         deadline: Duration::from_secs(5),
@@ -324,6 +342,9 @@ fn deadline_settings(server: &FakeServer, deadline: Duration) -> ScoreSettings {
     ScoreSettings {
         base_url: server.base_url(),
         model: "m".to_owned(),
+        route: Route::Direct,
+        base_url_origin: Origin::Default,
+        model_origin: Origin::Default,
         // A long timeout, so that only the deadline can stop a retry.
         timeout: Duration::from_secs(1),
         retry_wait: Duration::from_millis(50),
@@ -380,6 +401,9 @@ fn a_retry_wait_that_does_not_fit_in_the_deadline_gives_no_sleep() {
     let settings = ScoreSettings {
         base_url: server.base_url(),
         model: "m".to_owned(),
+        route: Route::Direct,
+        base_url_origin: Origin::Default,
+        model_origin: Origin::Default,
         timeout: Duration::from_secs(2),
         retry_wait: Duration::from_millis(800),
         deadline: Duration::from_secs(1),
@@ -409,6 +433,9 @@ fn a_late_batch_that_fails_ends_the_search_at_the_deadline() {
     let settings = ScoreSettings {
         base_url: server.base_url(),
         model: "m".to_owned(),
+        route: Route::Direct,
+        base_url_origin: Origin::Default,
+        model_origin: Origin::Default,
         timeout: Duration::from_secs(3),
         retry_wait: Duration::from_secs(1),
         deadline: Duration::from_secs(2),

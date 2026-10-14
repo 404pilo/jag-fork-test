@@ -52,7 +52,12 @@ fn help_and_version_exit_0() {
         .stdout(predicate::str::contains("--max-chars <COUNT>"))
         .stdout(predicate::str::contains("--no-max-chars"))
         .stdout(predicate::str::contains("--timeout <SECONDS>"))
-        .stdout(predicate::str::contains("--retry-wait <SECONDS>"));
+        .stdout(predicate::str::contains("--retry-wait <SECONDS>"))
+        .stdout(predicate::str::contains("--base-url <URL>"))
+        .stdout(predicate::str::contains("--model <NAME>"))
+        .stdout(predicate::str::contains(
+            "jag --check [--timeout SECONDS] [--retry-wait SECONDS] [--base-url URL] [--model NAME]",
+        ));
     jag_bare(home.path())
         .arg("--version")
         .assert()
@@ -282,7 +287,7 @@ fn a_time_value_out_of_range_exits_2() {
 }
 
 #[test]
-fn a_bad_time_option_comes_before_the_key_and_a_bad_variable_comes_after() {
+fn a_bad_time_option_or_variable_comes_before_the_key() {
     let dir = tempfile::tempdir().expect("temporary folder");
     write(dir.path(), "a.txt", b"needle\n");
     for option in ["--timeout", "--retry-wait"] {
@@ -293,6 +298,8 @@ fn a_bad_time_option_comes_before_the_key_and_a_bad_variable_comes_after() {
             .assert()
             .code(2);
     }
+    // The settings come before the key (decision 27), so a bad variable
+    // gives exit 2 and not exit 3.
     for variable in ["JAG_TIMEOUT", "JAG_RETRY_WAIT"] {
         let home = home();
         jag_bare(home.path())
@@ -300,8 +307,109 @@ fn a_bad_time_option_comes_before_the_key_and_a_bad_variable_comes_after() {
             .args(["--ask", "which line?", "needle"])
             .arg(dir.path())
             .assert()
-            .code(3);
+            .code(2);
     }
+}
+
+/// The text of the error stream of a search with no key, and with these
+/// variables and options.
+fn error_of(variables: &[(&str, &str)], options: &[&str]) -> (Option<i32>, String) {
+    let dir = tempfile::tempdir().expect("temporary folder");
+    write(dir.path(), "a.txt", b"needle\n");
+    let home = home();
+    let mut command = jag_bare(home.path());
+    for (name, value) in variables {
+        command.env(name, value);
+    }
+    let output = command
+        .args(options)
+        .args(["--ask", "which line?", "needle"])
+        .arg(dir.path())
+        .output()
+        .expect("run jag");
+    (
+        output.status.code(),
+        String::from_utf8_lossy(&output.stderr).into_owned(),
+    )
+}
+
+#[test]
+fn the_options_are_checked_in_order_and_before_the_variables() {
+    // timeout, retry wait, max scored, max chars, base URL, model.
+    let bad = [
+        ("--timeout", "the value of --timeout"),
+        ("--retry-wait", "the value of --retry-wait"),
+        ("--max-scored", "the value of --max-scored"),
+        ("--max-chars", "the value of --max-chars"),
+        ("--base-url", "the value of --base-url"),
+        ("--model", "the value of --model"),
+    ];
+    let values = ["abc", "abc", "abc", "abc", "  ", "  "];
+    for first in 0..bad.len() {
+        let mut options = Vec::new();
+        // Give each bad option from the last to `first`: the first one wins.
+        for index in (first..bad.len()).rev() {
+            options.push(bad[index].0);
+            options.push(values[index]);
+        }
+        let (code, error) = error_of(
+            &[("JAG_BASE_URL", "ftp://x"), ("JAG_MODEL", "ok")],
+            &options,
+        );
+        assert_eq!(code, Some(2), "{options:?}");
+        assert!(
+            error.starts_with(&format!("jag: {}", bad[first].1)),
+            "{error}"
+        );
+    }
+}
+
+#[test]
+fn a_bad_setting_variable_gives_exit_2_before_the_key_and_names_the_variable() {
+    let (code, error) = error_of(&[("JAG_BASE_URL", "ftp://x")], &[]);
+    assert_eq!(code, Some(2));
+    assert!(
+        error.starts_with("jag: JAG_BASE_URL is not an https address."),
+        "{error}"
+    );
+    assert!(!error.contains("ftp"), "{error}");
+}
+
+#[test]
+fn a_blank_address_or_model_option_exits_2_in_a_search_with_no_question_too() {
+    let dir = tempfile::tempdir().expect("temporary folder");
+    write(dir.path(), "a.txt", b"needle\n");
+    for (option, text) in [
+        (
+            "--base-url",
+            "jag: the value of --base-url is not an https address.",
+        ),
+        ("--model", "jag: the value of --model is blank."),
+    ] {
+        let home = home();
+        let output = jag_bare(home.path())
+            .args([option, " ", "needle"])
+            .arg(dir.path())
+            .output()
+            .expect("run jag");
+        assert_eq!(output.status.code(), Some(2), "{option}");
+        assert!(String::from_utf8_lossy(&output.stderr).starts_with(text));
+    }
+}
+
+#[test]
+fn a_search_with_no_question_uses_no_setting_variable_and_no_key() {
+    let dir = tempfile::tempdir().expect("temporary folder");
+    write(dir.path(), "a.txt", b"needle\n");
+    let home = home();
+    jag_bare(home.path())
+        .env("JAG_BASE_URL", "ftp://x")
+        .env("JAG_MODEL", "ok")
+        .env("JAG_TIMEOUT", "abc")
+        .args(["needle"])
+        .arg(dir.path())
+        .assert()
+        .code(0);
 }
 
 #[test]

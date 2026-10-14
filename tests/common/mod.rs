@@ -31,6 +31,7 @@ pub fn jag_bare(home: &Path) -> Command {
         .env("HOME", home)
         .env_remove("JAG_TYPESAFE_API_KEY")
         .env_remove("TYPESAFE_API_KEY")
+        .env_remove("JAG_GATEWAY_API_KEY")
         .env_remove("JAG_BASE_URL")
         .env_remove("JAG_MODEL")
         .env_remove("JAG_TIMEOUT")
@@ -43,24 +44,27 @@ pub fn jag_bare(home: &Path) -> Command {
     command
 }
 
-/// The `jag` command with the made-up key and the address of a fake server.
+/// The `jag` command with the made-up gateway key and the address of a fake
+/// server. The address is not the TypeSafe address, so the route is the
+/// gateway route, and the key is a gateway key.
 pub fn jag(home: &Path, base_url: &str) -> Command {
     let mut command = jag_bare(home);
     command
-        .env("JAG_TYPESAFE_API_KEY", KEY)
+        .env("JAG_GATEWAY_API_KEY", KEY)
         .env("JAG_BASE_URL", base_url);
     command
 }
 
-/// A `std::process::Command` with the variables of `jag`: the made-up key and
-/// the address of a fake server. A test that sends a signal, or that gives
+/// A `std::process::Command` with the variables of `jag`: the made-up gateway
+/// key and the address of a fake server. A test that sends a signal, or that gives
 /// its own standard output, uses it, because `assert_cmd` cannot do that.
 pub fn jag_std(home: &Path, base_url: &str) -> std::process::Command {
     let mut command = std::process::Command::new(assert_cmd::cargo::cargo_bin!("jag"));
     command
         .env("HOME", home)
-        .env("JAG_TYPESAFE_API_KEY", KEY)
+        .env("JAG_GATEWAY_API_KEY", KEY)
         .env("JAG_BASE_URL", base_url)
+        .env_remove("JAG_TYPESAFE_API_KEY")
         .env_remove("TYPESAFE_API_KEY")
         .env_remove("JAG_MODEL")
         .env_remove("JAG_TIMEOUT")

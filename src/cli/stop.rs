@@ -21,7 +21,6 @@ use signal_hook::low_level::emulate_default_handler;
 
 use super::{Mode, error_document};
 use crate::config::DEFAULT_SIZE_LIMIT;
-use crate::failure::Failure;
 use crate::output::Summary;
 use crate::output::progress::Progress;
 use crate::scorer::ScoreError;
@@ -131,7 +130,7 @@ impl Stop {
         if !self.take() {
             return;
         }
-        let failure = Failure::from(ScoreError::Stopped);
+        let failure = ScoreError::stopped();
         match self.mode {
             Mode::Text => {
                 self.progress.clear_for_stop();

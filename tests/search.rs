@@ -473,7 +473,7 @@ fn the_exit_4_text_says_how_to_fix_the_key() {
     let output = search(&server, "needle", dir.path(), &[]);
     let err = stderr(&output);
     assert!(err.contains("did not accept the key (HTTP 401)"), "{err}");
-    assert!(err.contains("https://console.typesafe.ai/keys"), "{err}");
+    assert!(err.contains("a key of the gateway"), "{err}");
     assert!(err.contains("jag --setup"), "{err}");
 }
 

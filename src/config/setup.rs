@@ -6,7 +6,10 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use signal_hook::consts::SIGINT;
 
-use super::{ApiKey, ConfigError, Env, Fs, load_for_change, write_key_file};
+use std::path::Path;
+
+use super::model::{BASE_URL_VARIABLE, Origin, Route, SettingSource, normalize_base_url, route_of};
+use super::{ApiKey, ConfigError, Env, FileValues, Fs, load_for_change, write_key_file};
 
 /// The questions of setup. A fake gives the answers in a unit test.
 pub trait Prompter {
@@ -54,13 +57,65 @@ impl Prompter for TtyPrompter {
     }
 }
 
-fn note_variable(env: &Env, out: &mut dyn Write, text: impl Fn(&str) -> String) {
-    if let Some(name) = env.set_variable() {
+fn note_variable(env: &Env, route: Route, out: &mut dyn Write, text: impl Fn(&str) -> String) {
+    if let Some(name) = env.set_key_variable(route) {
         let _ = writeln!(out, "{}", text(name));
     }
 }
 
-/// Store the key. The caller says if standard input is a terminal.
+/// The text of the variable `JAG_BASE_URL` when it is set and not blank. A
+/// value that is not text is a bad value.
+fn base_url_variable(env: &Env) -> Result<Option<String>, ConfigError> {
+    let Some(value) = (env.vars)(BASE_URL_VARIABLE) else {
+        return Ok(None);
+    };
+    let text = value.to_str().ok_or(ConfigError::BaseUrlBad {
+        source: SettingSource::Variable,
+    })?;
+    let text = text.trim();
+    Ok((!text.is_empty()).then(|| text.to_owned()))
+}
+
+/// The route from `JAG_BASE_URL`, then `config.base-url` of the file, then
+/// the default. `--setup` and `--forget-key` take no `--base-url`. The origin
+/// names the source of a gateway.
+fn change_route(
+    env: &Env,
+    path: &Path,
+    values: &FileValues,
+) -> Result<(Route, Origin), ConfigError> {
+    if let Some(text) = base_url_variable(env)? {
+        let url = normalize_base_url(&text).ok_or(ConfigError::BaseUrlBad {
+            source: SettingSource::Variable,
+        })?;
+        return Ok((route_of(&url), Origin::Variable));
+    }
+    if let Some(text) = values.base_url.as_deref() {
+        let url = normalize_base_url(text).ok_or_else(|| ConfigError::FileBaseUrlBad {
+            path: path.to_owned(),
+        })?;
+        return Ok((route_of(&url), Origin::ConfigFile(path.to_owned())));
+    }
+    Ok((Route::Direct, Origin::Default))
+}
+
+/// The key of the route in the values of the file.
+fn key_of(values: &FileValues, route: Route) -> &Option<String> {
+    match route {
+        Route::Direct => &values.api_key,
+        Route::Gateway => &values.gateway_api_key,
+    }
+}
+
+fn key_of_mut(values: &mut FileValues, route: Route) -> &mut Option<String> {
+    match route {
+        Route::Direct => &mut values.api_key,
+        Route::Gateway => &mut values.gateway_api_key,
+    }
+}
+
+/// Store the key of the route. The caller says if standard input is a
+/// terminal.
 pub fn setup(
     env: &Env,
     fs: &dyn Fs,
@@ -81,38 +136,83 @@ pub fn setup(
             mode: state.mode & 0o777,
         });
     }
-    // 4. Ask before a replace (CRITERION-03).
-    if state.has_key {
-        let question = format!(
-            "A key is already stored in {}. Replace it? [y/N] ",
-            path.display()
+    // 4. The route. A bad value stops setup, and the file does not change.
+    let (route, origin) = change_route(env, &path, &state.values)?;
+    let gateway = route == Route::Gateway;
+    // 5. The line before the question, on the gateway route.
+    if gateway {
+        let source = match &origin {
+            Origin::ConfigFile(path) => format!("config.base-url in {}", path.display()),
+            _ => BASE_URL_VARIABLE.to_owned(),
+        };
+        let _ = writeln!(
+            out,
+            "{source} names an AI gateway, so jag stores a gateway key."
         );
+    }
+    // 6. Ask before a replace (CRITERION-03).
+    if key_of(&state.values, route).is_some() {
+        let question = if gateway {
+            format!(
+                "A gateway key is already stored in {}. Replace it? [y/N] ",
+                path.display()
+            )
+        } else {
+            format!(
+                "A key is already stored in {}. Replace it? [y/N] ",
+                path.display()
+            )
+        };
         let replace = prompter
             .confirm(&question)
             .map_err(|error| ConfigError::PromptFailed { kind: error.kind() })?;
         if !replace {
-            let _ = writeln!(out, "Kept the stored key.");
+            let _ = writeln!(
+                out,
+                "{}",
+                if gateway {
+                    "Kept the stored gateway key."
+                } else {
+                    "Kept the stored key."
+                }
+            );
             return Ok(());
         }
     }
-    // 5. Read the key with no echo.
+    // 7. Read the key with no echo.
     let typed = prompter
-        .secret("TypeSafe API key: ")
+        .secret(if gateway {
+            "Gateway API key: "
+        } else {
+            "TypeSafe API key: "
+        })
         .map_err(|error| ConfigError::PromptFailed { kind: error.kind() })?;
-    // 6. Check the format. The error holds no text.
-    let key = ApiKey::parse(&typed).map_err(|_| ConfigError::KeyTypedBad)?;
-    // 7. Write the file. `load_for_change` found a path, so there is a home.
+    // 8. Check the format. The error holds no text.
+    let key = ApiKey::parse(&typed).map_err(|_| ConfigError::KeyTypedBad { route })?;
+    // 9. Write the file, with each other value as it was. `load_for_change`
+    //    found a path, so there is a home.
     let home = env.home.as_deref().ok_or(ConfigError::NoHome)?;
-    let path = write_key_file(fs, home, &key)?;
-    // 8. Report.
-    let _ = writeln!(out, "Stored the key in {}.", path.display());
-    note_variable(env, out, |name| {
+    let mut values = state.values;
+    *key_of_mut(&mut values, route) = Some(key.expose().to_owned());
+    let path = write_key_file(fs, home, &values)?;
+    // 10. Report.
+    let _ = writeln!(
+        out,
+        "{} {}.",
+        if gateway {
+            "Stored the gateway key in"
+        } else {
+            "Stored the key in"
+        },
+        path.display()
+    );
+    note_variable(env, route, out, |name| {
         format!("Note: {name} is set, and it wins over the stored key.")
     });
     Ok(())
 }
 
-/// Remove the stored key.
+/// Remove the stored key of the route.
 pub fn forget_key(env: &Env, fs: &dyn Fs, out: &mut dyn Write) -> Result<(), ConfigError> {
     // 1. No home: there is no stored key.
     if env.key_path().is_none() {
@@ -121,20 +221,50 @@ pub fn forget_key(env: &Env, fs: &dyn Fs, out: &mut dyn Write) -> Result<(), Con
     }
     // 2. Read the file. A bad file stays as it is.
     let (path, state) = load_for_change(env, fs)?;
-    // 3. No file, or no key in it.
-    if !state.exists || !state.has_key {
-        let _ = writeln!(out, "No stored key in {}.", path.display());
+    // 3. The route. A bad value stops the removal, and the file does not
+    //    change.
+    let (route, _) = change_route(env, &path, &state.values)?;
+    let gateway = route == Route::Gateway;
+    // 4. No file, or no key of the route in it.
+    if !state.exists || key_of(&state.values, route).is_none() {
+        let _ = writeln!(
+            out,
+            "{} {}.",
+            if gateway {
+                "No stored gateway key in"
+            } else {
+                "No stored key in"
+            },
+            path.display()
+        );
         return Ok(());
     }
-    // 4. Delete the file. Decision 18 makes sure that it holds only the key.
-    fs.remove_file(&path)
-        .map_err(|error| ConfigError::KeyFileWrite {
-            path: path.clone(),
-            kind: error.kind(),
-        })?;
-    // 5. and 6. Report.
-    let _ = writeln!(out, "Removed the stored key from {}.", path.display());
-    note_variable(env, out, |name| {
+    // 5. Clear the field of the route. When no value is left, remove the
+    //    file. Else write the file again with the other values.
+    let mut values = state.values;
+    *key_of_mut(&mut values, route) = None;
+    if values.is_empty() {
+        fs.remove_file(&path)
+            .map_err(|error| ConfigError::KeyFileWrite {
+                path: path.clone(),
+                kind: error.kind(),
+            })?;
+    } else {
+        let home = env.home.as_deref().ok_or(ConfigError::NoHome)?;
+        write_key_file(fs, home, &values)?;
+    }
+    // 6. Report.
+    let _ = writeln!(
+        out,
+        "{} {}.",
+        if gateway {
+            "Removed the stored gateway key from"
+        } else {
+            "Removed the stored key from"
+        },
+        path.display()
+    );
+    note_variable(env, route, out, |name| {
         format!("Note: {name} is still set, so jag still has a key.")
     });
     Ok(())
@@ -148,7 +278,7 @@ mod tests {
 
     use super::*;
     use crate::config::testing::*;
-    use crate::config::{KeySource, RealFs, find_key};
+    use crate::config::{ConfigFile, KeySource, RealFs, find_key};
     use crate::failure::Failure;
 
     /// A prompter with queued answers. It records each call.
@@ -226,7 +356,9 @@ mod tests {
             vars: &vars,
             home: Some(home.to_owned()),
         };
-        find_key(&env, &RealFs).map(|(key, source)| (key.expose().to_owned(), source))
+        let file = ConfigFile::new(&env, &RealFs);
+        find_key(&env, &file, Route::Direct, &Origin::Default)
+            .map(|(key, source)| (key.expose().to_owned(), source))
     }
 
     fn key_path(home: &Path) -> PathBuf {
@@ -344,7 +476,12 @@ mod tests {
             true,
         );
         let error = run.result.unwrap_err();
-        assert_eq!(error, ConfigError::KeyTypedBad);
+        assert_eq!(
+            error,
+            ConfigError::KeyTypedBad {
+                route: Route::Direct
+            }
+        );
         let failure = Failure::from(error);
         assert_eq!(failure.exit_code, 2);
         assert!(!failure.render().contains("SENTINEL"));
@@ -521,5 +658,165 @@ mod tests {
         let (result, out) = run_forget(&[], Some(home.path()));
         result.unwrap();
         assert!(!out.contains("SENTINEL"));
+    }
+
+    const GATEWAY_URL: (&str, &str) = ("JAG_BASE_URL", "https://openrouter.ai/api");
+
+    fn text_of(home: &Path) -> String {
+        std::fs::read_to_string(key_path(home)).unwrap()
+    }
+
+    #[test]
+    fn a_gateway_variable_makes_setup_store_the_gateway_key_and_keep_the_other_values() {
+        let home = tempfile::tempdir().unwrap();
+        write_file(
+            home.path(),
+            "config:\n  api-key: direct-key\n  model: m\n",
+            0o600,
+        );
+        let run = run_setup(
+            &[GATEWAY_URL],
+            Some(home.path()),
+            Fake::secret(SENTINEL_KEY),
+            true,
+        );
+        run.result.unwrap();
+        assert!(
+            run.out
+                .starts_with("JAG_BASE_URL names an AI gateway, so jag stores a gateway key.\n")
+        );
+        assert!(run.out.contains("Stored the gateway key in"));
+        assert_eq!(
+            text_of(home.path()),
+            format!(
+                "config:\n  api-key: direct-key\n  gateway-api-key: {SENTINEL_KEY}\n  model: m\n"
+            )
+        );
+        assert!(!run.out.contains("SENTINEL"));
+    }
+
+    #[test]
+    fn the_gateway_base_url_of_the_file_makes_setup_store_the_gateway_key() {
+        let home = tempfile::tempdir().unwrap();
+        let path = write_file(
+            home.path(),
+            "config:\n  base-url: https://openrouter.ai/api\n",
+            0o600,
+        );
+        let run = run_setup(&[], Some(home.path()), Fake::secret("gw-key"), true);
+        run.result.unwrap();
+        assert!(run.out.starts_with(&format!(
+            "config.base-url in {} names an AI gateway, so jag stores a gateway key.\n",
+            path.display()
+        )));
+        assert!(text_of(home.path()).contains("gateway-api-key: gw-key\n"));
+    }
+
+    #[test]
+    fn setup_asks_before_it_replaces_a_gateway_key_only() {
+        let home = tempfile::tempdir().unwrap();
+        write_file(home.path(), "config:\n  api-key: direct-key\n", 0o600);
+        // The direct key does not count: no question.
+        let run = run_setup(&[GATEWAY_URL], Some(home.path()), Fake::secret("one"), true);
+        run.result.unwrap();
+        assert_eq!(run.calls, 1);
+        // The gateway key counts: a question, and a no keeps the key.
+        let run = run_setup(
+            &[GATEWAY_URL],
+            Some(home.path()),
+            Fake::answering(false, "two"),
+            true,
+        );
+        run.result.unwrap();
+        assert!(run.out.contains("Kept the stored gateway key."));
+        assert!(text_of(home.path()).contains("gateway-api-key: one\n"));
+    }
+
+    #[test]
+    fn a_bad_gateway_key_gives_the_error_of_the_gateway_route() {
+        let home = tempfile::tempdir().unwrap();
+        let run = run_setup(
+            &[GATEWAY_URL],
+            Some(home.path()),
+            Fake::secret("has a space"),
+            true,
+        );
+        assert_eq!(
+            run.result.unwrap_err(),
+            ConfigError::KeyTypedBad {
+                route: Route::Gateway
+            }
+        );
+        assert!(!key_path(home.path()).exists());
+    }
+
+    #[test]
+    fn a_bad_base_url_variable_stops_setup_and_the_file_stays() {
+        let home = tempfile::tempdir().unwrap();
+        let run = run_setup(
+            &[("JAG_BASE_URL", "ftp://x")],
+            Some(home.path()),
+            Fake::secret("k"),
+            true,
+        );
+        assert_eq!(
+            run.result.unwrap_err(),
+            ConfigError::BaseUrlBad {
+                source: SettingSource::Variable
+            }
+        );
+        assert_eq!(run.calls, 0);
+        assert!(!key_path(home.path()).exists());
+    }
+
+    #[test]
+    fn forget_removes_only_the_gateway_key_on_the_gateway_route() {
+        let home = tempfile::tempdir().unwrap();
+        write_file(
+            home.path(),
+            "config:\n  api-key: direct-key\n  gateway-api-key: gw\n",
+            0o600,
+        );
+        let (result, out) = run_forget(&[GATEWAY_URL], Some(home.path()));
+        result.unwrap();
+        assert!(out.contains("Removed the stored gateway key from"));
+        assert_eq!(text_of(home.path()), "config:\n  api-key: direct-key\n");
+        // The file has no gateway key now.
+        let (result, out) = run_forget(&[GATEWAY_URL], Some(home.path()));
+        result.unwrap();
+        assert!(out.contains("No stored gateway key in"));
+    }
+
+    #[test]
+    fn forget_removes_the_file_when_no_value_is_left_and_keeps_it_when_one_is_left() {
+        let home = tempfile::tempdir().unwrap();
+        let path = write_file(home.path(), "config:\n  gateway-api-key: gw\n", 0o600);
+        let (result, _) = run_forget(&[GATEWAY_URL], Some(home.path()));
+        result.unwrap();
+        assert!(!path.exists());
+        write_file(
+            home.path(),
+            "config:\n  api-key: direct-key\n  model: m\n",
+            0o600,
+        );
+        let (result, _) = run_forget(&[], Some(home.path()));
+        result.unwrap();
+        assert_eq!(text_of(home.path()), "config:\n  model: m\n");
+    }
+
+    #[test]
+    fn the_note_names_the_gateway_variable_on_the_gateway_route() {
+        let home = tempfile::tempdir().unwrap();
+        let run = run_setup(
+            &[GATEWAY_URL, ("JAG_GATEWAY_API_KEY", "v")],
+            Some(home.path()),
+            Fake::secret("k"),
+            true,
+        );
+        run.result.unwrap();
+        assert!(
+            run.out
+                .contains("Note: JAG_GATEWAY_API_KEY is set, and it wins over the stored key.")
+        );
     }
 }

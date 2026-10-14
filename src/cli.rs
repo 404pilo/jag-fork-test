@@ -16,9 +16,9 @@ use grep_regex::{RegexMatcher, RegexMatcherBuilder};
 
 use crate::check;
 use crate::config::{
-    self, DEFAULT_SIZE_LIMIT, Env, RealFs, SettingSource, SizeLimit, TimeSetting, TtyPrompter,
-    cost_limit, find_key, model_settings, parse_cost_limit, parse_seconds, parse_size_limit,
-    size_limit,
+    self, ConfigError, ConfigFile, DEFAULT_SIZE_LIMIT, Env, RealFs, SettingOptions, SettingSource,
+    SizeLimit, TimeSetting, TtyPrompter, cost_limit, find_key, model_settings, normalize_base_url,
+    parse_cost_limit, parse_seconds, parse_size_limit, size_limit,
 };
 use crate::failure::Failure;
 use crate::output::progress::Progress;
@@ -44,7 +44,7 @@ const USAGE_ERROR: &str = "jag: the command line is not valid. Run jag --help to
     name = "jag",
     version,
     arg_required_else_help = true,
-    override_usage = "jag [OPTIONS] TERM [PATH...]\n       jag [OPTIONS] --ask QUESTION TERM [PATH...]\n       jag --check [--timeout SECONDS] [--retry-wait SECONDS]\n       jag --setup\n       jag --forget-key"
+    override_usage = "jag [OPTIONS] TERM [PATH...]\n       jag [OPTIONS] --ask QUESTION TERM [PATH...]\n       jag --check [--timeout SECONDS] [--retry-wait SECONDS] [--base-url URL] [--model NAME]\n       jag --setup\n       jag --forget-key"
 )]
 struct Cli {
     /// Write one JSON document for an agent, in place of text
@@ -69,11 +69,11 @@ struct Cli {
     #[arg(long, conflicts_with_all = ["setup", "forget_key", "cost_limit", "term", "ask", "paths"])]
     check: bool,
 
-    /// Store your TypeSafe API key, with no echo
+    /// Store your API key, with no echo: the TypeSafe key, or the gateway key when JAG_BASE_URL or config.base-url names a gateway
     #[arg(long, conflicts_with_all = ["forget_key", "term", "ask", "paths"])]
     setup: bool,
 
-    /// Remove the stored TypeSafe API key
+    /// Remove the stored key: the TypeSafe key, or the gateway key when JAG_BASE_URL or config.base-url names a gateway
     #[arg(long = "forget-key", conflicts_with_all = ["term", "ask", "paths"])]
     forget_key: bool,
 
@@ -84,6 +84,14 @@ struct Cli {
     /// Seconds to wait before the one retry, from 1 to 60 (default 1)
     #[arg(long = "retry-wait", value_name = "SECONDS", conflicts_with_all = ["setup", "forget_key"])]
     retry_wait: Option<String>,
+
+    /// The address of the model service or of an AI gateway (default https://api.typesafe.ai/v1)
+    #[arg(long = "base-url", value_name = "URL", conflicts_with_all = ["setup", "forget_key"])]
+    base_url: Option<String>,
+
+    /// The model name to send (default jev-1.13.0)
+    #[arg(long, value_name = "NAME", conflicts_with_all = ["setup", "forget_key"])]
+    model: Option<String>,
 
     /// The most results that the model scores, from 1 to 2,000 (default 200)
     #[arg(long = "max-scored", value_name = "COUNT", conflicts_with_all = ["setup", "forget_key"])]
@@ -354,8 +362,8 @@ struct SearchArgs<'a> {
     /// `None` for a search with no question (FEATURE-12).
     question: Option<&'a str>,
     paths: &'a [PathBuf],
-    /// The parsed `--timeout` and `--retry-wait`.
-    times: (Option<Duration>, Option<Duration>),
+    /// The parsed `--timeout`, `--retry-wait`, `--base-url`, and `--model`.
+    settings: SettingOptions,
     /// The parsed `--max-scored`.
     cost_limit: Option<usize>,
     /// The parsed `--max-chars` or `--no-max-chars`.
@@ -393,8 +401,7 @@ fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
     }
     // The time options come after the other checks and before the key
     // (decision 11). The timeout is checked first.
-    let timeout = parse_option(cli.timeout.as_deref(), TimeSetting::Timeout)?;
-    let retry_wait = parse_option(cli.retry_wait.as_deref(), TimeSetting::RetryWait)?;
+    let times = time_options(cli)?;
     let cost_limit = cli
         .cost_limit
         .as_deref()
@@ -410,13 +417,60 @@ fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
             .transpose()
             .map_err(Failure::from)?
     };
+    let settings = address_options(cli, times)?;
     Ok(SearchArgs {
         term,
         question,
         paths: &cli.paths,
-        times: (timeout, retry_wait),
+        settings,
         cost_limit,
         size_limit,
+    })
+}
+
+/// The checks of `--timeout` and `--retry-wait`, in this order.
+fn time_options(cli: &Cli) -> Result<(Option<Duration>, Option<Duration>), Failure> {
+    let timeout = parse_option(cli.timeout.as_deref(), TimeSetting::Timeout)?;
+    let retry_wait = parse_option(cli.retry_wait.as_deref(), TimeSetting::RetryWait)?;
+    Ok((timeout, retry_wait))
+}
+
+/// The checks of `--base-url` and `--model`, in this order, with the time
+/// options that came before. A blank value, or an address that the address
+/// rule refuses, gives exit 2. No message shows the value.
+fn address_options(
+    cli: &Cli,
+    times: (Option<Duration>, Option<Duration>),
+) -> Result<SettingOptions, Failure> {
+    let base_url = cli
+        .base_url
+        .as_deref()
+        .map(|text| {
+            normalize_base_url(text).ok_or(ConfigError::BaseUrlBad {
+                source: SettingSource::Option,
+            })
+        })
+        .transpose()
+        .map_err(Failure::from)?;
+    let model = cli
+        .model
+        .as_deref()
+        .map(|text| {
+            let text = text.trim();
+            if text.is_empty() {
+                Err(ConfigError::ModelBad {
+                    source: SettingSource::Option,
+                })
+            } else {
+                Ok(text.to_owned())
+            }
+        })
+        .transpose()
+        .map_err(Failure::from)?;
+    Ok(SettingOptions {
+        base_url,
+        model,
+        times,
     })
 }
 
@@ -452,9 +506,12 @@ fn search(
     let Some(question) = args.question else {
         return plain(cli, &args, env, context, summary, stdout, stderr);
     };
-    // The key comes before any file read (decision 18).
-    let (key, _source) = find_key(env, &RealFs).map_err(Failure::from)?;
-    let settings = model_settings(env, args.times).map_err(Failure::from)?;
+    // The settings come before the key (decision 27). The config file is
+    // read at most once.
+    let file = ConfigFile::new(env, &RealFs);
+    let settings = model_settings(env, &file, &args.settings).map_err(Failure::from)?;
+    let (key, _source) =
+        find_key(env, &file, settings.route, &settings.base_url_origin).map_err(Failure::from)?;
     let limit = cost_limit(env, args.cost_limit).map_err(Failure::from)?;
     let size = size_limit(env, args.size_limit)
         .map_err(Failure::from)?
@@ -505,7 +562,7 @@ fn search(
         );
     }
 
-    let score_settings = ScoreSettings::new(settings.base_url, settings.model, settings.times);
+    let score_settings = ScoreSettings::new(settings);
     progress.start(snippets.len());
     let scores = {
         let _clear = ClearOnDrop(progress);
@@ -522,7 +579,7 @@ fn search(
         Ok(scores) => scores,
         // Only a stop sets the flag, and the stop writes the failure.
         Err(ScoreError::Stopped) => wait_for_the_end(),
-        Err(error) => return Err(Failure::from(error)),
+        Err(error) => return Err(error.failure(&score_settings)),
     };
     let ranked = rank(snippets, scores);
 
@@ -742,11 +799,15 @@ fn check(
     stderr: &mut dyn Write,
 ) -> Result<u8, Failure> {
     // The timeout is checked first.
-    let timeout = parse_option(cli.timeout.as_deref(), TimeSetting::Timeout)?;
-    let retry_wait = parse_option(cli.retry_wait.as_deref(), TimeSetting::RetryWait)?;
-    let settings = model_settings(env, (timeout, retry_wait)).map_err(Failure::from)?;
-    let settings = ScoreSettings::new(settings.base_url, settings.model, settings.times);
-    let report = check::run(env, &RealFs, &|key| probe(key, &settings));
+    let options = address_options(cli, time_options(cli)?)?;
+    let file = ConfigFile::new(env, &RealFs);
+    // A file error shows on the items. Each other error stops the check.
+    let settings = match model_settings(env, &file, &options) {
+        Ok(settings) => Ok(ScoreSettings::new(settings)),
+        Err(error) if error.is_file_error() => Err(error),
+        Err(error) => return Err(Failure::from(error)),
+    };
+    let report = check::run(env, &file, settings, &|key, settings| probe(key, settings));
 
     // The lines first, then the failures. A reader that closes the pipe gives
     // no message and keeps the exit code (CV-4).

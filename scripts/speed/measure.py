@@ -4,8 +4,9 @@
 STORY-44, CRITERION-65: a typical search returns in under 5 seconds.
 
 Python 3, standard library only. The script never reads, prints, or sets the
-key: it copies the environment of the user and removes only the settings of
-the model service, so jag finds the key as it always does.
+key: it copies the environment of the user, removes the settings of the
+model service, and sets JAG_BASE_URL to the TypeSafe address, so that jag
+uses the TypeSafe key as it always does and never a gateway.
 
 Exit code: 0 when the target is met, 1 when it is not met, 2 when jag fails
 or an argument is wrong.
@@ -27,10 +28,12 @@ REPOSITORY = "https://github.com/golang/go.git"
 TARGET_SECONDS = 5.0
 # The codes of a search that ended (IF-4).
 ENDED = (0, 1, 7, 8)
-# The settings that make jag use anything but its defaults and the direct
-# route to the TypeSafe API.
+# The address of the direct route to the TypeSafe API. jag reads the base URL
+# from this variable before the config file, so a `config.base-url` of the user
+# cannot send the measure to a gateway.
+DIRECT_URL = "https://api.typesafe.ai/v1"
+# The settings that make jag use anything but its defaults.
 REMOVED_SETTINGS = (
-    "JAG_BASE_URL",
     "JAG_MODEL",
     "JAG_TIMEOUT",
     "JAG_RETRY_WAIT",
@@ -51,10 +54,12 @@ class Stop(Exception):
 
 
 def environment():
-    """The environment of the user, with no setting of the model service."""
+    """The environment of the user, with no setting of the model service and
+    with the address of the direct route."""
     env = dict(os.environ)
     for name in REMOVED_SETTINGS:
         env.pop(name, None)
+    env["JAG_BASE_URL"] = DIRECT_URL
     return env
 
 

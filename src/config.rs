@@ -18,20 +18,25 @@ use serde::Deserialize;
 
 use crate::failure::Failure;
 
-pub use change::{ChangeState, load_for_change, write_key_file};
+pub use change::{ChangeState, FileValues, load_for_change, write_key_file};
 pub use fs::{Fs, OpenFile, RealFs};
 pub use limit::{
     COST_LIMIT_OPTION, COST_LIMIT_VARIABLE, DEFAULT_COST_LIMIT, DEFAULT_SIZE_LIMIT, MAX_COST_LIMIT,
     MIN_SIZE_LIMIT, SIZE_LIMIT_OFF_OPTION, SIZE_LIMIT_OPTION, SIZE_LIMIT_VARIABLE, SizeLimit,
     cost_limit, parse_cost_limit, parse_size_limit, size_limit,
 };
-pub use model::{ModelSettings, SettingSource, TimeSetting, Times, model_settings, parse_seconds};
+pub use model::{
+    BASE_URL_OPTION, BASE_URL_VARIABLE, DEFAULT_BASE_URL, DEFAULT_MODEL, MODEL_OPTION,
+    MODEL_VARIABLE, ModelSettings, Origin, Route, SettingOptions, SettingSource, TimeSetting,
+    Times, model_settings, normalize_base_url, parse_seconds, route_of,
+};
 pub use setup::{Prompter, TtyPrompter, forget_key, setup};
 
 /// The page where a user gets a key (DECISION-09).
 pub const KEYS_PAGE: &str = "https://console.typesafe.ai/keys";
 pub const JAG_VARIABLE: &str = "JAG_TYPESAFE_API_KEY";
 pub const TYPESAFE_VARIABLE: &str = "TYPESAFE_API_KEY";
+pub const GATEWAY_VARIABLE: &str = "JAG_GATEWAY_API_KEY";
 
 /// A TypeSafe API key. The text stays private.
 ///
@@ -79,6 +84,10 @@ pub enum KeySource {
     JagVariable,
     TypeSafeVariable,
     ConfigFile(PathBuf),
+    /// `JAG_GATEWAY_API_KEY`.
+    GatewayVariable,
+    /// `config.gateway-api-key` in the file.
+    GatewayConfigFile(PathBuf),
 }
 
 impl KeySource {
@@ -86,7 +95,8 @@ impl KeySource {
         match self {
             KeySource::JagVariable => Some(JAG_VARIABLE),
             KeySource::TypeSafeVariable => Some(TYPESAFE_VARIABLE),
-            KeySource::ConfigFile(_) => None,
+            KeySource::GatewayVariable => Some(GATEWAY_VARIABLE),
+            KeySource::ConfigFile(_) | KeySource::GatewayConfigFile(_) => None,
         }
     }
 }
@@ -106,10 +116,15 @@ impl Env<'_> {
         Some(home.join(".config").join("jag").join("config.yml"))
     }
 
-    /// The first key variable that is set and not blank.
-    pub(crate) fn set_variable(&self) -> Option<&'static str> {
-        [JAG_VARIABLE, TYPESAFE_VARIABLE]
-            .into_iter()
+    /// The first key variable of the route that is set and not blank.
+    pub(crate) fn set_key_variable(&self, route: Route) -> Option<&'static str> {
+        let names: &[&'static str] = match route {
+            Route::Direct => &[JAG_VARIABLE, TYPESAFE_VARIABLE],
+            Route::Gateway => &[GATEWAY_VARIABLE],
+        };
+        names
+            .iter()
+            .copied()
             .find(|name| (self.vars)(name).is_some_and(|v| !is_blank(&v)))
     }
 }
@@ -118,6 +133,11 @@ impl Env<'_> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConfigError {
     KeyMissing,
+    /// No key for the gateway route (decision 11). `by_option` is true when
+    /// the base URL came from `--base-url`.
+    GatewayKeyMissing {
+        by_option: bool,
+    },
     KeyFileOpen {
         path: PathBuf,
         mode: u32,
@@ -147,14 +167,26 @@ pub enum ConfigError {
         path: PathBuf,
     },
     NoTerminal,
-    KeyTypedBad,
+    KeyTypedBad {
+        route: Route,
+    },
     PromptFailed {
         kind: std::io::ErrorKind,
     },
-    /// `JAG_BASE_URL` is not an allowed address. The text never shows it.
-    BaseUrlBad,
-    /// `JAG_MODEL` is not text. The text never shows it.
-    ModelBad,
+    /// A base URL of an option or a variable is not an allowed address. The
+    /// text never shows it.
+    BaseUrlBad {
+        source: SettingSource,
+    },
+    /// `config.base-url` is not an allowed address. The text never shows it.
+    FileBaseUrlBad {
+        path: PathBuf,
+    },
+    /// A model name of an option is blank, or `JAG_MODEL` is not text. The
+    /// text never shows it.
+    ModelBad {
+        source: SettingSource,
+    },
     /// A time option or a time variable is not a whole number of seconds
     /// from 1 to 60. The text never shows the value.
     TimeBad {
@@ -173,6 +205,20 @@ pub enum ConfigError {
     },
 }
 
+impl ConfigError {
+    /// True for KeyFileOpen, KeyFileUnreadable, KeyFileNotRegular, and
+    /// KeyFileBad: the errors of a read of the config file.
+    pub fn is_file_error(&self) -> bool {
+        matches!(
+            self,
+            ConfigError::KeyFileOpen { .. }
+                | ConfigError::KeyFileUnreadable { .. }
+                | ConfigError::KeyFileNotRegular { .. }
+                | ConfigError::KeyFileBad { .. }
+        )
+    }
+}
+
 impl From<ConfigError> for Failure {
     fn from(error: ConfigError) -> Failure {
         let (cause, fix, exit_code) = match error {
@@ -181,6 +227,18 @@ impl From<ConfigError> for Failure {
                 format!(
                     "Get a key at {KEYS_PAGE}, then run `jag --setup`,\nor set {JAG_VARIABLE}."
                 ),
+                3,
+            ),
+            ConfigError::GatewayKeyMissing { by_option: false } => (
+                "no gateway key found.".to_owned(),
+                format!(
+                    "Get a key from the gateway, then run `jag --setup`,\nor set {GATEWAY_VARIABLE}."
+                ),
+                3,
+            ),
+            ConfigError::GatewayKeyMissing { by_option: true } => (
+                "no gateway key found.".to_owned(),
+                format!("Set {GATEWAY_VARIABLE} to the key of the gateway."),
                 3,
             ),
             ConfigError::KeyFileOpen { path, mode } => (
@@ -205,31 +263,47 @@ impl From<ConfigError> for Failure {
                 "Fix the file by hand, or remove it and run `jag --setup`.".to_owned(),
                 3,
             ),
-            ConfigError::KeyFormatBad { source } => match source.variable() {
-                Some(name) => (
+            ConfigError::KeyFormatBad { source } => match source {
+                KeySource::GatewayVariable => (
                     format!(
-                        "the key in the variable {name} has a space or a character that is not plain ASCII."
+                        "the key in the variable {GATEWAY_VARIABLE} has a space or a character that is not plain ASCII."
                     ),
-                    format!("Set {name} to the key from {KEYS_PAGE}, or unset it."),
+                    format!("Set {GATEWAY_VARIABLE} to the key of the gateway, or unset it."),
                     3,
                 ),
-                None => {
-                    let KeySource::ConfigFile(path) = source else {
-                        unreachable!("a variable source has a name")
-                    };
+                KeySource::GatewayConfigFile(path) => (
+                    format!(
+                        "the gateway key in {} has a space or a character that is not plain ASCII.",
+                        path.display()
+                    ),
+                    format!(
+                        "Fix config.gateway-api-key in {}, or set {GATEWAY_VARIABLE}.",
+                        path.display()
+                    ),
+                    3,
+                ),
+                KeySource::ConfigFile(path) => (
+                    format!(
+                        "the key in {} has a space or a character that is not plain ASCII.",
+                        path.display()
+                    ),
+                    "Run `jag --setup` to store the key again.".to_owned(),
+                    3,
+                ),
+                KeySource::JagVariable | KeySource::TypeSafeVariable => {
+                    let name = source.variable().unwrap_or(JAG_VARIABLE);
                     (
                         format!(
-                            "the key in {} has a space or a character that is not plain ASCII.",
-                            path.display()
+                            "the key in the variable {name} has a space or a character that is not plain ASCII."
                         ),
-                        "Run `jag --setup` to store the key again.".to_owned(),
+                        format!("Set {name} to the key from {KEYS_PAGE}, or unset it."),
                         3,
                     )
                 }
             },
             ConfigError::KeyFileNotRegular { path } => (
                 format!("{} is not a regular file.", path.display()),
-                format!("Remove it, then run `jag --setup`, or set {JAG_VARIABLE}."),
+                "Remove it, then run `jag --setup`.".to_owned(),
                 3,
             ),
             ConfigError::KeyFileWrite { path, kind } => (
@@ -239,7 +313,9 @@ impl From<ConfigError> for Failure {
             ),
             ConfigError::NoHome => (
                 "HOME is not set, so jag has no folder for the key file.".to_owned(),
-                format!("Set HOME, or set {JAG_VARIABLE}."),
+                format!(
+                    "Set HOME, or set {JAG_VARIABLE},\nor {GATEWAY_VARIABLE} for an AI gateway."
+                ),
                 2,
             ),
             ConfigError::KeyFileIsLink { path } => (
@@ -252,7 +328,7 @@ impl From<ConfigError> for Failure {
             ),
             ConfigError::KeyFileHasOtherKeys { path } => (
                 format!(
-                    "{} holds settings other than config.api-key.",
+                    "{} holds settings other than config.api-key, config.gateway-api-key, config.base-url, and config.model.",
                     path.display()
                 ),
                 "Remove the other settings, or edit the file by hand.".to_owned(),
@@ -260,12 +336,17 @@ impl From<ConfigError> for Failure {
             ),
             ConfigError::NoTerminal => (
                 "--setup needs a terminal to read the key.".to_owned(),
-                format!("To give the key with no terminal, set {JAG_VARIABLE}."),
+                format!(
+                    "To give the key with no terminal, set {JAG_VARIABLE},\nor {GATEWAY_VARIABLE} for an AI gateway."
+                ),
                 2,
             ),
-            ConfigError::KeyTypedBad => (
+            ConfigError::KeyTypedBad { route } => (
                 "the key has a space or a character that is not plain ASCII.".to_owned(),
-                format!("Copy the key again from {KEYS_PAGE}."),
+                match route {
+                    Route::Direct => format!("Copy the key again from {KEYS_PAGE}."),
+                    Route::Gateway => "Copy the key again from the gateway.".to_owned(),
+                },
                 2,
             ),
             ConfigError::PromptFailed {
@@ -280,14 +361,43 @@ impl From<ConfigError> for Failure {
                 "Run `jag --setup` again in a terminal.".to_owned(),
                 2,
             ),
-            ConfigError::BaseUrlBad => (
-                "JAG_BASE_URL is not an https address.".to_owned(),
-                "Set JAG_BASE_URL to an https address, or unset it.".to_owned(),
+            ConfigError::BaseUrlBad {
+                source: SettingSource::Option,
+            } => (
+                format!("the value of {BASE_URL_OPTION} is not an https address."),
+                format!("Use an https address, such as {BASE_URL_OPTION} https://api.typesafe.ai."),
                 2,
             ),
-            ConfigError::ModelBad => (
-                "JAG_MODEL is not text.".to_owned(),
-                "Set JAG_MODEL to a model name, or unset it.".to_owned(),
+            ConfigError::BaseUrlBad {
+                source: SettingSource::Variable,
+            } => (
+                format!("{BASE_URL_VARIABLE} is not an https address."),
+                format!("Set {BASE_URL_VARIABLE} to an https address, or unset it."),
+                2,
+            ),
+            ConfigError::FileBaseUrlBad { path } => (
+                format!(
+                    "config.base-url in {} is not an https address.",
+                    path.display()
+                ),
+                format!(
+                    "Set config.base-url in {} to an https address, or remove it.",
+                    path.display()
+                ),
+                2,
+            ),
+            ConfigError::ModelBad {
+                source: SettingSource::Option,
+            } => (
+                format!("the value of {MODEL_OPTION} is blank."),
+                format!("Use a model name, such as {MODEL_OPTION} jev-1.13.0."),
+                2,
+            ),
+            ConfigError::ModelBad {
+                source: SettingSource::Variable,
+            } => (
+                format!("{MODEL_VARIABLE} is not text."),
+                format!("Set {MODEL_VARIABLE} to a model name, or unset it."),
                 2,
             ),
             ConfigError::CostLimitBad { source } => match source {
@@ -367,6 +477,11 @@ pub(crate) struct File {
 pub(crate) struct Section {
     #[serde(rename = "api-key")]
     pub(crate) api_key: Option<String>,
+    #[serde(rename = "gateway-api-key")]
+    pub(crate) gateway_api_key: Option<String>,
+    #[serde(rename = "base-url")]
+    pub(crate) base_url: Option<String>,
+    pub(crate) model: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -382,6 +497,14 @@ pub(crate) struct StrictSection {
     #[serde(rename = "api-key")]
     #[allow(dead_code)]
     api_key: Option<String>,
+    #[serde(rename = "gateway-api-key")]
+    #[allow(dead_code)]
+    gateway_api_key: Option<String>,
+    #[serde(rename = "base-url")]
+    #[allow(dead_code)]
+    base_url: Option<String>,
+    #[allow(dead_code)]
+    model: Option<String>,
 }
 
 /// True when the text holds more than blank lines, comments, and a document marker.
@@ -409,6 +532,16 @@ pub(crate) fn file_key_text(file: &File) -> Option<&str> {
     file.config
         .as_ref()?
         .api_key
+        .as_deref()
+        .map(str::trim)
+        .filter(|text| !text.is_empty())
+}
+
+/// The gateway key text of the file, or `None` when it is missing or blank.
+pub(crate) fn file_gateway_key_text(file: &File) -> Option<&str> {
+    file.config
+        .as_ref()?
+        .gateway_api_key
         .as_deref()
         .map(str::trim)
         .filter(|text| !text.is_empty())
@@ -464,25 +597,46 @@ pub(crate) fn read_open_file(file: &mut dyn OpenFile, path: &Path) -> Result<Str
         })
 }
 
-/// Find the key (decision 7): `JAG_TYPESAFE_API_KEY`, then
-/// `TYPESAFE_API_KEY`, then `~/.config/jag/config.yml`. The first set source
-/// wins. A source that is set but bad stops the lookup (decision 15).
-pub fn find_key(env: &Env, fs: &dyn Fs) -> Result<(ApiKey, KeySource), ConfigError> {
-    for (name, source) in [
-        (JAG_VARIABLE, KeySource::JagVariable),
-        (TYPESAFE_VARIABLE, KeySource::TypeSafeVariable),
-    ] {
-        if let Some(raw) = (env.vars)(name).filter(|value| !is_blank(value)) {
-            // A value that is not UTF-8 has a bad format.
-            return match raw.to_str().ok_or(KeyFormatError).and_then(ApiKey::parse) {
-                Ok(key) => Ok((key, source)),
-                Err(KeyFormatError) => Err(ConfigError::KeyFormatBad { source }),
-            };
+/// The config file of one run. The settings step and the key step share the
+/// read (decision 12).
+pub struct ConfigFile<'a> {
+    env: &'a Env<'a>,
+    fs: &'a dyn Fs,
+    read: std::cell::OnceCell<Result<Option<(PathBuf, File)>, ConfigError>>,
+}
+
+impl<'a> ConfigFile<'a> {
+    pub fn new(env: &'a Env<'a>, fs: &'a dyn Fs) -> Self {
+        Self {
+            env,
+            fs,
+            read: std::cell::OnceCell::new(),
         }
     }
-    if let Some(path) = env.key_path()
-        && let Some(mut file) = open_key_file(fs, &path)?
-    {
+
+    /// The path and the parse of the file. `Ok(None)` when there is no home
+    /// or no file. The first call opens the file, checks the mode of the open
+    /// file, reads it, and parses it. Each later call gives the same result
+    /// and reads nothing.
+    pub(crate) fn get(&self) -> Result<Option<(&Path, &File)>, ConfigError> {
+        match self.read.get_or_init(|| self.load()) {
+            Ok(Some((path, file))) => Ok(Some((path.as_path(), file))),
+            Ok(None) => Ok(None),
+            Err(error) => Err(error.clone()),
+        }
+    }
+
+    pub(crate) fn fs(&self) -> &dyn Fs {
+        self.fs
+    }
+
+    fn load(&self) -> Result<Option<(PathBuf, File)>, ConfigError> {
+        let Some(path) = self.env.key_path() else {
+            return Ok(None);
+        };
+        let Some(mut file) = open_key_file(self.fs, &path)? else {
+            return Ok(None);
+        };
         // Check the mode of the open file before jag reads a byte.
         let mode = file
             .mode()
@@ -495,15 +649,82 @@ pub fn find_key(env: &Env, fs: &dyn Fs) -> Result<(ApiKey, KeySource), ConfigErr
         }
         let text = read_open_file(file.as_mut(), &path)?;
         let parsed = parse_loose(&text, &path)?;
-        if let Some(raw) = file_key_text(&parsed) {
-            let source = KeySource::ConfigFile(path);
-            return match ApiKey::parse(raw) {
-                Ok(key) => Ok((key, source)),
-                Err(KeyFormatError) => Err(ConfigError::KeyFormatBad { source }),
-            };
+        Ok(Some((path, parsed)))
+    }
+}
+
+/// The key from one variable, when it is set and not blank. A value with a
+/// bad format gives `KeyFormatBad`.
+fn key_from_variable(
+    env: &Env,
+    name: &str,
+    source: KeySource,
+) -> Result<Option<(ApiKey, KeySource)>, ConfigError> {
+    let Some(raw) = (env.vars)(name).filter(|value| !is_blank(value)) else {
+        return Ok(None);
+    };
+    // A value that is not UTF-8 has a bad format.
+    match raw.to_str().ok_or(KeyFormatError).and_then(ApiKey::parse) {
+        Ok(key) => Ok(Some((key, source))),
+        Err(KeyFormatError) => Err(ConfigError::KeyFormatBad { source }),
+    }
+}
+
+/// The key sources of a route: the variables, the reader of the file, the
+/// source of a key of the file, and the error for no key.
+type RouteSources<'a> = (
+    &'a [(&'a str, KeySource)],
+    fn(&File) -> Option<&str>,
+    fn(PathBuf) -> KeySource,
+    ConfigError,
+);
+
+/// Find the key of the route (decision 11). The first set source wins. A
+/// source that is set but bad stops the lookup. jag never reads a source of
+/// the other route.
+///
+/// - Direct: `JAG_TYPESAFE_API_KEY`, `TYPESAFE_API_KEY`, then `config.api-key`.
+/// - Gateway: `JAG_GATEWAY_API_KEY`, then `config.gateway-api-key`.
+pub fn find_key(
+    env: &Env,
+    file: &ConfigFile,
+    route: Route,
+    base_url_origin: &Origin,
+) -> Result<(ApiKey, KeySource), ConfigError> {
+    let (variables, file_text, file_source, missing): RouteSources = match route {
+        Route::Direct => (
+            &[
+                (JAG_VARIABLE, KeySource::JagVariable),
+                (TYPESAFE_VARIABLE, KeySource::TypeSafeVariable),
+            ],
+            file_key_text,
+            KeySource::ConfigFile,
+            ConfigError::KeyMissing,
+        ),
+        Route::Gateway => (
+            &[(GATEWAY_VARIABLE, KeySource::GatewayVariable)],
+            file_gateway_key_text,
+            KeySource::GatewayConfigFile,
+            ConfigError::GatewayKeyMissing {
+                by_option: matches!(base_url_origin, Origin::Option),
+            },
+        ),
+    };
+    for (name, source) in variables {
+        if let Some(found) = key_from_variable(env, name, source.clone())? {
+            return Ok(found);
         }
     }
-    Err(ConfigError::KeyMissing)
+    if let Some((path, parsed)) = file.get()?
+        && let Some(raw) = file_text(parsed)
+    {
+        let source = file_source(path.to_owned());
+        return match ApiKey::parse(raw) {
+            Ok(key) => Ok((key, source)),
+            Err(KeyFormatError) => Err(ConfigError::KeyFormatBad { source }),
+        };
+    }
+    Err(missing)
 }
 
 #[cfg(test)]
@@ -643,6 +864,8 @@ mod mode_tests {
 
 #[cfg(test)]
 mod tests {
+    use std::io;
+
     use super::testing::*;
     use super::*;
 
@@ -655,7 +878,21 @@ mod tests {
             vars: &vars,
             home: home.map(Path::to_owned),
         };
-        find_key(&env, &RealFs)
+        find_key(
+            &env,
+            &ConfigFile::new(&env, &RealFs),
+            Route::Direct,
+            &Origin::Default,
+        )
+    }
+
+    fn find_direct(env: &Env) -> Result<(ApiKey, KeySource), ConfigError> {
+        find_key(
+            env,
+            &ConfigFile::new(env, &RealFs),
+            Route::Direct,
+            &Origin::Default,
+        )
     }
 
     fn key_text(result: Result<(ApiKey, KeySource), ConfigError>) -> (String, KeySource) {
@@ -680,6 +917,215 @@ mod tests {
         assert_eq!(ApiKey::parse("a\u{e9}b").unwrap_err(), KeyFormatError);
         assert_eq!(ApiKey::parse("a\tb").unwrap_err(), KeyFormatError);
         assert!(ApiKey::parse("~!@#$%^&*()_+-={}[]|:;<>,.?/").is_ok());
+    }
+
+    #[test]
+    fn the_key_texts_of_each_source_and_route_are_pinned() {
+        let path = PathBuf::from("/h/.config/jag/config.yml");
+        let gateway_var = KeySource::GatewayVariable;
+        let gateway_file = KeySource::GatewayConfigFile(path.clone());
+        let cases = [
+            (
+                ConfigError::KeyFormatBad {
+                    source: gateway_var,
+                },
+                "the key in the variable JAG_GATEWAY_API_KEY has a space or a character that is not plain ASCII.",
+                "Set JAG_GATEWAY_API_KEY to the key of the gateway, or unset it.",
+            ),
+            (
+                ConfigError::KeyFormatBad {
+                    source: gateway_file,
+                },
+                "the gateway key in /h/.config/jag/config.yml has a space or a character that is not plain ASCII.",
+                "Fix config.gateway-api-key in /h/.config/jag/config.yml, or set JAG_GATEWAY_API_KEY.",
+            ),
+            (
+                ConfigError::KeyTypedBad {
+                    route: Route::Direct,
+                },
+                "the key has a space or a character that is not plain ASCII.",
+                "Copy the key again from https://console.typesafe.ai/keys.",
+            ),
+            (
+                ConfigError::KeyTypedBad {
+                    route: Route::Gateway,
+                },
+                "the key has a space or a character that is not plain ASCII.",
+                "Copy the key again from the gateway.",
+            ),
+        ];
+        for (error, cause, fix) in cases {
+            let failure = Failure::from(error);
+            assert_eq!(failure.cause, cause);
+            assert_eq!(failure.fix, fix);
+        }
+    }
+
+    fn find_gateway(
+        pairs: &[(&str, &str)],
+        home: Option<&Path>,
+        origin: &Origin,
+    ) -> Result<(ApiKey, KeySource), ConfigError> {
+        let vars = vars(pairs);
+        let env = Env {
+            vars: &vars,
+            home: home.map(Path::to_owned),
+        };
+        find_key(
+            &env,
+            &ConfigFile::new(&env, &RealFs),
+            Route::Gateway,
+            origin,
+        )
+    }
+
+    #[test]
+    fn the_gateway_route_reads_the_gateway_variable_then_the_gateway_key_of_the_file() {
+        let home = tempfile::tempdir().expect("temporary folder");
+        let path = write_file(
+            home.path(),
+            "config:\n  api-key: direct-key\n  gateway-api-key: file-gateway\n",
+            0o600,
+        );
+        let pairs = [(GATEWAY_VARIABLE, "variable-gateway")];
+        assert_eq!(
+            key_text(find_gateway(&pairs, Some(home.path()), &Origin::Variable)),
+            ("variable-gateway".to_owned(), KeySource::GatewayVariable)
+        );
+        assert_eq!(
+            key_text(find_gateway(&[], Some(home.path()), &Origin::Variable)),
+            (
+                "file-gateway".to_owned(),
+                KeySource::GatewayConfigFile(path)
+            )
+        );
+    }
+
+    #[test]
+    fn the_gateway_route_never_reads_a_key_of_the_direct_route() {
+        let home = tempfile::tempdir().expect("temporary folder");
+        write_file(home.path(), "config:\n  api-key: direct-key\n", 0o600);
+        let pairs = [(JAG_VARIABLE, "a"), (TYPESAFE_VARIABLE, "b")];
+        for (origin, by_option) in [(Origin::Option, true), (Origin::Variable, false)] {
+            let error = find_gateway(&pairs, Some(home.path()), &origin)
+                .err()
+                .unwrap();
+            assert_eq!(error, ConfigError::GatewayKeyMissing { by_option });
+        }
+    }
+
+    #[test]
+    fn the_direct_route_never_reads_a_key_of_the_gateway() {
+        let home = tempfile::tempdir().expect("temporary folder");
+        write_file(home.path(), "config:\n  gateway-api-key: g\n", 0o600);
+        let pairs = [(GATEWAY_VARIABLE, "g")];
+        assert_eq!(
+            find(&pairs, Some(home.path())).err().unwrap(),
+            ConfigError::KeyMissing
+        );
+    }
+
+    #[test]
+    fn a_bad_gateway_variable_stops_the_lookup_and_names_the_variable() {
+        let pairs = [(GATEWAY_VARIABLE, "has a space")];
+        let error = find_gateway(&pairs, None, &Origin::Variable).err().unwrap();
+        let ConfigError::KeyFormatBad { source } = &error else {
+            panic!("want KeyFormatBad, got {error:?}");
+        };
+        assert_eq!(source.variable(), Some(GATEWAY_VARIABLE));
+        assert_eq!(Failure::from(error).exit_code, 3);
+    }
+
+    /// A file system that counts the opens.
+    struct CountingFs(std::cell::Cell<u32>);
+
+    impl Fs for CountingFs {
+        fn open(&self, path: &Path) -> io::Result<Box<dyn OpenFile>> {
+            self.0.set(self.0.get() + 1);
+            RealFs.open(path)
+        }
+        fn is_symlink(&self, path: &Path) -> io::Result<bool> {
+            RealFs.is_symlink(path)
+        }
+        fn is_special(&self, path: &Path) -> io::Result<bool> {
+            RealFs.is_special(path)
+        }
+        fn create_dir_all(&self, _: &Path) -> io::Result<()> {
+            unreachable!()
+        }
+        fn create_private_dir(&self, _: &Path) -> io::Result<()> {
+            unreachable!()
+        }
+        fn create_private_file(&self, _: &Path, _: &str) -> io::Result<()> {
+            unreachable!()
+        }
+        fn rename(&self, _: &Path, _: &Path) -> io::Result<()> {
+            unreachable!()
+        }
+        fn remove_file(&self, _: &Path) -> io::Result<()> {
+            unreachable!()
+        }
+    }
+
+    #[test]
+    fn the_file_is_read_once_for_the_settings_and_the_key() {
+        let home = tempfile::tempdir().expect("temporary folder");
+        write_file(
+            home.path(),
+            "config:\n  gateway-api-key: g\n  base-url: https://openrouter.ai/api\n  model: m\n",
+            0o600,
+        );
+        let vars = vars(&[]);
+        let env = Env {
+            vars: &vars,
+            home: Some(home.path().to_owned()),
+        };
+        let fs = CountingFs(std::cell::Cell::new(0));
+        let file = ConfigFile::new(&env, &fs);
+        let settings = model_settings(&env, &file, &SettingOptions::default()).unwrap();
+        assert_eq!(settings.route, Route::Gateway);
+        find_key(&env, &file, settings.route, &settings.base_url_origin).unwrap();
+        assert_eq!(fs.0.get(), 1);
+    }
+
+    #[test]
+    fn a_file_error_is_given_again_and_the_file_is_not_read_again() {
+        let home = tempfile::tempdir().expect("temporary folder");
+        write_file(home.path(), "config:\n  model: m\n", 0o644);
+        let vars = vars(&[]);
+        let env = Env {
+            vars: &vars,
+            home: Some(home.path().to_owned()),
+        };
+        let fs = CountingFs(std::cell::Cell::new(0));
+        let file = ConfigFile::new(&env, &fs);
+        for _ in 0..2 {
+            assert!(matches!(
+                file.get().err().unwrap(),
+                ConfigError::KeyFileOpen { mode: 0o644, .. }
+            ));
+        }
+        assert_eq!(fs.0.get(), 1);
+    }
+
+    #[test]
+    fn no_file_read_happens_when_the_variables_give_everything() {
+        let home = tempfile::tempdir().expect("temporary folder");
+        write_file(home.path(), "config:\n  model: m\n", 0o644);
+        let vars = vars(&[
+            (JAG_VARIABLE, "k"),
+            ("JAG_BASE_URL", "https://api.typesafe.ai/v1"),
+            ("JAG_MODEL", "m"),
+        ]);
+        let env = Env {
+            vars: &vars,
+            home: Some(home.path().to_owned()),
+        };
+        let fs = CountingFs(std::cell::Cell::new(0));
+        let file = ConfigFile::new(&env, &fs);
+        let settings = model_settings(&env, &file, &SettingOptions::default()).unwrap();
+        find_key(&env, &file, settings.route, &settings.base_url_origin).unwrap();
+        assert_eq!(fs.0.get(), 0);
     }
 
     // CRITERION-02: the first set source wins, over the 8 combinations.
@@ -945,7 +1391,7 @@ mod tests {
                 vars: &bad,
                 home: Some(home.path().to_owned()),
             };
-            let error = find_key(&env, &RealFs).err().unwrap();
+            let error = find_direct(&env).err().unwrap();
             let ConfigError::KeyFormatBad { source } = &error else {
                 panic!("want KeyFormatBad, got {error:?}");
             };
@@ -971,15 +1417,11 @@ mod tests {
             } else {
                 std::fs::create_dir(&path).unwrap();
             }
-            let error = find_key(
-                &Env {
-                    vars: &|_: &str| None,
-                    home: Some(home.path().to_owned()),
-                },
-                &RealFs,
-            )
-            .err()
-            .unwrap();
+            let env = Env {
+                vars: &|_: &str| None,
+                home: Some(home.path().to_owned()),
+            };
+            let error = find_direct(&env).err().unwrap();
             assert_eq!(error, ConfigError::KeyFileNotRegular { path });
             let failure = Failure::from(error);
             assert_eq!(failure.exit_code, 3);

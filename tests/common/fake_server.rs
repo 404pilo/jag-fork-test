@@ -164,6 +164,11 @@ impl FakeServer {
         format!("http://127.0.0.1:{}/v1", self.port)
     }
 
+    /// The address of the server with no path: `http://127.0.0.1:<port>`.
+    pub fn root(&self) -> String {
+        format!("http://127.0.0.1:{}", self.port)
+    }
+
     pub fn requests(&self) -> Vec<Request> {
         self.state.requests.lock().expect("lock").clone()
     }
