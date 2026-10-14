@@ -166,6 +166,12 @@ impl Run<'_> {
         if self.stop.load(Ordering::SeqCst) {
             return None;
         }
+        // No retry starts after the deadline, so a wait that is as long as
+        // the time left would only delay the failure.
+        let left = self.end.saturating_duration_since(Instant::now());
+        if self.settings.retry_wait >= left {
+            return Some(Err(first.error));
+        }
         std::thread::sleep(self.settings.retry_wait);
         if self.stop.load(Ordering::SeqCst) {
             return None;

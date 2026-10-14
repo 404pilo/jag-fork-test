@@ -354,3 +354,52 @@ fn a_skipped_retry_does_not_hide_the_first_failure() {
         assert_eq!(server.requests().len(), 2);
     }
 }
+
+#[test]
+fn a_retry_wait_that_does_not_fit_in_the_deadline_gives_no_sleep() {
+    // One call. The reply is 503 after 600 ms. The deadline is 1 s and the
+    // retry wait is 800 ms, so no retry can start. The search ends at about
+    // 600 ms. A search that sleeps the wait first ends after 1.4 s.
+    let server = FakeServer::start(|_| Reply::status(503).after(Duration::from_millis(600)));
+    let settings = ScoreSettings {
+        base_url: server.base_url(),
+        model: "m".to_owned(),
+        timeout: Duration::from_secs(2),
+        retry_wait: Duration::from_millis(800),
+        deadline: Duration::from_secs(1),
+    };
+    let started = Instant::now();
+    let error = run(&server, &snippets(1), &settings).expect_err("a failure");
+    assert_eq!(exit_code(error), 6);
+    assert!(started.elapsed() < Duration::from_millis(1200));
+    assert_eq!(server.requests().len(), 1);
+}
+
+#[test]
+fn a_late_batch_that_fails_ends_the_search_at_the_deadline() {
+    // 7 calls and 6 threads, so call 7 starts when the first call ends, at
+    // about 1 s. Calls 1 to 6 get 200 after 1 s. Call 7 gets 503 after 600 ms,
+    // at about 1.6 s, with 0.4 s left of the 2 s deadline. The retry wait is
+    // 1 s, so no retry can start. The search ends at about 1.6 s. A search
+    // that sleeps the wait first ends after 2.6 s.
+    let server = FakeServer::start(|request| {
+        let first = request.snippet_texts().into_iter().next();
+        if first.as_deref() == Some("text-192") {
+            Reply::status(503).after(Duration::from_millis(600))
+        } else {
+            Reply::scores(request, |_| 0.5).after(Duration::from_secs(1))
+        }
+    });
+    let settings = ScoreSettings {
+        base_url: server.base_url(),
+        model: "m".to_owned(),
+        timeout: Duration::from_secs(3),
+        retry_wait: Duration::from_secs(1),
+        deadline: Duration::from_secs(2),
+    };
+    let started = Instant::now();
+    let error = run(&server, &snippets(224), &settings).expect_err("a failure");
+    assert_eq!(exit_code(error), 6);
+    assert!(started.elapsed() < Duration::from_millis(2300));
+    assert_eq!(server.requests().len(), 7);
+}
