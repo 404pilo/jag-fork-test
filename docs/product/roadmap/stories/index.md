@@ -1,12 +1,5 @@
 # stories
 
-## MILESTONE-01: Make it work
-
-* [STORY-25: Stay inside a default size limit](STORY-25.md) - As an agent builder (PERSONA-01), I want jag to never write more characters than a default size limit, so that the output fits the context of my agent.
-* [STORY-26: Leave out the lowest-ranked results](STORY-26.md) - As an agent builder (PERSONA-01), I want jag to leave out the lowest-ranked results and tell me how many, so that I know the list is not complete and how to see more.
-* [STORY-27: Cut a top result that is larger than the limit](STORY-27.md) - As an agent builder (PERSONA-01), I want jag to cut the top result and say so when that result alone is larger than the limit, so that I still get the best answer.
-* [STORY-28: Reject a size limit that is not valid](STORY-28.md) - As an agent builder (PERSONA-01), I want a limit of zero, a negative limit, or a value that is not a number to give a usage error, so that a typo does not hide the output.
-
 ## MILESTONE-02: Make it good
 
 * [STORY-24: Label piped text](STORY-24.md) - As a shell power user (PERSONA-04), I want a result from piped text to have the label (standard input), so that I read a pipe result as a file result.

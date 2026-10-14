@@ -16,6 +16,7 @@ generated:
 * [FEATURE-05: Search a folder as grep -r does](FEATURE-05.md) - jag searches each subfolder of a folder, skips binary, hidden, and ignored files, and says how many files it skipped.
 * [FEATURE-06: Cost limit on scoring](FEATURE-06.md) - When a term matches too many lines, jag scores only the best part up to a cost limit that the user can change, and says how many matches it skipped.
 * [FEATURE-08: File, line, and snippet for each result](FEATURE-08.md) - Each result shows the file, the line range, and the exact source text, with each matching line marked, so the person or the agent can open the source at that line.
+* [FEATURE-09: Size limit on the text that jag returns](FEATURE-09.md) - jag never writes more characters than the size limit, leaves out whole results with the lowest rank first, and says how many it left out and how to raise the limit.
 * [FEATURE-11: Text output for a person and structured output for an agent](FEATURE-11.md) - An option turns on structured output that an agent can parse, with the same results as the text, a named field for each item, structured errors, and a form version.
 * [FEATURE-17: Block private data in the repository](FEATURE-17.md) - A check on each pull request fails when the change adds a key, case content, private evaluation data, or an internal project name.
 

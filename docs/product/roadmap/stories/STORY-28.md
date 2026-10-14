@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want a limit of zero, a negativ
   limit, or a value that is not a number to give a usage error, so that a typo does
   not hide the output.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 89
   node_id: I_kwDOVDCdD88AAAABXCAnKQ

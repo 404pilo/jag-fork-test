@@ -5,8 +5,9 @@ description: jag never writes more characters than the size limit, leaves out wh
   results with the lowest rank first, and says how many it left out and how to raise
   the limit.
 status: draft
-state: in_progress
+state: done
 actual_start_date: '2026-10-14'
+actual_end_date: '2026-10-14'
 github:
   number: 50
   node_id: I_kwDOVDCdD88AAAABXB-Blw
@@ -51,10 +52,10 @@ jag never writes more characters than the size limit, leaves out whole results w
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-25: Stay inside a default size limit](../stories/STORY-25.md) | ready | - | - | - | - |
-| [STORY-26: Leave out the lowest-ranked results](../stories/STORY-26.md) | ready | - | - | - | - |
-| [STORY-27: Cut a top result that is larger than the limit](../stories/STORY-27.md) | ready | - | - | - | - |
-| [STORY-28: Reject a size limit that is not valid](../stories/STORY-28.md) | ready | - | - | - | - |
+| [STORY-25: Stay inside a default size limit](../stories/STORY-25.md) | done | - | - | - | - |
+| [STORY-26: Leave out the lowest-ranked results](../stories/STORY-26.md) | done | - | - | - | - |
+| [STORY-27: Cut a top result that is larger than the limit](../stories/STORY-27.md) | done | - | - | - | - |
+| [STORY-28: Reject a size limit that is not valid](../stories/STORY-28.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

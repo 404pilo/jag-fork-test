@@ -1,9 +1,5 @@
 # features
 
-## MILESTONE-01: Make it work
-
-* [FEATURE-09: Size limit on the text that jag returns](FEATURE-09.md) - jag never writes more characters than the size limit, leaves out whole results with the lowest rank first, and says how many it left out and how to raise the limit.
-
 ## MILESTONE-02: Make it good
 
 * [FEATURE-13: Common grep options and exit codes](FEATURE-13.md) - jag keeps the grep options that people use most and the grep exit codes 0, 1, and 2; any other option is a usage error that names it.
