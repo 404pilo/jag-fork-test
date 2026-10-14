@@ -40,6 +40,13 @@ Repository rules:
 8. Write all documents in ASD-STE100 Simplified Technical English.
 9. When you finish a task, send a `DONE` message. Then wait for the next message.
 10. Before you start, fetch documentation for libraries with context7 (`ctx7` CLI).
+11. A story has the state `ready` only if all of these are true:
+    - Its spec is merged on `main`.
+    - Its feature is not blocked: each feature in its `blocked_by` list has the state `done`.
+    - No open `ASK` blocks the story.
+
+    If one of these is false, the story stays in `backlog`. A role that changes the state of a story or a feature checks this rule in the same PR.
+    When a feature gets the state `done`, the same PR sets to `ready` each story that waited only for this feature and has a merged spec.
 
 ## 3. Roles
 
@@ -60,6 +67,7 @@ Repository rules:
 
 **orchestrator**
 - Keep a queue of features in roadmap order.
+- As soon as a story gets the state `ready` on `main`, assign its spec to a free implementer at once. If no implementer is free, start a new implementer (the maximum is 4). Do not wait for other stories or features.
 - Start a feature only when the features it depends on are merged.
 - Run 2 features at the same time only if they do not change the same area.
 - Start more implementers and verifiers when the queue grows. The maximum is 4 of each.
@@ -102,6 +110,7 @@ Repository rules:
 - One feature gives one spec.
 - Writes the spec in the feature folder with `prd:specifying-stories`.
 - Lands the spec through a PR. The orchestrator assigns the spec to an implementer after the merge.
+- In the spec PR, sets the stories of the feature to `ready` only if the feature is not blocked (rule 11). If the feature is blocked, the stories stay in `backlog`.
 - Uses effort `xhigh`. The goal is a specifier that needs the user as little as possible.
 - Infers each decision from the ADRs, the system design (`docs/product/system-design.md`), the PRD and the merged specs first. Records the source of each inferred decision in the spec.
 - Does not ask the user to confirm a decision that an ADR or the system design states, or that is clearly inferred from them.
@@ -135,7 +144,8 @@ Repository rules:
 roadmap (main)
   → orchestrator picks next ready feature
   → specifier: spec PR → merge
-  → orchestrator assigns spec to free implementer
+  → stories get the state ready (rule 11)
+  → orchestrator at once assigns the spec to a free implementer (or starts one)
   → implementer: code PR → REVIEW
   → verifier: approve | request changes
        request changes → implementer fixes → verifier (max 3 rounds)
@@ -254,3 +264,4 @@ Send a DONE message to the orchestrator when you are ready. Then wait for TASK m
 | 2026-10-13 | Replaced the options table in the HITL card (section 7) with a bullet list. Each option has its pros and cons as indented bullets | The user asked for this change. A table does not show correctly on a mobile screen |
 | 2026-10-13 | Hitl asks the cards in priority order, up to 4 cards of 1 feature together. Up to 2 specifiers. The specifier uses effort `xhigh`, infers more from the ADRs and the system design, and asks guideline questions. For document PRs, an exact non-blocking fix merges with no new check | The user asked for these changes to make the team faster. Today, code work stopped for about 3 hours because specs waited for user answers |
 | 2026-10-13 | Changed the HITL card (section 7): a header with the role and a plain title, plain words with no IDs, options with no numbers, ✅ and ❌ on the Pros and Cons lines, and `[recommended]` with no separate recommendation line | The user asked for this change. The cards must be easy to read with no knowledge of the IDs |
+| 2026-10-13 | Added rule 11: a story is `ready` only if its spec is merged, its feature is not blocked, and no open `ASK` blocks it. The orchestrator assigns a ready story to an implementer at once. The specifier and each PR that sets a feature to `done` set the story state by this rule | The user asked for this change. 9 stories showed `ready` but were blocked or had no spec |
