@@ -5,6 +5,13 @@ description: As an agent builder (PERSONA-01), I want an explicit option for str
   output with the same results as the text, so that my agent can parse the results.
 status: draft
 state: ready
+github:
+  number: 91
+  node_id: I_kwDOVDCdD88AAAABXCAwow
+  url: https://github.com/ai-ready-future/jag/issues/91
+  pushed_hash: 15b8c2
+  synced:
+    state: ready
 parent: /features/FEATURE-11.md
 milestone: /milestones/MILESTONE-01.md
 traces:

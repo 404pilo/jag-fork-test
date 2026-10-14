@@ -5,6 +5,13 @@ description: jag keeps its output inside a size limit that the user sets, and gi
   readable text to a person or structured output to an agent.
 status: draft
 state: ready
+github:
+  number: 39
+  node_id: I_kwDOVDCdD88AAAABXB80KA
+  url: https://github.com/ai-ready-future/jag/issues/39
+  pushed_hash: 16cd31
+  synced:
+    state: ready
 milestone: /milestones/MILESTONE-01.md
 traces:
 - to: prd:/capabilities/CAPABILITY-04.md

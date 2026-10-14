@@ -5,6 +5,13 @@ description: As an agent builder (PERSONA-01), I want the held-out evaluation ru
   done before release 1, so that I can trust that jag answers better than grep.
 status: draft
 state: backlog
+github:
+  number: 106
+  node_id: I_kwDOVDCdD88AAAABXCB1UA
+  url: https://github.com/ai-ready-future/jag/issues/106
+  pushed_hash: a05e93
+  synced:
+    state: backlog
 parent: /epics/EPIC-02.md
 milestone: /milestones/MILESTONE-02.md
 traces:

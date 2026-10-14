@@ -5,6 +5,13 @@ description: As a shell power user (PERSONA-04), I want jag to stop at once on C
   or a closed pipe, so that a stopped search wastes no more credit.
 status: draft
 state: backlog
+github:
+  number: 104
+  node_id: I_kwDOVDCdD88AAAABXCBtLw
+  url: https://github.com/ai-ready-future/jag/issues/104
+  pushed_hash: 37537d
+  synced:
+    state: backlog
 parent: /features/FEATURE-15.md
 milestone: /milestones/MILESTONE-02.md
 traces:

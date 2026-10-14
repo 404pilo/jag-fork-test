@@ -5,6 +5,13 @@ description: As a shell power user (PERSONA-04), I want plain grep mode to work 
   no stored key, so that I can use jag before I set it up.
 status: draft
 state: backlog
+github:
+  number: 95
+  node_id: I_kwDOVDCdD88AAAABXCBGaw
+  url: https://github.com/ai-ready-future/jag/issues/95
+  pushed_hash: d65ab2
+  synced:
+    state: backlog
 parent: /features/FEATURE-12.md
 milestone: /milestones/MILESTONE-02.md
 traces:

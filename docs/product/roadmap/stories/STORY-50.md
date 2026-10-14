@@ -5,6 +5,13 @@ description: As an agent builder (PERSONA-01), I want to install jag with npm or
   it with npx, so that my agent setup gets jag with the tools it already uses.
 status: draft
 state: backlog
+github:
+  number: 112
+  node_id: I_kwDOVDCdD88AAAABXCCL2Q
+  url: https://github.com/ai-ready-future/jag/issues/112
+  pushed_hash: 7f3727
+  synced:
+    state: backlog
 parent: /features/FEATURE-18.md
 milestone: /milestones/MILESTONE-02.md
 ---

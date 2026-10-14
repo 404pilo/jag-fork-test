@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want the board and the open iss
   see them.
 status: draft
 state: backlog
+github:
+  number: 123
+  node_id: I_kwDOVDCdD88AAAABXCC7Yg
+  url: https://github.com/ai-ready-future/jag/issues/123
+  pushed_hash: 3e1f48
+  synced:
+    state: backlog
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
 ---

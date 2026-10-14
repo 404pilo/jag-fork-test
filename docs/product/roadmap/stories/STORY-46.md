@@ -7,6 +7,13 @@ description: As an agent builder (PERSONA-01), I want each pull request checked 
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 108
+  node_id: I_kwDOVDCdD88AAAABXCB5fA
+  url: https://github.com/ai-ready-future/jag/issues/108
+  pushed_hash: 9fd492
+  synced:
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-46-block-private-data-in-pull-requests-design.md
 parent: /features/FEATURE-17.md
 milestone: /milestones/MILESTONE-01.md

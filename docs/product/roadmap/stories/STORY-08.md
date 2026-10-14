@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want the readiness check to mak
   as I want.
 status: draft
 state: backlog
+github:
+  number: 69
+  node_id: I_kwDOVDCdD88AAAABXB_SIQ
+  url: https://github.com/ai-ready-future/jag/issues/69
+  pushed_hash: 5ae687
+  synced:
+    state: backlog
 parent: /features/FEATURE-02.md
 milestone: /milestones/MILESTONE-02.md
 traces:

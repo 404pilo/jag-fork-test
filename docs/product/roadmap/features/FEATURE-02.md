@@ -5,6 +5,13 @@ description: One command examines five items, shows pass or fail for each one, a
   names the fix for each failure, with one call that costs almost nothing.
 status: draft
 state: backlog
+github:
+  number: 43
+  node_id: I_kwDOVDCdD88AAAABXB9Dmw
+  url: https://github.com/ai-ready-future/jag/issues/43
+  pushed_hash: 806f39
+  synced:
+    state: backlog
 parent: /epics/EPIC-01.md
 blocked_by:
 - /features/FEATURE-01.md

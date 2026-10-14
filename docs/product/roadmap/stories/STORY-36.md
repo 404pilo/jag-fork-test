@@ -6,6 +6,13 @@ description: As a shell power user (PERSONA-04), I want -A, -B, and -C to set th
   I read.
 status: draft
 state: backlog
+github:
+  number: 97
+  node_id: I_kwDOVDCdD88AAAABXCBPlA
+  url: https://github.com/ai-ready-future/jag/issues/97
+  pushed_hash: ebbf20
+  synced:
+    state: backlog
 parent: /features/FEATURE-13.md
 milestone: /milestones/MILESTONE-02.md
 traces:

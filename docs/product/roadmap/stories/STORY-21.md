@@ -5,6 +5,13 @@ description: As a knowledge seeker (PERSONA-03), I want each result to show the 
   the line, and the exact source text, so that I can open the source at that line.
 status: draft
 state: ready
+github:
+  number: 82
+  node_id: I_kwDOVDCdD88AAAABXCAH1A
+  url: https://github.com/ai-ready-future/jag/issues/82
+  pushed_hash: e70e1f
+  synced:
+    state: ready
 parent: /features/FEATURE-08.md
 milestone: /milestones/MILESTONE-01.md
 traces:

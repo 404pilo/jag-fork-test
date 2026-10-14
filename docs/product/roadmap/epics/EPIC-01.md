@@ -5,6 +5,13 @@ description: The user stores a TypeSafe key one time and runs one command that s
   jag is ready or what to fix.
 status: draft
 state: ready
+github:
+  number: 37
+  node_id: I_kwDOVDCdD88AAAABXB8tJw
+  url: https://github.com/ai-ready-future/jag/issues/37
+  pushed_hash: cf04e1
+  synced:
+    state: ready
 milestone: /milestones/MILESTONE-01.md
 traces:
 - to: prd:/capabilities/CAPABILITY-01.md

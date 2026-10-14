@@ -5,6 +5,13 @@ description: A scan lists the private data in the history. A new public reposito
   gets a clean history, and a second scan finds none. This repository stays private.
 status: draft
 state: backlog
+github:
+  number: 59
+  node_id: I_kwDOVDCdD88AAAABXB-m8A
+  url: https://github.com/ai-ready-future/jag/issues/59
+  pushed_hash: f68441
+  synced:
+    state: backlog
 parent: /epics/EPIC-05.md
 blocked_by:
 - /features/FEATURE-17.md

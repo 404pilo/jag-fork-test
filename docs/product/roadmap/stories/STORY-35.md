@@ -6,6 +6,13 @@ description: As a shell power user (PERSONA-04), I want jag to accept the grep o
   so that I keep my habits.
 status: draft
 state: backlog
+github:
+  number: 96
+  node_id: I_kwDOVDCdD88AAAABXCBLgw
+  url: https://github.com/ai-ready-future/jag/issues/96
+  pushed_hash: ab2618
+  synced:
+    state: backlog
 parent: /features/FEATURE-13.md
 milestone: /milestones/MILESTONE-02.md
 traces:

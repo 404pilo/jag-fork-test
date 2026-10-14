@@ -5,6 +5,13 @@ description: As an agent builder (PERSONA-01), I want each commit in the history
   for private data before jag goes public, so that no old commit shows it.
 status: draft
 state: ready
+github:
+  number: 109
+  node_id: I_kwDOVDCdD88AAAABXCB-TQ
+  url: https://github.com/ai-ready-future/jag/issues/109
+  pushed_hash: cc138e
+  synced:
+    state: ready
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
 ---

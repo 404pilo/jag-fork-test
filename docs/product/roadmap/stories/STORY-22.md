@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want a joined result to give it
   finds the exact match inside the range.
 status: draft
 state: ready
+github:
+  number: 83
+  node_id: I_kwDOVDCdD88AAAABXCAMXQ
+  url: https://github.com/ai-ready-future/jag/issues/83
+  pushed_hash: 2fefe4
+  synced:
+    state: ready
 parent: /features/FEATURE-08.md
 milestone: /milestones/MILESTONE-01.md
 traces:

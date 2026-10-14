@@ -5,6 +5,13 @@ description: As a shell power user (PERSONA-04), I want to install jag with carg
   install, so that I can build jag from source with the Rust tools I use.
 status: draft
 state: backlog
+github:
+  number: 111
+  node_id: I_kwDOVDCdD88AAAABXCCHmg
+  url: https://github.com/ai-ready-future/jag/issues/111
+  pushed_hash: 5339e2
+  synced:
+    state: backlog
 parent: /features/FEATURE-18.md
 milestone: /milestones/MILESTONE-02.md
 ---

@@ -6,6 +6,13 @@ description: As an operator (PERSONA-02), I want jag to pre-rank a large set of 
   a broad term does not cost too much.
 status: draft
 state: ready
+github:
+  number: 79
+  node_id: I_kwDOVDCdD88AAAABXB_8tg
+  url: https://github.com/ai-ready-future/jag/issues/79
+  pushed_hash: fe3b7c
+  synced:
+    state: ready
 spec: docs/superpowers/specs/2026-10-13-STORY-18-cost-limit-on-scoring-design.md
 parent: /features/FEATURE-06.md
 milestone: /milestones/MILESTONE-01.md

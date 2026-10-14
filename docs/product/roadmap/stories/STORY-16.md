@@ -6,6 +6,13 @@ description: As a shell power user (PERSONA-04), I want jag to search each file 
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 77
+  node_id: I_kwDOVDCdD88AAAABXB_z5Q
+  url: https://github.com/ai-ready-future/jag/issues/77
+  pushed_hash: '129778'
+  synced:
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-16-search-a-folder-as-grep-r-design.md
 parent: /features/FEATURE-05.md
 milestone: /milestones/MILESTONE-01.md

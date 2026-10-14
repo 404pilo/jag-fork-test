@@ -5,6 +5,13 @@ description: As an agent builder (PERSONA-01), I want the cost as a field of str
   output, so that my agent can track what its searches cost.
 status: draft
 state: backlog
+github:
+  number: 116
+  node_id: I_kwDOVDCdD88AAAABXCCcCw
+  url: https://github.com/ai-ready-future/jag/issues/116
+  pushed_hash: 9b6af8
+  synced:
+    state: backlog
 parent: /features/FEATURE-20.md
 milestone: /milestones/MILESTONE-02.md
 ---

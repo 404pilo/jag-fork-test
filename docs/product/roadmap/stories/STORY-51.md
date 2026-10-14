@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want one version tag to publish
   gives the same jag.
 status: draft
 state: backlog
+github:
+  number: 113
+  node_id: I_kwDOVDCdD88AAAABXCCQOg
+  url: https://github.com/ai-ready-future/jag/issues/113
+  pushed_hash: fa2a66
+  synced:
+    state: backlog
 parent: /features/FEATURE-18.md
 milestone: /milestones/MILESTONE-02.md
 traces:

@@ -7,6 +7,13 @@ description: As an operator (PERSONA-02), I want jag to read the key from two va
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 63
+  node_id: I_kwDOVDCdD88AAAABXB-3Ew
+  url: https://github.com/ai-ready-future/jag/issues/63
+  pushed_hash: 95f3df
+  synced:
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-01-store-a-key-one-time-design.md
 parent: /features/FEATURE-01.md
 milestone: /milestones/MILESTONE-01.md

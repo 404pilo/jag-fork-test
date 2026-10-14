@@ -5,6 +5,13 @@ description: As an agent builder (PERSONA-01), I want jag to never write more ch
   than a default size limit, so that the output fits the context of my agent.
 status: draft
 state: ready
+github:
+  number: 86
+  node_id: I_kwDOVDCdD88AAAABXCAZMw
+  url: https://github.com/ai-ready-future/jag/issues/86
+  pushed_hash: '799827'
+  synced:
+    state: ready
 parent: /features/FEATURE-09.md
 milestone: /milestones/MILESTONE-01.md
 traces:

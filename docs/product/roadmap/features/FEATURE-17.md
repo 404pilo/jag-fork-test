@@ -6,6 +6,13 @@ description: A check on each pull request fails when the change adds a key, case
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 57
+  node_id: I_kwDOVDCdD88AAAABXB-eVA
+  url: https://github.com/ai-ready-future/jag/issues/57
+  pushed_hash: d6b914
+  synced:
+    state: done
 parent: /epics/EPIC-05.md
 milestone: /milestones/MILESTONE-01.md
 traces:

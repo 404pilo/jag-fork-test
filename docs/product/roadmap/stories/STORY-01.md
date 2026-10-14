@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want to store my TypeSafe key w
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 62
+  node_id: I_kwDOVDCdD88AAAABXB-zMA
+  url: https://github.com/ai-ready-future/jag/issues/62
+  pushed_hash: cd44fd
+  synced:
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-01-store-a-key-one-time-design.md
 parent: /features/FEATURE-01.md
 milestone: /milestones/MILESTONE-01.md

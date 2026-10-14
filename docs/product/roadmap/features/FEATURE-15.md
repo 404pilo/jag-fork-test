@@ -5,6 +5,13 @@ description: jag shows progress and color only in a terminal, and it stops at on
   with no partial results when the user stops it or the pipe closes.
 status: draft
 state: backlog
+github:
+  number: 55
+  node_id: I_kwDOVDCdD88AAAABXB-WMQ
+  url: https://github.com/ai-ready-future/jag/issues/55
+  pushed_hash: 6d3b8d
+  synced:
+    state: backlog
 parent: /epics/EPIC-04.md
 blocked_by:
 - /features/FEATURE-04.md

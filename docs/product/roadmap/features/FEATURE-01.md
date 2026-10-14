@@ -6,6 +6,13 @@ description: The user stores a TypeSafe key one time; jag finds it on each searc
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 42
+  node_id: I_kwDOVDCdD88AAAABXB8_ZA
+  url: https://github.com/ai-ready-future/jag/issues/42
+  synced:
+    state: done
+  pushed_hash: bb2557
 parent: /epics/EPIC-01.md
 blocked_by:
 - /features/FEATURE-17.md

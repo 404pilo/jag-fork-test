@@ -7,6 +7,13 @@ description: As an operator (PERSONA-02), I want jag to wait a fixed time and tr
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 72
+  node_id: I_kwDOVDCdD88AAAABXB_eBg
+  url: https://github.com/ai-ready-future/jag/issues/72
+  pushed_hash: 7bc998
+  synced:
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-09-clear-failure-when-the-model-is-not-available-design.md
 parent: /features/FEATURE-03.md
 milestone: /milestones/MILESTONE-02.md

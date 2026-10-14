@@ -6,6 +6,13 @@ description: As a shell power user (PERSONA-04), I want any other option to give
   without a notice.
 status: draft
 state: backlog
+github:
+  number: 98
+  node_id: I_kwDOVDCdD88AAAABXCBTsg
+  url: https://github.com/ai-ready-future/jag/issues/98
+  pushed_hash: cb98cd
+  synced:
+    state: backlog
 parent: /features/FEATURE-13.md
 milestone: /milestones/MILESTONE-02.md
 traces:

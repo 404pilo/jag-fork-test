@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want jag to leave out the lowes
   see more.
 status: draft
 state: ready
+github:
+  number: 87
+  node_id: I_kwDOVDCdD88AAAABXCAdog
+  url: https://github.com/ai-ready-future/jag/issues/87
+  pushed_hash: 9d20f5
+  synced:
+    state: ready
 parent: /features/FEATURE-09.md
 milestone: /milestones/MILESTONE-01.md
 traces:

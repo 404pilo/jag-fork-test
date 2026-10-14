@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want to give jag the base URL a
   uses.
 status: draft
 state: backlog
+github:
+  number: 119
+  node_id: I_kwDOVDCdD88AAAABXCCpyA
+  url: https://github.com/ai-ready-future/jag/issues/119
+  pushed_hash: df3282
+  synced:
+    state: backlog
 parent: /features/FEATURE-21.md
 milestone: /milestones/MILESTONE-02.md
 ---

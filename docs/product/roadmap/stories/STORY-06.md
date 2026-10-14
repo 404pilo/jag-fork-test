@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want one command that shows pas
   repair before I give jag to an agent.
 status: draft
 state: backlog
+github:
+  number: 67
+  node_id: I_kwDOVDCdD88AAAABXB_JgQ
+  url: https://github.com/ai-ready-future/jag/issues/67
+  pushed_hash: b68e92
+  synced:
+    state: backlog
 parent: /features/FEATURE-02.md
 milestone: /milestones/MILESTONE-02.md
 traces:

@@ -7,6 +7,13 @@ description: As an operator (PERSONA-02), I want setup to ask before it replaces
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 64
+  node_id: I_kwDOVDCdD88AAAABXB-8XA
+  url: https://github.com/ai-ready-future/jag/issues/64
+  pushed_hash: b68a89
+  synced:
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-01-store-a-key-one-time-design.md
 parent: /features/FEATURE-01.md
 milestone: /milestones/MILESTONE-01.md

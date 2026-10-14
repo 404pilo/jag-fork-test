@@ -5,6 +5,13 @@ description: jag works in a pipe, uses grep-like options and exit codes, and is 
   enough to replace grep.
 status: draft
 state: backlog
+github:
+  number: 40
+  node_id: I_kwDOVDCdD88AAAABXB84Cw
+  url: https://github.com/ai-ready-future/jag/issues/40
+  pushed_hash: 1dd90c
+  synced:
+    state: backlog
 milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/capabilities/CAPABILITY-06.md

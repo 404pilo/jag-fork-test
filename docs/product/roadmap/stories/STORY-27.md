@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want jag to cut the top result 
   best answer.
 status: draft
 state: ready
+github:
+  number: 88
+  node_id: I_kwDOVDCdD88AAAABXCAjBA
+  url: https://github.com/ai-ready-future/jag/issues/88
+  pushed_hash: d8e49c
+  synced:
+    state: ready
 parent: /features/FEATURE-09.md
 milestone: /milestones/MILESTONE-01.md
 traces:

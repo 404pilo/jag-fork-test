@@ -5,6 +5,13 @@ description: The repository and the packages hold no private data, and the user 
   jag from GitHub Releases, crates.io, or npm.
 status: draft
 state: ready
+github:
+  number: 41
+  node_id: I_kwDOVDCdD88AAAABXB87cw
+  url: https://github.com/ai-ready-future/jag/issues/41
+  pushed_hash: 904c4a
+  synced:
+    state: ready
 milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/constraints/CONSTRAINT-01.md

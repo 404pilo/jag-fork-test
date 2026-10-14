@@ -5,6 +5,13 @@ description: With a term and no question, jag returns the matching lines as grep
   makes no model call, and costs nothing.
 status: draft
 state: backlog
+github:
+  number: 52
+  node_id: I_kwDOVDCdD88AAAABXB-KdQ
+  url: https://github.com/ai-ready-future/jag/issues/52
+  pushed_hash: 3fb122
+  synced:
+    state: backlog
 parent: /epics/EPIC-04.md
 milestone: /milestones/MILESTONE-02.md
 traces:

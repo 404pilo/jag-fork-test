@@ -6,6 +6,13 @@ description: As a knowledge seeker (PERSONA-03), I want each result to hold the 
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 75
+  node_id: I_kwDOVDCdD88AAAABXB_rTg
+  url: https://github.com/ai-ready-future/jag/issues/75
+  pushed_hash: '911910'
+  synced:
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-13-rank-matching-lines-by-a-question-design.md
 parent: /features/FEATURE-04.md
 milestone: /milestones/MILESTONE-01.md

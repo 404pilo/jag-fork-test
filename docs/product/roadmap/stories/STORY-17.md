@@ -7,6 +7,13 @@ description: As a shell power user (PERSONA-04), I want jag to skip binary, hidd
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 78
+  node_id: I_kwDOVDCdD88AAAABXB_4Ug
+  url: https://github.com/ai-ready-future/jag/issues/78
+  pushed_hash: 9b95ad
+  synced:
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-16-search-a-folder-as-grep-r-design.md
 parent: /features/FEATURE-05.md
 milestone: /milestones/MILESTONE-01.md

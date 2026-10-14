@@ -5,6 +5,13 @@ description: After each search, jag reports how many results it scored and skipp
   and the billed cost in US dollars, as a text line or a structured field.
 status: draft
 state: backlog
+github:
+  number: 60
+  node_id: I_kwDOVDCdD88AAAABXB-rBA
+  url: https://github.com/ai-ready-future/jag/issues/60
+  pushed_hash: e6f99d
+  synced:
+    state: backlog
 parent: /epics/EPIC-03.md
 blocked_by:
 - /features/FEATURE-04.md

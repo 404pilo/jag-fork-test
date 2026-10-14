@@ -6,6 +6,13 @@ description: As a shell power user (PERSONA-04), I want a progress line on the e
   noise.
 status: draft
 state: backlog
+github:
+  number: 102
+  node_id: I_kwDOVDCdD88AAAABXCBkqQ
+  url: https://github.com/ai-ready-future/jag/issues/102
+  pushed_hash: bc4d17
+  synced:
+    state: backlog
 parent: /features/FEATURE-15.md
 milestone: /milestones/MILESTONE-02.md
 traces:

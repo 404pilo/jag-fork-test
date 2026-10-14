@@ -5,6 +5,13 @@ description: As a shell power user (PERSONA-04), I want a cost line after each s
   so that I know what each search costs.
 status: draft
 state: backlog
+github:
+  number: 115
+  node_id: I_kwDOVDCdD88AAAABXCCYFg
+  url: https://github.com/ai-ready-future/jag/issues/115
+  pushed_hash: 54bb63
+  synced:
+    state: backlog
 parent: /features/FEATURE-20.md
 milestone: /milestones/MILESTONE-02.md
 ---

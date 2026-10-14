@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want structured output to hold 
   in one form.
 status: draft
 state: ready
+github:
+  number: 92
+  node_id: I_kwDOVDCdD88AAAABXCA1dg
+  url: https://github.com/ai-ready-future/jag/issues/92
+  pushed_hash: bc7d5d
+  synced:
+    state: ready
 parent: /features/FEATURE-11.md
 milestone: /milestones/MILESTONE-01.md
 traces:

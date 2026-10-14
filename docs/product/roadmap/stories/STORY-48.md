@@ -5,6 +5,13 @@ description: As a shell power user (PERSONA-04), I want a prebuilt binary for my
   on GitHub Releases, so that I can install jag in seconds with no runtime.
 status: draft
 state: backlog
+github:
+  number: 110
+  node_id: I_kwDOVDCdD88AAAABXCCC0Q
+  url: https://github.com/ai-ready-future/jag/issues/110
+  pushed_hash: 632d12
+  synced:
+    state: backlog
 parent: /features/FEATURE-18.md
 milestone: /milestones/MILESTONE-02.md
 ---

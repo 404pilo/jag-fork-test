@@ -5,6 +5,13 @@ description: As a shell power user (PERSONA-04), I want a typical search to retu
   in under 5 seconds, so that I do not go back to grep.
 status: draft
 state: backlog
+github:
+  number: 105
+  node_id: I_kwDOVDCdD88AAAABXCBxaA
+  url: https://github.com/ai-ready-future/jag/issues/105
+  pushed_hash: 1a756c
+  synced:
+    state: backlog
 parent: /features/FEATURE-16.md
 milestone: /milestones/MILESTONE-03.md
 ---

@@ -6,6 +6,13 @@ description: jag never writes more characters than the size limit, leaves out wh
   the limit.
 status: draft
 state: blocked
+github:
+  number: 50
+  node_id: I_kwDOVDCdD88AAAABXB-Blw
+  url: https://github.com/ai-ready-future/jag/issues/50
+  pushed_hash: 0fa67b
+  synced:
+    state: blocked
 parent: /epics/EPIC-03.md
 blocked_by:
 - /features/FEATURE-08.md

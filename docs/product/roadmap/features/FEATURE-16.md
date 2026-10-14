@@ -5,6 +5,13 @@ description: A typical search returns in under 5 seconds, so that a shell user d
   not go back to grep.
 status: draft
 state: backlog
+github:
+  number: 56
+  node_id: I_kwDOVDCdD88AAAABXB-Z-A
+  url: https://github.com/ai-ready-future/jag/issues/56
+  pushed_hash: dfe6f5
+  synced:
+    state: backlog
 parent: /epics/EPIC-04.md
 blocked_by:
 - /features/FEATURE-04.md

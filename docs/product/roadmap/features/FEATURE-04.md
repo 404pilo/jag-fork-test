@@ -8,6 +8,13 @@ aliases:
 - FEATURE-07
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 45
+  node_id: I_kwDOVDCdD88AAAABXB9dWg
+  url: https://github.com/ai-ready-future/jag/issues/45
+  synced:
+    state: done
+  pushed_hash: 52aa75
 parent: /epics/EPIC-02.md
 blocked_by:
 - /features/FEATURE-01.md

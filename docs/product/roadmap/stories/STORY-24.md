@@ -5,6 +5,13 @@ description: As a shell power user (PERSONA-04), I want a result from piped text
   have the label (standard input), so that I read a pipe result as a file result.
 status: draft
 state: ready
+github:
+  number: 85
+  node_id: I_kwDOVDCdD88AAAABXCAUSA
+  url: https://github.com/ai-ready-future/jag/issues/85
+  pushed_hash: ca7b01
+  synced:
+    state: ready
 parent: /features/FEATURE-08.md
 milestone: /milestones/MILESTONE-01.md
 traces:

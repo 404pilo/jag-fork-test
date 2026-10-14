@@ -5,6 +5,13 @@ description: One version tag builds the jag binary for four platforms and publis
   it on GitHub Releases, crates.io, and npm with the same version (ADR-0010).
 status: draft
 state: backlog
+github:
+  number: 58
+  node_id: I_kwDOVDCdD88AAAABXB-iFg
+  url: https://github.com/ai-ready-future/jag/issues/58
+  synced:
+    state: backlog
+  pushed_hash: fe45a8
 parent: /epics/EPIC-05.md
 blocked_by:
 - /features/FEATURE-01.md

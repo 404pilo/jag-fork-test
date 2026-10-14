@@ -6,6 +6,13 @@ description: Each result shows the file, the line range, and the exact source te
   that line.
 status: draft
 state: ready
+github:
+  number: 49
+  node_id: I_kwDOVDCdD88AAAABXB99aA
+  url: https://github.com/ai-ready-future/jag/issues/49
+  pushed_hash: 3f21d5
+  synced:
+    state: ready
 parent: /epics/EPIC-02.md
 blocked_by:
 - /features/FEATURE-04.md

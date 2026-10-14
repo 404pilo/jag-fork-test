@@ -5,6 +5,13 @@ description: As a shell power user (PERSONA-04), I want to give several paths, e
   a file or a folder, so that I search exactly the places that I choose.
 status: draft
 state: backlog
+github:
+  number: 101
+  node_id: I_kwDOVDCdD88AAAABXCBgYw
+  url: https://github.com/ai-ready-future/jag/issues/101
+  pushed_hash: 8d008b
+  synced:
+    state: backlog
 parent: /features/FEATURE-14.md
 milestone: /milestones/MILESTONE-02.md
 traces:

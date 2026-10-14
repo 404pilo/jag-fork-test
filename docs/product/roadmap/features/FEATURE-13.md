@@ -5,6 +5,13 @@ description: jag keeps the grep options that people use most and the grep exit c
   0, 1, and 2; any other option is a usage error that names it.
 status: draft
 state: backlog
+github:
+  number: 53
+  node_id: I_kwDOVDCdD88AAAABXB-Okg
+  url: https://github.com/ai-ready-future/jag/issues/53
+  pushed_hash: 1c0b7a
+  synced:
+    state: backlog
 parent: /epics/EPIC-04.md
 milestone: /milestones/MILESTONE-02.md
 traces:

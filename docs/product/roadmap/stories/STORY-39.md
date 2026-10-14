@@ -6,6 +6,13 @@ description: As a shell power user (PERSONA-04), I want jag with no path to sear
   I use jag as I use grep.
 status: draft
 state: backlog
+github:
+  number: 100
+  node_id: I_kwDOVDCdD88AAAABXCBcOw
+  url: https://github.com/ai-ready-future/jag/issues/100
+  pushed_hash: c81fa9
+  synced:
+    state: backlog
 parent: /features/FEATURE-14.md
 milestone: /milestones/MILESTONE-02.md
 traces:

@@ -5,6 +5,13 @@ description: With no path, jag searches the current folder or reads the pipe; th
   user can also give any mix of files and folders.
 status: draft
 state: backlog
+github:
+  number: 54
+  node_id: I_kwDOVDCdD88AAAABXB-SAw
+  url: https://github.com/ai-ready-future/jag/issues/54
+  pushed_hash: 6ee887
+  synced:
+    state: backlog
 parent: /epics/EPIC-04.md
 blocked_by:
 - /features/FEATURE-05.md

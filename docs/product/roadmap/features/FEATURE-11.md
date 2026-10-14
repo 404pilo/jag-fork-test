@@ -8,6 +8,13 @@ status: draft
 aliases:
 - FEATURE-10
 state: blocked
+github:
+  number: 51
+  node_id: I_kwDOVDCdD88AAAABXB-F-g
+  url: https://github.com/ai-ready-future/jag/issues/51
+  pushed_hash: e6e9b3
+  synced:
+    state: blocked
 parent: /epics/EPIC-03.md
 blocked_by:
 - /features/FEATURE-08.md

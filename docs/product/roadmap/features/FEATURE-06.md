@@ -6,6 +6,13 @@ description: When a term matches too many lines, jag scores only the best part u
 status: draft
 state: in_progress
 actual_start_date: '2026-10-14'
+github:
+  number: 47
+  node_id: I_kwDOVDCdD88AAAABXB9mRg
+  url: https://github.com/ai-ready-future/jag/issues/47
+  pushed_hash: 0d4f5f
+  synced:
+    state: ready
 parent: /epics/EPIC-02.md
 blocked_by:
 - /features/FEATURE-04.md

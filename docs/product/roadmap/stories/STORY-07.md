@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want the readiness check to exi
   so that a script or an agent can act on the result.
 status: draft
 state: backlog
+github:
+  number: 68
+  node_id: I_kwDOVDCdD88AAAABXB_NxA
+  url: https://github.com/ai-ready-future/jag/issues/68
+  pushed_hash: 37fdbf
+  synced:
+    state: backlog
 parent: /features/FEATURE-02.md
 milestone: /milestones/MILESTONE-02.md
 traces:

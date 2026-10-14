@@ -5,6 +5,13 @@ description: As an agent builder (PERSONA-01), I want a default cost limit that 
   can change with an option, so that I can trade cost for a wider search.
 status: draft
 state: ready
+github:
+  number: 80
+  node_id: I_kwDOVDCdD88AAAABXCAA2w
+  url: https://github.com/ai-ready-future/jag/issues/80
+  pushed_hash: 1387a1
+  synced:
+    state: ready
 spec: docs/superpowers/specs/2026-10-13-STORY-18-cost-limit-on-scoring-design.md
 parent: /features/FEATURE-06.md
 milestone: /milestones/MILESTONE-01.md

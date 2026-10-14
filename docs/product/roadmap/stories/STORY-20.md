@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want jag to exit with its own c
   my agent knows the list is not complete.
 status: draft
 state: ready
+github:
+  number: 81
+  node_id: I_kwDOVDCdD88AAAABXCAEOA
+  url: https://github.com/ai-ready-future/jag/issues/81
+  pushed_hash: 920c7e
+  synced:
+    state: ready
 spec: docs/superpowers/specs/2026-10-13-STORY-18-cost-limit-on-scoring-design.md
 parent: /features/FEATURE-06.md
 milestone: /milestones/MILESTONE-01.md

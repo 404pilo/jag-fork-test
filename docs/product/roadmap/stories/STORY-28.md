@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want a limit of zero, a negativ
   not hide the output.
 status: draft
 state: ready
+github:
+  number: 89
+  node_id: I_kwDOVDCdD88AAAABXCAnKQ
+  url: https://github.com/ai-ready-future/jag/issues/89
+  pushed_hash: 1f189f
+  synced:
+    state: ready
 parent: /features/FEATURE-09.md
 milestone: /milestones/MILESTONE-01.md
 traces:

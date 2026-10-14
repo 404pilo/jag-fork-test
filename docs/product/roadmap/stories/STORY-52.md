@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want a new public repository wi
   stays as it is.
 status: draft
 state: backlog
+github:
+  number: 114
+  node_id: I_kwDOVDCdD88AAAABXCCT-Q
+  url: https://github.com/ai-ready-future/jag/issues/114
+  pushed_hash: a3c9e4
+  synced:
+    state: backlog
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
 ---

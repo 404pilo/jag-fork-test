@@ -7,6 +7,13 @@ description: As an agent builder (PERSONA-01), I want jag to never show my key a
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 65
+  node_id: I_kwDOVDCdD88AAAABXB_BFQ
+  url: https://github.com/ai-ready-future/jag/issues/65
+  pushed_hash: 385e79
+  synced:
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-01-store-a-key-one-time-design.md
 parent: /features/FEATURE-01.md
 milestone: /milestones/MILESTONE-01.md

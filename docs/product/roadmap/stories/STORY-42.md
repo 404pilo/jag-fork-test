@@ -6,6 +6,13 @@ description: As a shell power user (PERSONA-04), I want jag to color the matchin
   that color works as grep --color=auto.
 status: draft
 state: backlog
+github:
+  number: 103
+  node_id: I_kwDOVDCdD88AAAABXCBohA
+  url: https://github.com/ai-ready-future/jag/issues/103
+  pushed_hash: 8c7622
+  synced:
+    state: backlog
 parent: /features/FEATURE-15.md
 milestone: /milestones/MILESTONE-02.md
 traces:

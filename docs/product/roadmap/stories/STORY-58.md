@@ -6,6 +6,13 @@ description: As an operator (PERSONA-02), I want to set the base URL and the mod
   for one search, one job, or each search.
 status: draft
 state: backlog
+github:
+  number: 120
+  node_id: I_kwDOVDCdD88AAAABXCCt5A
+  url: https://github.com/ai-ready-future/jag/issues/120
+  pushed_hash: a22009
+  synced:
+    state: backlog
 parent: /features/FEATURE-21.md
 milestone: /milestones/MILESTONE-02.md
 ---

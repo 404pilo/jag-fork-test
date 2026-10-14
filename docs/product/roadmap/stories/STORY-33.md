@@ -6,6 +6,13 @@ description: As a shell power user (PERSONA-04), I want jag with a term and no q
   costs nothing.
 status: draft
 state: backlog
+github:
+  number: 94
+  node_id: I_kwDOVDCdD88AAAABXCBAyg
+  url: https://github.com/ai-ready-future/jag/issues/94
+  pushed_hash: 6bf2fd
+  synced:
+    state: backlog
 parent: /features/FEATURE-12.md
 milestone: /milestones/MILESTONE-02.md
 traces:

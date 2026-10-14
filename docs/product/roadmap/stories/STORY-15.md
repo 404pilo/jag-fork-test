@@ -7,6 +7,13 @@ description: As an agent builder (PERSONA-01), I want jag to label the best resu
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 76
+  node_id: I_kwDOVDCdD88AAAABXB_vxQ
+  url: https://github.com/ai-ready-future/jag/issues/76
+  pushed_hash: aba5f8
+  synced:
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-13-rank-matching-lines-by-a-question-design.md
 parent: /features/FEATURE-04.md
 milestone: /milestones/MILESTONE-01.md

@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want a guard against guesses th
   can find private data by many tries.
 status: draft
 state: backlog
+github:
+  number: 121
+  node_id: I_kwDOVDCdD88AAAABXCCyPA
+  url: https://github.com/ai-ready-future/jag/issues/121
+  pushed_hash: 54e23e
+  synced:
+    state: backlog
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
 ---

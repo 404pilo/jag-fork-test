@@ -5,6 +5,13 @@ description: The user gives a folder, a term, and a question, and gets ranked li
   that show the file, the line number, and the snippet.
 status: draft
 state: ready
+github:
+  number: 38
+  node_id: I_kwDOVDCdD88AAAABXB8wsg
+  url: https://github.com/ai-ready-future/jag/issues/38
+  pushed_hash: fc4e7d
+  synced:
+    state: ready
 milestone: /milestones/MILESTONE-01.md
 traces:
 - to: prd:/capabilities/CAPABILITY-02.md

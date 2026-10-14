@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want the structured output to s
   working when jag updates.
 status: draft
 state: ready
+github:
+  number: 93
+  node_id: I_kwDOVDCdD88AAAABXCA8Fw
+  url: https://github.com/ai-ready-future/jag/issues/93
+  pushed_hash: d30149
+  synced:
+    state: ready
 parent: /features/FEATURE-11.md
 milestone: /milestones/MILESTONE-01.md
 traces:

@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want the private-data check to 
   skips the check.
 status: draft
 state: backlog
+github:
+  number: 122
+  node_id: I_kwDOVDCdD88AAAABXCC3Ig
+  url: https://github.com/ai-ready-future/jag/issues/122
+  pushed_hash: 76a4dc
+  synced:
+    state: backlog
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
 ---

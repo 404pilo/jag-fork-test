@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want jag to cut each line that 
   the output.
 status: draft
 state: ready
+github:
+  number: 84
+  node_id: I_kwDOVDCdD88AAAABXCAPwg
+  url: https://github.com/ai-ready-future/jag/issues/84
+  pushed_hash: 09b8c7
+  synced:
+    state: ready
 parent: /features/FEATURE-08.md
 milestone: /milestones/MILESTONE-01.md
 traces:

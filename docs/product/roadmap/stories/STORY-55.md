@@ -6,6 +6,13 @@ description: As an agent builder (PERSONA-01), I want a clear cost report when j
   works.
 status: draft
 state: backlog
+github:
+  number: 117
+  node_id: I_kwDOVDCdD88AAAABXCCgxw
+  url: https://github.com/ai-ready-future/jag/issues/117
+  pushed_hash: 8813f7
+  synced:
+    state: backlog
 parent: /features/FEATURE-20.md
 milestone: /milestones/MILESTONE-02.md
 ---

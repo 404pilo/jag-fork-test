@@ -5,6 +5,13 @@ description: As an agent builder (PERSONA-01), I want to know what a failed or s
   search cost, so that no cost is hidden from me.
 status: draft
 state: backlog
+github:
+  number: 118
+  node_id: I_kwDOVDCdD88AAAABXCClVw
+  url: https://github.com/ai-ready-future/jag/issues/118
+  pushed_hash: f085eb
+  synced:
+    state: backlog
 parent: /features/FEATURE-20.md
 milestone: /milestones/MILESTONE-02.md
 ---

@@ -7,6 +7,13 @@ description: As an agent builder (PERSONA-01), I want a search to show no partia
 status: draft
 state: done
 actual_end_date: '2026-10-14'
+github:
+  number: 73
+  node_id: I_kwDOVDCdD88AAAABXB_iOQ
+  url: https://github.com/ai-ready-future/jag/issues/73
+  pushed_hash: 4ed21b
+  synced:
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-09-clear-failure-when-the-model-is-not-available-design.md
 parent: /features/FEATURE-03.md
 milestone: /milestones/MILESTONE-02.md

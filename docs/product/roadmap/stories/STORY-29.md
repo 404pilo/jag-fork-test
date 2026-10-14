@@ -6,6 +6,13 @@ description: As a shell power user (PERSONA-04), I want jag to write readable te
   stream, so that a pipe receives results only.
 status: draft
 state: ready
+github:
+  number: 90
+  node_id: I_kwDOVDCdD88AAAABXCAsCQ
+  url: https://github.com/ai-ready-future/jag/issues/90
+  pushed_hash: 02da4f
+  synced:
+    state: ready
 parent: /features/FEATURE-11.md
 milestone: /milestones/MILESTONE-01.md
 traces:

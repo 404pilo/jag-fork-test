@@ -5,6 +5,13 @@ description: The user can set a base URL and a model name, so that jag sends the
   model calls through an AI gateway. With no setting, jag calls TypeSafe directly.
 status: draft
 state: backlog
+github:
+  number: 61
+  node_id: I_kwDOVDCdD88AAAABXB-vVw
+  url: https://github.com/ai-ready-future/jag/issues/61
+  pushed_hash: b76046
+  synced:
+    state: backlog
 parent: /epics/EPIC-01.md
 blocked_by:
 - /features/FEATURE-04.md

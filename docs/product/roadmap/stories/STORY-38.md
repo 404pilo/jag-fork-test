@@ -5,6 +5,13 @@ description: As a shell power user (PERSONA-04), I want the grep exit codes 0, 1
   and 2, so that my scripts that test grep exit codes keep working.
 status: draft
 state: backlog
+github:
+  number: 99
+  node_id: I_kwDOVDCdD88AAAABXCBYAw
+  url: https://github.com/ai-ready-future/jag/issues/99
+  pushed_hash: b3558b
+  synced:
+    state: backlog
 parent: /features/FEATURE-13.md
 milestone: /milestones/MILESTONE-02.md
 traces:
