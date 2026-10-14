@@ -13,7 +13,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/102
   pushed_hash: bc4d17
   synced:
-    state: ready
+    state: done
 spec: docs/superpowers/specs/2026-10-14-STORY-41-good-behavior-in-a-terminal-and-in-a-pipe-design.md
 parent: /features/FEATURE-15.md
 milestone: /milestones/MILESTONE-02.md
