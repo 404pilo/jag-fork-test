@@ -148,10 +148,13 @@ Out of scope:
 - Artifact: the model client and the exit code.
 - Response: jag fails the full search with no partial result. It gives the
   cause and the fix, and exits with the code of the cause.
-- Response measure: within 10 seconds of the first call, with the one retry
-  included.
-- Importance: H. Risk: M, because a long timeout or many retries break the
-  target.
+- Response measure: within 2 × the timeout + the retry wait from the first
+  call of the search, with the one retry included. That is 9 seconds with
+  the defaults (4 seconds and 1 second). The user can set each value from 1
+  to 60 whole seconds, which gives a longer time, for example 180 seconds
+  for 60 and 60 (CV-5).
+- Importance: H. Risk: M, because a change to the default timeout or retry
+  wait, or a second retry, makes the time longer.
 - Cites: CONSTRAINT-07, CONSTRAINT-04.
 
 ### QS-5: The key stays secret
@@ -203,7 +206,7 @@ flowchart LR
 | QS-2 no good answer | A fixed threshold on the top Jev probability. The threshold is tuned with the prompt on the development set and changes only with a new prompt version (strategy-2). | 0003-decide-no-good-answer-with-a-fixed-threshold-on-the-top.md |
 | QS-3 speed | The ripgrep libraries search in one pass, in the jag process. Jev gets 32 snippets in each call and 6 calls in parallel, so a typical search needs two rounds of calls (strategy-1). | 0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md |
 | QS-3 and METRIC-05 cost | The default cost limit is 200 results. 200 results cost about $0.009 in the worst case (strategy-1). | 0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md |
-| QS-4 fail clearly | No fallback to a word-match ranking (DECISION-01). A model failure fails the full search (DECISION-06). The retry rule is in Crosscutting conventions. | |
+| QS-4 fail clearly | No fallback to a word-match ranking (DECISION-01). A model failure fails the full search (DECISION-06). jag fails within 2 × the timeout + the retry wait from the first call of the search, 9 seconds with the defaults. The retry rule is in Crosscutting conventions (CV-5). | |
 | QS-5 key secrecy | One component reads the key, and no other component gets the key as text (Crosscutting conventions). | |
 
 ## Building blocks
@@ -407,9 +410,14 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
   message (conventions-4, DECISION-39).
 - CV-5: Each Jev call times out after 4 seconds. After a timeout, a failed
   connection, HTTP 429, or HTTP 5xx, jag waits 1 second and tries one more
-  time. Then it fails with code 6. The `JAG_TIMEOUT` variable and the
-  `--timeout` option change the time of one call. With the defaults, jag
-  fails within 9 seconds (conventions-5, QS-4, CONSTRAINT-04).
+  time. Then it fails with code 6. The `--timeout` option and the
+  `JAG_TIMEOUT` variable change the time of one call. The `--retry-wait`
+  option and the `JAG_RETRY_WAIT` variable change the wait before the
+  retry. Both take whole seconds from 1 to 60. One deadline covers all
+  calls of a search: 2 × the timeout + the retry wait from the first call.
+  No call and no retry starts after it. The deadline is 9 seconds with the
+  defaults, and for example 180 seconds for 60 and 60 (conventions-5, QS-4,
+  CONSTRAINT-04).
 - CV-6: Only C-config reads the key. The key lives in a type that never
   prints itself in a message, an error, or debug text. No option takes the
   key, so it never shows in the process list. `--setup` reads it from the
@@ -477,7 +485,7 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | conventions-2 | |  | conventions | A model failure fails the full search | human:404pilo, 2026-10-12 |
 | conventions-3 | |  | conventions | Results go to standard output, and notices go to the error stream | human:404pilo, 2026-10-12 |
 | conventions-4 | |  | conventions | Ctrl-C and a closed pipe stop jag at once | human:404pilo, 2026-10-12 |
-| conventions-5 | |  | conventions | The retry wait, and how you change it | human:404pilo, 2026-10-12 |
+| conventions-5 | |  | conventions | The retry wait, and how you change it | human:404pilo, 2026-10-13 |
 | conventions-6 | |  | conventions | How jag keeps the key secret | human:404pilo, 2026-10-12 |
 | conventions-7 | |  | conventions | The order in which an option, a variable, and the config file set a value | human:404pilo, 2026-10-12 |
 | deployment-1 | 0010-ship-jag-on-github-releases-crates-io-and-npm.md | accepted | deployment | How users install jag | adr |
