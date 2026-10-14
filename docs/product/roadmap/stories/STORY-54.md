@@ -4,7 +4,8 @@ title: Read the cost in structured output
 description: As an agent builder (PERSONA-01), I want the cost as a field of structured
   output, so that my agent can track what its searches cost.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 116
   node_id: I_kwDOVDCdD88AAAABXCCcCw

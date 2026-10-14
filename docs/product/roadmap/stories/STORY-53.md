@@ -4,7 +4,8 @@ title: See the cost after each search
 description: As a shell power user (PERSONA-04), I want a cost line after each search,
   so that I know what each search costs.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 115
   node_id: I_kwDOVDCdD88AAAABXCCYFg

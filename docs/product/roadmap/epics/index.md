@@ -3,7 +3,6 @@
 ## MILESTONE-01: Make it work
 
 * [EPIC-02: Ranked search with file and line](EPIC-02.md) - The user gives a folder, a term, and a question, and gets ranked lines that show the file, the line number, and the snippet.
-* [EPIC-03: Output that fits an agent](EPIC-03.md) - jag keeps its output inside a size limit that the user sets, and gives readable text to a person or structured output to an agent.
 
 ## MILESTONE-02: Make it good
 

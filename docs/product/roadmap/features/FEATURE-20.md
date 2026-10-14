@@ -4,7 +4,8 @@ title: Show the cost of a search
 description: After each search, jag reports how many results it scored and skipped,
   and the billed cost in US dollars, as a text line or a structured field.
 status: draft
-state: backlog
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 60
   node_id: I_kwDOVDCdD88AAAABXB-rBA
@@ -44,10 +45,10 @@ After each search, jag reports how many results it scored and skipped, and the b
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-53: See the cost after each search](../stories/STORY-53.md) | ready | - | - | - | - |
-| [STORY-54: Read the cost in structured output](../stories/STORY-54.md) | ready | - | - | - | - |
-| [STORY-55: Know the cost when no figure is available](../stories/STORY-55.md) | ready | - | - | - | - |
-| [STORY-56: Know the cost of a failed or stopped search](../stories/STORY-56.md) | ready | - | - | - | - |
+| [STORY-53: See the cost after each search](../stories/STORY-53.md) | done | - | - | - | - |
+| [STORY-54: Read the cost in structured output](../stories/STORY-54.md) | done | - | - | - | - |
+| [STORY-55: Know the cost when no figure is available](../stories/STORY-55.md) | done | - | - | - | - |
+| [STORY-56: Know the cost of a failed or stopped search](../stories/STORY-56.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

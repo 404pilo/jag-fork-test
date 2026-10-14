@@ -9,10 +9,6 @@
 * [STORY-50: Install or run jag with npm](STORY-50.md) - As an agent builder (PERSONA-01), I want to install jag with npm or run it with npx, so that my agent setup gets jag with the tools it already uses.
 * [STORY-51: Publish each channel from one tag](STORY-51.md) - As an agent builder (PERSONA-01), I want one version tag to publish jag on each channel with the same version and no private data, so that each channel gives the same jag.
 * [STORY-52: Create the new public repository with a clean history](STORY-52.md) - As an agent builder (PERSONA-01), I want a new public repository with a clean history, so that no public commit holds private data, and the private repository stays as it is.
-* [STORY-53: See the cost after each search](STORY-53.md) - As a shell power user (PERSONA-04), I want a cost line after each search, so that I know what each search costs.
-* [STORY-54: Read the cost in structured output](STORY-54.md) - As an agent builder (PERSONA-01), I want the cost as a field of structured output, so that my agent can track what its searches cost.
-* [STORY-55: Know the cost when no figure is available](STORY-55.md) - As an agent builder (PERSONA-01), I want a clear cost report when jag makes no model call or the service gives no cost figure, so that the search still works.
-* [STORY-56: Know the cost of a failed or stopped search](STORY-56.md) - As an agent builder (PERSONA-01), I want to know what a failed or stopped search cost, so that no cost is hidden from me.
 * [STORY-60: Run the private-data check on fork pull requests in the new public repository](STORY-60.md) - As an agent builder (PERSONA-01), I want the private-data check to run on each fork pull request in the new public repository, so that no fork pull request skips the check.
 * [STORY-61: Make the project board and all issues public with the new repository](STORY-61.md) - As an agent builder (PERSONA-01), I want the board and all issues of jag, open and closed, to become public with the new repository, so that outside contributors can see them.
 

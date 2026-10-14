@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want a clear cost report when j
   makes no model call or the service gives no cost figure, so that the search still
   works.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 117
   node_id: I_kwDOVDCdD88AAAABXCCgxw

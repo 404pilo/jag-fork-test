@@ -39,7 +39,7 @@ This milestone holds the capabilities that make jag better to use and easier to 
 | [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md) | done | 3/3 (100%) | - | FEATURE-04 | - |
 | [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](../features/FEATURE-18.md) | backlog | 0/4 (0%) | - | FEATURE-01, FEATURE-17, FEATURE-19 | - |
 | [FEATURE-19: Go public with a clean history](../features/FEATURE-19.md) | backlog | 0/4 (0%) | - | FEATURE-17 | - |
-| [FEATURE-20: Show the cost of a search](../features/FEATURE-20.md) | backlog | 0/4 (0%) | - | FEATURE-04, FEATURE-11 | - |
+| [FEATURE-20: Show the cost of a search](../features/FEATURE-20.md) | done | 4/4 (100%) | - | FEATURE-04, FEATURE-11 | - |
 | [FEATURE-21: Send the model calls through an AI gateway](../features/FEATURE-21.md) | done | 2/2 (100%) | - | FEATURE-04 | - |
 <!-- STATUS:END -->
 

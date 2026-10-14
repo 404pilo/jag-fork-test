@@ -4,7 +4,8 @@ title: Output that fits an agent
 description: jag keeps its output inside a size limit that the user sets, and gives
   readable text to a person or structured output to an agent.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 39
   node_id: I_kwDOVDCdD88AAAABXB80KA
