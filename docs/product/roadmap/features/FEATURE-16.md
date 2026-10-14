@@ -36,7 +36,7 @@ A typical search returns in under 5 seconds, so that a shell user does not go ba
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-44: Return a typical search in under 5 seconds](../stories/STORY-44.md) | backlog | - | - | - | - |
+| [STORY-44: Return a typical search in under 5 seconds](../stories/STORY-44.md) | ready | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

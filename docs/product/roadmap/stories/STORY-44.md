@@ -4,7 +4,7 @@ title: Return a typical search in under 5 seconds
 description: As a shell power user (PERSONA-04), I want a typical search to return
   in under 5 seconds, so that I do not go back to grep.
 status: draft
-state: backlog
+state: ready
 github:
   number: 105
   node_id: I_kwDOVDCdD88AAAABXCBxaA
@@ -12,6 +12,7 @@ github:
   pushed_hash: 1a756c
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-44-a-typical-search-in-under-5-seconds-design.md
 parent: /features/FEATURE-16.md
 milestone: /milestones/MILESTONE-03.md
 ---
