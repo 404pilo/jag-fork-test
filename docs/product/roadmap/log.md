@@ -1,6 +1,7 @@
 # Log
 
 ## 2026-10-14
+* **Sync**: [STORY-47](stories/STORY-47.md) pushed to GitHub, by system:github, at 2026-10-14T22:10:01Z
 * **Plan**: [EPIC-04](epics/EPIC-04.md) backlog -> done: each of its 5 features (FEATURE-12, FEATURE-13, FEATURE-14, FEATURE-15, FEATURE-16) is done; user answer (human:404pilo, hitl, 2026-10-14): "always allow": the planner sets each epic whose features are all done to done as human:404pilo, with no card, by agent:planner, at 2026-10-14T22:06:11Z
 * **State**: [EPIC-04](epics/EPIC-04.md) backlog -> done, by human:404pilo, at 2026-10-14T22:06:11Z
 * **State**: [FEATURE-16](features/FEATURE-16.md) backlog -> done, by human:404pilo, at 2026-10-14T22:06:11Z

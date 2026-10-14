@@ -12,7 +12,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/109
   pushed_hash: cc138e
   synced:
-    state: ready
+    state: done
 spec: docs/superpowers/specs/2026-10-14-STORY-47-go-public-with-a-clean-history-design.md
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
