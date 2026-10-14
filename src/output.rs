@@ -1,8 +1,11 @@
 //! C-output: the text form of the results and the no-good-answer label
 //! (STORY-15).
 
+pub mod progress;
+
 use std::borrow::Cow;
 use std::io::{self, Write};
+use std::ops::Range;
 
 use serde::Serialize;
 
@@ -169,6 +172,44 @@ pub fn write_json(
     out.write_all(b"\n")
 }
 
+/// The byte ranges of the matches in one line. C-cli gives it, so that
+/// C-output does not use the matcher (FEATURE-15, decision 10).
+pub type Paint<'a> = &'a dyn Fn(&[u8]) -> Vec<Range<usize>>;
+
+/// The colors of GNU grep with its default `GREP_COLORS` (decision 7).
+const MATCH: &str = "01;31";
+const PATH: &str = "35";
+const NUMBER: &str = "32";
+const SEPARATOR: &str = "36";
+
+/// Write `item`, in `code` when `colored`. A colored item is
+/// `ESC[<code>m ESC[K <item> ESC[m ESC[K`, byte for byte as grep.
+fn item(out: &mut dyn Write, colored: bool, code: &str, bytes: &[u8]) -> io::Result<()> {
+    if !colored {
+        return out.write_all(bytes);
+    }
+    write!(out, "\x1b[{code}m\x1b[K")?;
+    out.write_all(bytes)?;
+    out.write_all(b"\x1b[m\x1b[K")
+}
+
+/// Write the text of a matching line, with each match in `MATCH`. An empty
+/// range gets no color. On a cut line, a range that ends at the last kept
+/// byte gets no color, because it may go on in the cut part (decision 8).
+fn write_painted(out: &mut dyn Write, text: &[u8], cut: bool, paint: Paint) -> io::Result<()> {
+    let mut at = 0;
+    for range in paint(text) {
+        let ends_at_the_cut = cut && range.end == text.len();
+        if range.is_empty() || range.start < at || range.end > text.len() || ends_at_the_cut {
+            continue;
+        }
+        out.write_all(&text[at..range.start])?;
+        item(out, true, MATCH, &text[range.clone()])?;
+        at = range.end;
+    }
+    out.write_all(&text[at..])
+}
+
 /// Write the results in rank order. Gives true when the label shows.
 ///
 /// A result has the form of `grep -n` with lines around the match:
@@ -177,23 +218,37 @@ pub fn write_json(
 /// `(standard input)`. `text` is the first bytes of the line as the file holds
 /// them. A line that jag cut ends with ` [+N chars]`, with N the count of cut
 /// characters.
-pub fn write_text(out: &mut dyn Write, ranked: &[(Snippet, f64)]) -> io::Result<bool> {
+///
+/// With `paint`, the text has the color of `grep --color=always` (decision 7).
+/// With `None`, it has no escape code.
+pub fn write_text(
+    out: &mut dyn Write,
+    ranked: &[(Snippet, f64)],
+    paint: Option<Paint>,
+) -> io::Result<bool> {
+    let colored = paint.is_some();
     let no_good_answer = is_no_good_answer(ranked);
     if no_good_answer {
         writeln!(out, "{NO_GOOD_ANSWER}")?;
     }
     for (index, (snippet, _)) in ranked.iter().enumerate() {
         if index > 0 {
-            out.write_all(b"--\n")?;
+            item(out, colored, SEPARATOR, b"--")?;
+            out.write_all(b"\n")?;
         }
         let label = snippet.source.label();
         for line in &snippet.lines {
             let separator: &[u8] = if line.is_match { b":" } else { b"-" };
-            out.write_all(label)?;
-            out.write_all(separator)?;
-            write!(out, "{}", line.number)?;
-            out.write_all(separator)?;
-            out.write_all(&line.text)?;
+            item(out, colored, PATH, label)?;
+            item(out, colored, SEPARATOR, separator)?;
+            item(out, colored, NUMBER, line.number.to_string().as_bytes())?;
+            item(out, colored, SEPARATOR, separator)?;
+            match paint {
+                Some(paint) if line.is_match => {
+                    write_painted(out, &line.text, line.cut > 0, paint)?;
+                }
+                _ => out.write_all(&line.text)?,
+            }
             if line.cut > 0 {
                 write!(out, " [+{} chars]", line.cut)?;
             }
@@ -228,7 +283,7 @@ mod tests {
 
     fn write(ranked: &[(Snippet, f64)]) -> (String, bool) {
         let mut out = Vec::new();
-        let label = write_text(&mut out, ranked).expect("write");
+        let label = write_text(&mut out, ranked, None).expect("write");
         (String::from_utf8(out).expect("text"), label)
     }
 
@@ -287,7 +342,7 @@ mod tests {
         let mut result = snippet("a", &[(1, "x", true)]);
         result.lines[0].text = vec![b'a', 0xff, b'\r'];
         let mut out = Vec::new();
-        write_text(&mut out, &[(result, 0.9)]).expect("write");
+        write_text(&mut out, &[(result, 0.9)], None).expect("write");
         assert_eq!(out, b"a:1:a\xff\r\n");
     }
 
@@ -576,5 +631,121 @@ mod tests {
         let (text, label) = write(&[]);
         assert!(text.is_empty());
         assert!(!label);
+    }
+
+    /// Every range of `needle` in the line.
+    fn find_needle(line: &[u8]) -> Vec<Range<usize>> {
+        let word = b"needle";
+        (0..line.len())
+            .filter(|at| line[*at..].starts_with(word))
+            .map(|at| at..at + word.len())
+            .collect()
+    }
+
+    fn colored(ranked: &[(Snippet, f64)]) -> String {
+        let mut out = Vec::new();
+        write_text(&mut out, ranked, Some(&find_needle)).expect("write");
+        String::from_utf8(out).expect("text")
+    }
+
+    fn paint(code: &str, text: &str) -> String {
+        format!("\x1b[{code}m\x1b[K{text}\x1b[m\x1b[K")
+    }
+
+    /// `path`, a separator, a number, a separator, as grep colors them.
+    fn head(path: &str, separator: &str, number: u64) -> String {
+        format!(
+            "{}{}{}{}",
+            paint("35", path),
+            paint("36", separator),
+            paint("32", &number.to_string()),
+            paint("36", separator)
+        )
+    }
+
+    #[test]
+    fn a_colored_result_has_the_bytes_of_grep_color_always() {
+        let ranked = [(
+            snippet("a.txt", &[(1, "x needle y", true), (2, "ctx", false)]),
+            0.9,
+        )];
+        assert_eq!(
+            colored(&ranked),
+            format!(
+                "{}x {} y\n{}ctx\n",
+                head("a.txt", ":", 1),
+                paint("01;31", "needle"),
+                head("a.txt", "-", 2)
+            )
+        );
+        // The exact bytes of the spec.
+        assert!(colored(&ranked).starts_with(
+            "\x1b[35m\x1b[Ka.txt\x1b[m\x1b[K\x1b[36m\x1b[K:\x1b[m\x1b[K\x1b[32m\x1b[K1\x1b[m\x1b[K\x1b[36m\x1b[K:\x1b[m\x1b[Kx \x1b[01;31m\x1b[Kneedle\x1b[m\x1b[K y\n"
+        ));
+    }
+
+    #[test]
+    fn two_results_have_a_colored_double_dash_between_them() {
+        let ranked = [
+            (snippet("a", &[(1, "needle", true)]), 0.9),
+            (snippet("b", &[(1, "needle", true)]), 0.8),
+        ];
+        assert!(colored(&ranked).contains("\n\x1b[36m\x1b[K--\x1b[m\x1b[K\n"));
+    }
+
+    #[test]
+    fn two_matches_on_a_line_give_two_colored_items() {
+        let ranked = [(snippet("a", &[(1, "needle and needle", true)]), 0.9)];
+        let match_item = paint("01;31", "needle");
+        assert_eq!(
+            colored(&ranked),
+            format!("{}{match_item} and {match_item}\n", head("a", ":", 1))
+        );
+    }
+
+    #[test]
+    fn an_empty_range_and_a_line_around_get_no_match_color() {
+        let ranked = [(snippet("a", &[(1, "needle", false), (2, "x", true)]), 0.9)];
+        let empty = |_: &[u8]| std::iter::once(0..0).collect::<Vec<_>>();
+        let mut out = Vec::new();
+        write_text(&mut out, &ranked, Some(&empty)).expect("write");
+        let text = String::from_utf8(out).expect("text");
+        assert!(!text.contains("01;31"));
+        // A line around the match is not searched for matches.
+        assert!(text.contains(&format!("{}needle\n", head("a", "-", 1))));
+    }
+
+    #[test]
+    fn standard_input_has_the_color_of_a_path() {
+        let mut result = snippet("a", &[(1, "x", true)]);
+        result.source = Source::StandardInput;
+        assert!(colored(&[(result, 0.9)]).starts_with(&paint("35", "(standard input)")));
+    }
+
+    #[test]
+    fn on_a_cut_line_a_match_at_the_cut_has_no_color_and_the_mark_has_none() {
+        let mut result = snippet("a", &[(1, "x needle", true)]);
+        result.lines[0].cut = 5;
+        assert_eq!(
+            colored(&[(result, 0.9)]),
+            format!("{}x needle [+5 chars]\n", head("a", ":", 1))
+        );
+        // A match that ends before the end of the kept bytes has color.
+        let mut result = snippet("a", &[(1, "needle x", true)]);
+        result.lines[0].cut = 5;
+        assert_eq!(
+            colored(&[(result, 0.9)]),
+            format!(
+                "{}{} x [+5 chars]\n",
+                head("a", ":", 1),
+                paint("01;31", "needle")
+            )
+        );
+    }
+
+    #[test]
+    fn the_label_line_has_no_color() {
+        let ranked = [(snippet("a", &[(1, "needle", true)]), 0.1)];
+        assert!(colored(&ranked).starts_with(&format!("{NO_GOOD_ANSWER}\n")));
     }
 }

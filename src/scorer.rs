@@ -76,6 +76,8 @@ pub enum ScoreError {
     UnexpectedStatus { status: u16 },
     /// HTTP 200 with a body that jag cannot read. Exit 6.
     BadResponse,
+    /// A Ctrl-C or a closed pipe set the stop flag. Exit 130.
+    Stopped,
 }
 
 impl From<ScoreError> for Failure {
@@ -128,6 +130,11 @@ impl From<ScoreError> for Failure {
                 "Check JAG_BASE_URL, or unset it.".to_owned(),
                 6,
             ),
+            ScoreError::Stopped => (
+                "the search was stopped.".to_owned(),
+                "To get the results, run the search again.".to_owned(),
+                130,
+            ),
         };
         Failure {
             cause,
@@ -148,9 +155,16 @@ struct Run<'a> {
     end: Instant,
     /// Set after the first failure: no new call and no retry starts.
     stop: AtomicBool,
+    /// Set by a Ctrl-C or a closed pipe: the same effect as `stop`.
+    external_stop: &'a AtomicBool,
 }
 
 impl Run<'_> {
+    /// True when no new call and no retry may start.
+    fn stopped(&self) -> bool {
+        self.stop.load(Ordering::SeqCst) || self.external_stop.load(Ordering::SeqCst)
+    }
+
     /// One attempt, with the time that is left. No attempt starts after the
     /// deadline.
     fn attempt(&self, body: &str, count: usize) -> Result<Vec<f64>, Attempt> {
@@ -179,7 +193,7 @@ impl Run<'_> {
         if !first.retry {
             return Some(Err(first.error));
         }
-        if self.stop.load(Ordering::SeqCst) {
+        if self.stopped() {
             return None;
         }
         // No retry starts after the deadline, so a wait that is as long as
@@ -189,7 +203,7 @@ impl Run<'_> {
             return Some(Err(first.error));
         }
         std::thread::sleep(self.settings.retry_wait);
-        if self.stop.load(Ordering::SeqCst) {
+        if self.stopped() {
             return None;
         }
         Some(self.attempt(body, count).map_err(|attempt| attempt.error))
@@ -209,18 +223,33 @@ pub fn probe(key: &ApiKey, settings: &ScoreSettings) -> Result<(), ScoreError> {
         source: Source::File(PathBuf::from(CHECK_PATH)),
         lines: vec![SnippetLine::new(1, CHECK_LINE, true)],
     };
-    score(&[snippet], CHECK_QUESTION, key, settings).map(|_| ())
+    // The check has no stop flag and no progress (FEATURE-15, decision 16).
+    score(
+        &[snippet],
+        CHECK_QUESTION,
+        key,
+        settings,
+        &AtomicBool::new(false),
+        &|_| {},
+    )
+    .map(|_| ())
 }
 
 /// Score each snippet from 0 to 1. The scores are in the order of the input.
 ///
 /// When a call fails, the result is the failure of the lowest call number
 /// that failed. A retry that the stop flag skips is not a failure.
+///
+/// `stop` is the flag of a Ctrl-C or a closed pipe: when it is set, no call and
+/// no retry starts, and the result is `ScoreError::Stopped`. `on_call_end`
+/// gets the count of results of each call that ends with scores.
 pub fn score(
     snippets: &[Snippet],
     question: &str,
     key: &ApiKey,
     settings: &ScoreSettings,
+    stop: &AtomicBool,
+    on_call_end: &(dyn Fn(usize) + Sync),
 ) -> Result<Vec<f64>, ScoreError> {
     let batches = prompt::split_batches(snippets, question);
     let run = Run {
@@ -228,6 +257,7 @@ pub fn score(
         settings,
         end: Instant::now() + settings.deadline,
         stop: AtomicBool::new(false),
+        external_stop: stop,
     };
     let next = AtomicUsize::new(0);
     let slots: Vec<Slot> = batches.iter().map(|_| Mutex::new(None)).collect();
@@ -235,7 +265,7 @@ pub fn score(
     std::thread::scope(|scope| {
         for _ in 0..batches.len().min(MAX_THREADS) {
             scope.spawn(|| {
-                while !run.stop.load(Ordering::SeqCst) {
+                while !run.stopped() {
                     let number = next.fetch_add(1, Ordering::SeqCst);
                     let Some(batch) = batches.get(number) else {
                         break;
@@ -248,8 +278,9 @@ pub fn score(
                     let Some(result) = run.call(&body, batch.range.len()) else {
                         continue;
                     };
-                    if result.is_err() {
-                        run.stop.store(true, Ordering::SeqCst);
+                    match &result {
+                        Ok(_) => on_call_end(batch.range.len()),
+                        Err(_) => run.stop.store(true, Ordering::SeqCst),
                     }
                     if let Ok(mut slot) = slots[number].lock() {
                         *slot = Some(result);
@@ -259,6 +290,9 @@ pub fn score(
         }
     });
 
+    if stop.load(Ordering::SeqCst) {
+        return Err(ScoreError::Stopped);
+    }
     let mut scores = Vec::with_capacity(snippets.len());
     for slot in slots {
         match slot.into_inner().ok().flatten() {
@@ -376,6 +410,7 @@ mod tests {
             (ScoreError::Redirect, 6),
             (ScoreError::UnexpectedStatus { status: 422 }, 6),
             (ScoreError::BadResponse, 6),
+            (ScoreError::Stopped, 130),
         ];
         for (error, code) in cases {
             let failure = Failure::from(error);

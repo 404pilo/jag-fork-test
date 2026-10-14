@@ -451,6 +451,7 @@ dependencies = [
  "ignore",
  "predicates",
  "rpassword",
+ "rustix",
  "serde",
  "serde-saphyr",
  "serde_json",

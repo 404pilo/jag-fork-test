@@ -131,3 +131,26 @@ In one major version of jag, jag does not remove or rename a field. It can add
 a field, so agent code must accept a field that it does not know. The order of
 the fields can change: a new field goes before `results`. `version` changes
 only when a field is removed or renamed.
+
+## In a terminal and in a pipe
+
+- In a terminal, jag shows `jag: the model scored K of N results` on the
+  error stream while the model scores, and removes it when the results come.
+  In a pipe or a file, jag shows no progress. With `--json`, jag never shows
+  progress.
+- jag colors the matches, the paths, the line numbers, and the separators as
+  `grep --color=auto` does: only when the output is a terminal and `TERM` is
+  not `dumb`. `--color=always` colors also in a pipe, for example for
+  `less -R`. `--color=never` never colors. `--color` alone means
+  `--color=auto`. A value needs `=`: in `--color never`, `never` is the term.
+  `--colour` works as `--color`. When you give the option more than one time,
+  the last one wins. jag does not read `NO_COLOR` or `GREP_COLORS`. With
+  `--json`, the document has no color.
+- Ctrl-C stops jag at once. jag starts no new model call and shows no
+  results. jag writes `jag: the search was stopped.` and ends by the signal
+  SIGINT, as grep does, so a shell shows the exit code 130 and a script
+  stops. With `--json`, the output is an error document with `exit_code`
+  130.
+- When the reader of the output closes the pipe, jag stops at once, starts no
+  new model call, and ends by the signal SIGPIPE with no message. A shell
+  shows the exit code 141.

@@ -6,6 +6,7 @@ mod common;
 use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
 use common::fake_server::{FakeServer, Reply};
@@ -47,7 +48,14 @@ fn run(
 ) -> Result<Vec<f64>, ScoreError> {
     let key = ApiKey::parse(KEY).expect("a test key");
     let _ = server;
-    score(snippets, "which one answers?", &key, settings)
+    score(
+        snippets,
+        "which one answers?",
+        &key,
+        settings,
+        &AtomicBool::new(false),
+        &|_| {},
+    )
 }
 
 fn exit_code(error: ScoreError) -> u8 {
@@ -230,7 +238,15 @@ fn no_connection_gives_exit_6() {
         retry_wait: Duration::from_millis(20),
         deadline: Duration::from_secs(5),
     };
-    let error = score(&snippets(1), "q", &key, &settings).expect_err("no connection");
+    let error = score(
+        &snippets(1),
+        "q",
+        &key,
+        &settings,
+        &AtomicBool::new(false),
+        &|_| {},
+    )
+    .expect_err("no connection");
     assert_eq!(error, ScoreError::CannotConnect);
 }
 
@@ -402,4 +418,92 @@ fn a_late_batch_that_fails_ends_the_search_at_the_deadline() {
     assert_eq!(exit_code(error), 6);
     assert!(started.elapsed() < Duration::from_millis(2300));
     assert_eq!(server.requests().len(), 7);
+}
+
+fn run_with(
+    snippets: &[Snippet],
+    settings: &ScoreSettings,
+    stop: &AtomicBool,
+    on_call_end: &(dyn Fn(usize) + Sync),
+) -> Result<Vec<f64>, ScoreError> {
+    let key = ApiKey::parse(KEY).expect("a test key");
+    score(
+        snippets,
+        "which one answers?",
+        &key,
+        settings,
+        stop,
+        on_call_end,
+    )
+}
+
+#[test]
+fn each_call_that_ends_with_scores_calls_on_call_end() {
+    let server = FakeServer::constant(0.5);
+    let counts = Mutex::new(Vec::new());
+    let scores = run_with(
+        &snippets(200),
+        &settings(&server),
+        &AtomicBool::new(false),
+        &|count| counts.lock().expect("lock").push(count),
+    )
+    .expect("scores");
+    assert_eq!(scores.len(), 200);
+    let mut counts = counts.into_inner().expect("counts");
+    counts.sort_unstable();
+    assert_eq!(counts, [8, 32, 32, 32, 32, 32, 32]);
+}
+
+#[test]
+fn a_call_that_fails_does_not_call_on_call_end() {
+    let server = FakeServer::start(|_| Reply::status(401));
+    let counts = Mutex::new(Vec::new());
+    let error = run_with(
+        &snippets(40),
+        &settings(&server),
+        &AtomicBool::new(false),
+        &|count| counts.lock().expect("lock").push(count),
+    )
+    .expect_err("a failure");
+    assert_eq!(exit_code(error), 4);
+    assert!(counts.into_inner().expect("counts").is_empty());
+}
+
+#[test]
+fn a_stop_flag_that_is_set_before_score_starts_no_call() {
+    let server = FakeServer::constant(0.5);
+    let error = run_with(
+        &snippets(70),
+        &settings(&server),
+        &AtomicBool::new(true),
+        &|_| {},
+    )
+    .expect_err("stopped");
+    assert_eq!(error, ScoreError::Stopped);
+    assert_eq!(exit_code(error), 130);
+    assert!(server.requests().is_empty());
+}
+
+#[test]
+fn a_stop_flag_that_is_set_while_calls_run_starts_no_seventh_call() {
+    let server =
+        FakeServer::start(|request| Reply::scores(request, |_| 0.5).after(Duration::from_secs(2)));
+    let settings = ScoreSettings {
+        timeout: Duration::from_secs(10),
+        deadline: Duration::from_secs(30),
+        ..settings(&server)
+    };
+    let stop = AtomicBool::new(false);
+    let result = std::thread::scope(|scope| {
+        scope.spawn(|| {
+            let started = Instant::now();
+            while server.requests().len() < 6 && started.elapsed() < Duration::from_secs(10) {
+                std::thread::sleep(Duration::from_millis(10));
+            }
+            stop.store(true, Ordering::SeqCst);
+        });
+        run_with(&snippets(200), &settings, &stop, &|_| {})
+    });
+    assert_eq!(result.expect_err("stopped"), ScoreError::Stopped);
+    assert_eq!(server.requests().len(), 6);
 }

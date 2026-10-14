@@ -28,6 +28,7 @@ grep-regex = "0.1.14"
 grep-searcher = "0.1.17"
 ignore = "0.4.33"
 rpassword = "7.5.4"
+rustix = { version = "1.1.5", features = ["event"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde-saphyr = "2.0.0"
 serde_json = "1"

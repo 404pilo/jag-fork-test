@@ -51,6 +51,26 @@ pub fn jag(home: &Path, base_url: &str) -> Command {
     command
 }
 
+/// A `std::process::Command` with the variables of `jag`: the made-up key and
+/// the address of a fake server. A test that sends a signal, or that gives
+/// its own standard output, uses it, because `assert_cmd` cannot do that.
+pub fn jag_std(home: &Path, base_url: &str) -> std::process::Command {
+    let mut command = std::process::Command::new(assert_cmd::cargo::cargo_bin!("jag"));
+    command
+        .env("HOME", home)
+        .env("JAG_TYPESAFE_API_KEY", KEY)
+        .env("JAG_BASE_URL", base_url)
+        .env_remove("TYPESAFE_API_KEY")
+        .env_remove("JAG_MODEL")
+        .env_remove("JAG_TIMEOUT")
+        .env_remove("JAG_RETRY_WAIT")
+        .env_remove("JAG_MAX_SCORED");
+    for name in PROXY_VARIABLES {
+        command.env_remove(name);
+    }
+    command
+}
+
 /// Write a file under `root`, with its folders.
 pub fn write(root: &Path, relative: &str, bytes: &[u8]) {
     let path = root.join(relative);

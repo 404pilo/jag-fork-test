@@ -1,13 +1,17 @@
 //! C-cli: option parsing, dispatch, the search flow, and the exit code.
 
-use std::ffi::OsString;
+mod stop;
+
+use std::ffi::{OsStr, OsString};
 use std::io::{self, IsTerminal, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::sync::Arc;
 use std::time::Duration;
 
 use clap::Parser;
 use clap::error::ErrorKind;
+use grep_matcher::Matcher;
 use grep_regex::RegexMatcherBuilder;
 
 use crate::check;
@@ -16,11 +20,13 @@ use crate::config::{
     model_settings, parse_cost_limit, parse_seconds,
 };
 use crate::failure::Failure;
-use crate::output::{Summary, is_no_good_answer, write_json, write_text};
+use crate::output::progress::Progress;
+use crate::output::{Paint, Summary, is_no_good_answer, write_json, write_text};
 use crate::prerank;
-use crate::scorer::{ScoreSettings, probe, rank, score};
+use crate::scorer::{ScoreError, ScoreSettings, probe, rank, score};
 use crate::search::snippet::{match_texts, plan_windows, read_snippets};
 use crate::search::{ScanOptions, scan};
+use stop::Stop;
 
 /// The longest question, in UTF-8 bytes (decision 30).
 const MAX_QUESTION_BYTES: usize = 12_000;
@@ -35,12 +41,26 @@ const USAGE_ERROR: &str = "jag: the command line is not valid. Run jag --help to
     name = "jag",
     version,
     arg_required_else_help = true,
-    override_usage = "jag [--json] [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]\n       jag --check [--timeout SECONDS] [--retry-wait SECONDS]\n       jag --setup\n       jag --forget-key"
+    override_usage = "jag [--json] [--color[=WHEN]] [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]\n       jag --check [--timeout SECONDS] [--retry-wait SECONDS]\n       jag --setup\n       jag --forget-key"
 )]
 struct Cli {
     /// Write one JSON document for an agent, in place of text
     #[arg(long, conflicts_with_all = ["setup", "forget_key", "check"])]
     json: bool,
+
+    /// When to color the matches: never, always, or auto (the default: only in a terminal)
+    #[arg(
+        long,
+        value_name = "WHEN",
+        alias = "colour",
+        num_args = 0..=1,
+        require_equals = true,
+        default_missing_value = "auto",
+        value_parser = ["never", "always", "auto"],
+        overrides_with = "color",
+        conflicts_with_all = ["setup", "forget_key", "check"]
+    )]
+    color: Option<String>,
 
     /// Check that jag is ready: the key, the service, and the key file
     #[arg(long, conflicts_with_all = ["setup", "forget_key", "cost_limit", "term", "question", "paths"])]
@@ -79,6 +99,59 @@ struct Cli {
     paths: Vec<PathBuf>,
 }
 
+impl Cli {
+    /// The last `--color` wins (clap keeps it). No option is `auto`.
+    fn color_when(&self) -> ColorWhen {
+        match self.color.as_deref() {
+            Some("never") => ColorWhen::Never,
+            Some("always") => ColorWhen::Always,
+            _ => ColorWhen::Auto,
+        }
+    }
+}
+
+/// The value of `--color` (decision 5).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ColorWhen {
+    Never,
+    Always,
+    Auto,
+}
+
+/// True when the text output gets color (decisions 5 and 6).
+fn color_on(when: ColorWhen, stdout_is_terminal: bool, term: Option<&OsStr>) -> bool {
+    match when {
+        ColorWhen::Always => true,
+        ColorWhen::Never => false,
+        ColorWhen::Auto => stdout_is_terminal && term.is_some_and(|term| term != "dumb"),
+    }
+}
+
+/// What the search flow shares with a stop and with the terminal.
+struct Context<'a> {
+    mode: Mode,
+    stop: &'a Stop,
+    progress: &'a Progress,
+    stdout_is_terminal: bool,
+}
+
+/// Remove the progress line on each path out of the scoring step.
+struct ClearOnDrop<'a>(&'a Progress);
+
+impl Drop for ClearOnDrop<'_> {
+    fn drop(&mut self) {
+        self.0.clear();
+    }
+}
+
+/// Wait for the end of the process. A stop ends it, and the search flow
+/// writes nothing meanwhile (decision 14).
+fn wait_for_the_end() -> ! {
+    loop {
+        std::thread::park();
+    }
+}
+
 /// Parse the command line, run the command, and give the exit code.
 pub fn run() -> ExitCode {
     let cli = match parse() {
@@ -112,7 +185,25 @@ pub fn run() -> ExitCode {
     } else if cli.check {
         check(&cli, &env, &mut stdout, &mut stderr)
     } else {
-        search(&cli, &env, mode, &mut summary, &mut stdout, &mut stderr)
+        let progress = Arc::new(Progress::new(
+            Box::new(io::stderr()),
+            mode == Mode::Text && io::stderr().is_terminal(),
+        ));
+        let stop = Arc::new(Stop::new(mode, Arc::clone(&progress)));
+        // With no handler, the default action of SIGINT stays (decision 11).
+        let _ = stop::install(&stop);
+        stop::watch_pipe(&stop);
+        let context = Context {
+            mode,
+            stop: &stop,
+            progress: &progress,
+            stdout_is_terminal: io::stdout().is_terminal(),
+        };
+        let result = search(&cli, &env, &context, &mut summary, &mut stdout, &mut stderr);
+        if !stop.claim_for_search() {
+            wait_for_the_end();
+        }
+        result
     };
     finish(result, mode, &mut summary, &mut stdout, &mut stderr)
 }
@@ -301,11 +392,17 @@ fn parse_option(text: Option<&str>, setting: TimeSetting) -> Result<Option<Durat
 fn search(
     cli: &Cli,
     env: &Env,
-    mode: Mode,
+    context: &Context,
     summary: &mut Summary,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> Result<u8, Failure> {
+    let Context {
+        mode,
+        stop,
+        progress,
+        stdout_is_terminal,
+    } = *context;
     let args = search_args(cli)?;
     // The key comes before any file read (decision 18).
     let (key, _source) = find_key(env, &RealFs).map_err(Failure::from)?;
@@ -350,15 +447,16 @@ fn search(
     summary.results_found = total as u64;
     summary.results_scored = kept.len() as u64;
     summary.results_skipped = (total - kept.len()) as u64;
+    stop.count(summary);
 
     // CRITERION-85: in text mode, the notice and the warnings go to the error
     // stream. In JSON mode they are fields of the document.
     if mode == Mode::Text {
         if let Some(notice) = report.skipped.notice() {
-            let _ = writeln!(stderr, "{notice}");
+            stop.notice(stderr, &notice);
         }
         for warning in &summary.warnings {
-            let _ = writeln!(stderr, "{}", warning.message());
+            stop.notice(stderr, &warning.message());
         }
     }
 
@@ -367,22 +465,41 @@ fn search(
             summary.exit_code = 1;
             let mut buffer = Vec::new();
             write_json(&mut buffer, summary, &[]).map_err(|_| write_failure())?;
-            return Ok(emit(stdout, stderr, &buffer, 1));
+            return Ok(emit_claimed(stop, stdout, stderr, &buffer, 1));
         }
         return Ok(1);
     }
     let cost_limit_reached = total > limit;
     if cost_limit_reached && mode == Mode::Text {
-        let _ = writeln!(
+        stop.notice(
             stderr,
-            "jag: cost limit reached: scored {} of {total} results, skipped {}.",
-            kept.len(),
-            total - kept.len()
+            &format!(
+                "jag: cost limit reached: scored {} of {total} results, skipped {}.",
+                kept.len(),
+                total - kept.len()
+            ),
         );
     }
 
     let score_settings = ScoreSettings::new(settings.base_url, settings.model, settings.times);
-    let scores = score(&snippets, args.question, &key, &score_settings).map_err(Failure::from)?;
+    progress.start(snippets.len());
+    let scores = {
+        let _clear = ClearOnDrop(progress);
+        score(
+            &snippets,
+            args.question,
+            &key,
+            &score_settings,
+            stop.flag(),
+            &|count| progress.advance(count),
+        )
+    };
+    let scores = match scores {
+        Ok(scores) => scores,
+        // Only a stop sets the flag, and the stop writes the failure.
+        Err(ScoreError::Stopped) => wait_for_the_end(),
+        Err(error) => return Err(Failure::from(error)),
+    };
     let ranked = rank(snippets, scores);
 
     let no_good_answer = is_no_good_answer(&ranked);
@@ -397,7 +514,19 @@ fn search(
     let mut buffer = Vec::new();
     match mode {
         Mode::Text => {
-            write_text(&mut buffer, &ranked).map_err(|_| write_failure())?;
+            // A `RegexMatcher` gives no error (`NoError`).
+            let find = |line: &[u8]| {
+                let mut ranges = Vec::new();
+                let _ = matcher.find_iter(line, |found| {
+                    ranges.push(found.start()..found.end());
+                    true
+                });
+                ranges
+            };
+            let term = (env.vars)("TERM");
+            let colored = color_on(cli.color_when(), stdout_is_terminal, term.as_deref());
+            let paint: Option<Paint> = if colored { Some(&find) } else { None };
+            write_text(&mut buffer, &ranked, paint).map_err(|_| write_failure())?;
         }
         Mode::Json => {
             summary.no_good_answer = no_good_answer;
@@ -407,7 +536,22 @@ fn search(
     }
     // A reader that closed the pipe gives no message and the code of the
     // search (CV-4).
-    Ok(emit(stdout, stderr, &buffer, code))
+    Ok(emit_claimed(stop, stdout, stderr, &buffer, code))
+}
+
+/// `emit` for the search flow: it takes the output first. When a stop owns
+/// the output, the search flow waits for the end of the process.
+fn emit_claimed(
+    stop: &Stop,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+    bytes: &[u8],
+    code: u8,
+) -> u8 {
+    if !stop.claim_for_search() {
+        wait_for_the_end();
+    }
+    emit(stdout, stderr, bytes, code)
 }
 
 /// The readiness check (FEATURE-02). Gives the exit code of the first item
@@ -491,6 +635,65 @@ mod tests {
         assert!(!json_requested(args(&["jag", "--json=1"])));
         assert!(!json_requested(args(&["jag"])));
         assert!(!json_requested(args(&[])));
+    }
+
+    #[test]
+    fn color_on_follows_grep_color_auto() {
+        let term = |text: &'static str| Some(OsStr::new(text));
+        assert!(color_on(ColorWhen::Always, false, None));
+        assert!(color_on(ColorWhen::Auto, true, term("xterm")));
+        assert!(color_on(ColorWhen::Auto, true, term("")));
+        assert!(!color_on(ColorWhen::Never, true, term("xterm")));
+        assert!(!color_on(ColorWhen::Auto, true, term("dumb")));
+        assert!(!color_on(ColorWhen::Auto, true, None));
+        assert!(!color_on(ColorWhen::Auto, false, term("xterm")));
+    }
+
+    fn color_of(list: &[&str]) -> Result<ColorWhen, clap::Error> {
+        let mut all = vec!["jag"];
+        all.extend_from_slice(list);
+        all.extend_from_slice(&["term", "question", "path"]);
+        Cli::try_parse_from(all).map(|cli| cli.color_when())
+    }
+
+    #[test]
+    fn the_option_color_takes_never_always_and_auto() {
+        assert_eq!(color_of(&[]).expect("parse"), ColorWhen::Auto);
+        assert_eq!(color_of(&["--color"]).expect("parse"), ColorWhen::Auto);
+        assert_eq!(color_of(&["--color=auto"]).expect("parse"), ColorWhen::Auto);
+        assert_eq!(
+            color_of(&["--color=always", "--color=never"]).expect("parse"),
+            ColorWhen::Never
+        );
+        assert_eq!(
+            color_of(&["--colour=always"]).expect("parse"),
+            ColorWhen::Always
+        );
+        assert!(color_of(&["--color=sometimes"]).is_err());
+    }
+
+    #[test]
+    fn a_value_of_color_needs_an_equals_sign() {
+        // `never` is the term here, as in grep.
+        let cli =
+            Cli::try_parse_from(["jag", "--color", "never", "question", "path"]).expect("parse");
+        assert_eq!(cli.color_when(), ColorWhen::Auto);
+        assert_eq!(cli.term.as_deref(), Some("never"));
+    }
+
+    fn scoring_step_that_fails(progress: &Progress) -> Result<(), Failure> {
+        let _clear = ClearOnDrop(progress);
+        Err(usage_failure("a cause.", "a fix."))
+    }
+
+    #[test]
+    fn clear_on_drop_removes_the_line_before_the_failure_text() {
+        use crate::output::progress::tests::Shared;
+        let line = Shared::default();
+        let progress = Progress::new(Box::new(line.clone()), true);
+        progress.start(70);
+        assert!(scoring_step_that_fails(&progress).is_err());
+        assert!(line.text().ends_with(&format!("\r{}\r", " ".repeat(37))));
     }
 
     fn code(no_good_answer: bool, cost_limit_reached: bool, left_out: bool) -> u8 {

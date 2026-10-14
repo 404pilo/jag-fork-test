@@ -42,9 +42,10 @@ fn help_and_version_exit_0() {
         .assert()
         .success()
         .stdout(predicate::str::contains(
-            "jag [--json] [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]",
+            "jag [--json] [--color[=WHEN]] [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]",
         ))
         .stdout(predicate::str::contains("--json"))
+        .stdout(predicate::str::contains("--color[=<WHEN>]"))
         .stdout(predicate::str::contains("--max-scored <COUNT>"))
         .stdout(predicate::str::contains("--timeout <SECONDS>"))
         .stdout(predicate::str::contains("--retry-wait <SECONDS>"));
