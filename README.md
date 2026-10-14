@@ -229,3 +229,32 @@ only when a field is removed or renamed.
 - When the reader of the output closes the pipe, jag stops at once, starts no
   new model call, and ends by the signal SIGPIPE with no message. A shell
   shows the exit code 141.
+
+## Speed
+
+A typical search returns in under 5 seconds. A typical search is one search
+with a question, at the default limit of 200 scored results, on a code
+repository of about 15,000 files, while the model service works.
+
+- jag finds the matches in one pass. On Go 1.25.0, with 14,490 files, that
+  takes about 0.1 s on a machine with 12 CPUs. Then the model scores 200
+  results in 7 calls, 6 at the same time, so the search waits for two rounds
+  of calls. The calls take most of the time.
+- A larger `--max-scored` needs one more round of calls for each 192
+  results.
+- A long list of files can be too long for the system. macOS allows 1 MiB for
+  the arguments of a command and its environment, so a shell glob of a
+  repository with about 1.5 times the files of Go can fail with `argument
+  list too long`. Then give the folder in the place of the list.
+- To measure jag on your machine, run
+  `python3 scripts/speed/measure.py --jag PATH` in a clone of this
+  repository, with the path of the jag that you use, for example
+  `target/release/jag` after `cargo build --release --locked`. The script
+  clones Go 1.25.0 (a download of about 36 MB) and runs 5 searches 6 times
+  each: 30 searches. Each search costs at most about $0.02, so the measure
+  costs at most about $0.60. jag finds your key as it always does. The script
+  exits with 0 when each search returns in under 5 seconds, with 1 when it
+  does not, and with 2 when jag fails or an argument is wrong.
+- A test in the CI (`tests/speed.rs`, a release build) keeps the local part
+  of a search under 1 s, and a search with a model service that needs 2 s for
+  each call under 5 s.

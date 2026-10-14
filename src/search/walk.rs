@@ -3,7 +3,7 @@
 //! `scan` walks each root with the `ignore` crate, searches each regular file
 //! with `grep-searcher`, and counts the entries that the walk skips.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ffi::OsStr;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -159,7 +159,7 @@ struct Shared {
     /// Paths of errors for entries at depth 1 or more.
     error_paths: Mutex<Vec<PathBuf>>,
     /// Paths of the folders that the walk yielded.
-    folder_paths: Mutex<Vec<PathBuf>>,
+    folder_paths: Mutex<HashSet<PathBuf>>,
 }
 
 /// Walk each root, search each file, and count what jag skips.
@@ -222,7 +222,9 @@ fn visit_entry<M: Matcher>(
     };
     if file_type.is_dir() {
         count_children(shared, entry.path());
-        push(&shared.folder_paths, entry.path().to_path_buf());
+        if let Ok(mut folders) = shared.folder_paths.lock() {
+            folders.insert(entry.path().to_path_buf());
+        }
     } else if file_type.is_file() {
         let path = entry.path();
         let root = path.ancestors().nth(entry.depth()).unwrap_or(path);
@@ -478,6 +480,37 @@ mod tests {
             path: path.map(PathBuf::from),
             kind,
         }
+    }
+
+    // `finish` looks up each error path in the set of the folders. A search of
+    // a large tree has many of both, so the time must not grow with their
+    // product (FEATURE-16, CRITERION-65).
+    #[test]
+    fn finish_with_many_folders_and_many_error_paths_is_fast() {
+        let shared = Shared::default();
+        shared.children.store(50_000, Ordering::Relaxed);
+        shared.yielded.store(40_000, Ordering::Relaxed);
+        for number in 0..40_000 {
+            if let Ok(mut folders) = shared.folder_paths.lock() {
+                folders.insert(PathBuf::from(format!("/tree/d{number:05}")));
+            }
+        }
+        // 2,000 error paths are folders, and 2,000 are not.
+        for number in 0..2_000 {
+            push(
+                &shared.error_paths,
+                PathBuf::from(format!("/tree/d{number:05}")),
+            );
+            push(
+                &shared.error_paths,
+                PathBuf::from(format!("/tree/x{number:05}")),
+            );
+        }
+        let started = std::time::Instant::now();
+        let report = finish(shared, &[]);
+        assert!(started.elapsed() < std::time::Duration::from_secs(1));
+        // Only the 2,000 error paths that are not folders count as entries.
+        assert_eq!(report.skipped.ignored, 50_000 - 42_000);
     }
 
     // No real folder gives two warnings with the same path and different
