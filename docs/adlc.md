@@ -185,45 +185,43 @@ Types:
 
 Always use this layout, in this order:
 
-1. Context line 1: `<question id> · question <n> of <total> · from <role> → <feature> spec, <spec section>`
-2. Context line 2: `Related: <linked items and how they relate>`. If nothing is related, do not write this line.
-3. One empty line.
-4. The question, in 1 sentence.
-5. The options list: 1 bullet for each option, with the pros and the cons indented below it.
-6. The recommendation line: `⭐ Recommended: <n>. <reason in 1 sentence>`
+1. The header: `from <role> → "<title>"`. The title tells the topic of the question in a few plain words.
+2. The related line: `Related: <background in plain words>`. If there is no useful background, do not write this line.
+3. The question, in 1 sentence.
+4. The options list: 1 bullet for each option, with the pros and the cons indented below it.
 
 Example (markdown source):
 
 ```markdown
-Q-aa · question 5 of 11 · from specifier → FEATURE-04 spec, Output section
-Related: FEATURE-09 adds the size limit later
+from specifier → "The label for standard input"
 
-Which results does jag show when there is a good answer?
+Related: A search needs a path until the team adds search of standard input.
 
-- **Option 1:** All scored results, in rank order [recommended]
-  - **Pros:**
-    - Nothing is hidden
-  - **Cons:**
-    - Long output until FEATURE-09
-- **Option 2:** Only results at or above the threshold, plus a count
-  - **Pros:**
-    - Short output
-  - **Cons:**
-    - Can hide a useful result
+What do we build now for the "(standard input)" label?
 
-⭐ Recommended: 1. Nothing is hidden, and FEATURE-09 adds the limit later.
+- **Only the output code:** a result can come from a file or from standard input, and standard input prints "(standard input)". A unit test checks it. The end-to-end test comes later. [recommended]
+  - **Pros:** ✅
+    - This work stays small
+    - The standard input code is not written 2 times
+  - **Cons:** ❌
+    - Only the later end-to-end test fully proves the label
+- **The full standard input search now:** read standard input and print the label, with an end-to-end test.
+  - **Pros:** ✅
+    - The label is fully proven now
+  - **Cons:** ❌
+    - This work gets much larger
 ```
 
 Rules:
-- Context: Always give the role that asks, the feature, the spec section and the question number. The person gets the background before they read the question.
-- Options list: Do not use tables. Tables do not show correctly on a mobile screen. Use a markdown bullet list.
-- Highlight: Write `**Option <n>:**`, `**Pros:**` and `**Cons:**` in bold.
-- Pros and cons: Give each option 1 or more pros and 1 or more cons. Put each pro and each con on its own indented bullet. Keep each bullet to a short phrase.
-- Recommended option: Mark it with the text `[recommended]` after the option text.
-- Emojis: Use only ⭐, and only on the recommendation line.
-- Do not use 🟥 🟨 🟩 🎯 🛠️ 🔗 ✅ ❌ ✍️, or the labels What, How and Context.
-- No repeated text: Give each fact 1 time only. For example, put a note about a related feature in the Related line, not in each option.
+- Plain words: Write the header, the related line, the question and the options in plain English (ASD-STE100 and the Google developer documentation style). Do not use IDs of features, stories, decisions, constraints or criteria, and do not use question IDs. Say what the item does in plain words.
+- Question IDs: Hitl keeps the question ID for itself. It uses the ID in the `ANSWER` message to the orchestrator, but not in the card.
+- Options: Do not number the options. Start each option with a short bold name and a colon, then the description. Do not use tables, because tables do not show correctly on a mobile screen.
+- Recommended option: Put the text `[recommended]` at the end of the option. Do not write a separate recommendation line.
+- Pros and cons: Write `**Pros:** ✅` and `**Cons:** ❌`. Give each option 1 or more pros and 1 or more cons. Put each pro and each con on its own indented bullet. Keep each bullet to a short phrase.
+- Emojis: Use only ✅ and ❌, and only on the Pros and Cons lines.
+- No repeated text: Give each fact 1 time only. For example, put the background in the related line, not in each option.
 - Number of options: Use 2 or 3 options. If there are 4 or more options, keep this layout.
+- `AskUserQuestion`: Use the short bold name of each option as its label.
 
 ## 8. Start commands
 
@@ -255,3 +253,4 @@ Send a DONE message to the orchestrator when you are ready. Then wait for TASK m
 | 2026-10-13 | The chores session can talk to the user directly and guide the user through manual steps. Decisions still go through hitl | The user asked for this change |
 | 2026-10-13 | Replaced the options table in the HITL card (section 7) with a bullet list. Each option has its pros and cons as indented bullets | The user asked for this change. A table does not show correctly on a mobile screen |
 | 2026-10-13 | Hitl asks the cards in priority order, up to 4 cards of 1 feature together. Up to 2 specifiers. The specifier uses effort `xhigh`, infers more from the ADRs and the system design, and asks guideline questions. For document PRs, an exact non-blocking fix merges with no new check | The user asked for these changes to make the team faster. Today, code work stopped for about 3 hours because specs waited for user answers |
+| 2026-10-13 | Changed the HITL card (section 7): a header with the role and a plain title, plain words with no IDs, options with no numbers, ✅ and ❌ on the Pros and Cons lines, and `[recommended]` with no separate recommendation line | The user asked for this change. The cards must be easy to read with no knowledge of the IDs |
