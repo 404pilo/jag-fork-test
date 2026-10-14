@@ -5,7 +5,8 @@ description: As an operator (PERSONA-02), I want setup to ask before it replaces
   key and one command to remove the key, so that I never lose a key by accident and
   I can clean up a machine.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 spec: docs/superpowers/specs/2026-10-13-STORY-01-store-a-key-one-time-design.md
 parent: /features/FEATURE-01.md
 milestone: /milestones/MILESTONE-01.md

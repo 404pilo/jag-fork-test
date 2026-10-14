@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want jag to label the best resu
   as weak and to exit with code 1 when no result answers the question well, so that
   my agent does not trust noise.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 spec: docs/superpowers/specs/2026-10-13-STORY-13-rank-matching-lines-by-a-question-design.md
 parent: /features/FEATURE-04.md
 milestone: /milestones/MILESTONE-01.md

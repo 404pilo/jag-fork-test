@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want each pull request checked 
   private data, so that the public repository never holds keys, case content, private
   evaluation data, or internal project names.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 spec: docs/superpowers/specs/2026-10-13-STORY-46-block-private-data-in-pull-requests-design.md
 parent: /features/FEATURE-17.md
 milestone: /milestones/MILESTONE-01.md

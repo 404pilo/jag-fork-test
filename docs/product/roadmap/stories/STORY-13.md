@@ -5,7 +5,8 @@ description: As a knowledge seeker (PERSONA-03), I want to run jag with a term, 
   question, and paths, and get the matching lines in order of how well they answer
   the question, so that the best answer comes first.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 spec: docs/superpowers/specs/2026-10-13-STORY-13-rank-matching-lines-by-a-question-design.md
 parent: /features/FEATURE-04.md
 milestone: /milestones/MILESTONE-01.md

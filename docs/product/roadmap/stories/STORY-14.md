@@ -4,7 +4,8 @@ title: See the lines around a match
 description: As a knowledge seeker (PERSONA-03), I want each result to hold the matching
   line with the lines around it, so that I can read the answer in its context.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 spec: docs/superpowers/specs/2026-10-13-STORY-13-rank-matching-lines-by-a-question-design.md
 parent: /features/FEATURE-04.md
 milestone: /milestones/MILESTONE-01.md

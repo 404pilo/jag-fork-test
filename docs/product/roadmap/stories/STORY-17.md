@@ -5,7 +5,8 @@ description: As a shell power user (PERSONA-04), I want jag to skip binary, hidd
   and ignored files and to say how many files it skipped, so that I trust the search
   and see what it left out.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 spec: docs/superpowers/specs/2026-10-13-STORY-16-search-a-folder-as-grep-r-design.md
 parent: /features/FEATURE-05.md
 milestone: /milestones/MILESTONE-01.md

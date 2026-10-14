@@ -30,7 +30,7 @@ This milestone holds the capabilities that make jag better to use and easier to 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
 | [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md) | backlog | 0/5 (0%) | - | - | - |
-| [EPIC-05: Safe public release](../epics/EPIC-05.md) | ready | 0/3 (0%) | - | - | - |
+| [EPIC-05: Safe public release](../epics/EPIC-05.md) | ready | 1/3 (33%) | - | - | - |
 | [FEATURE-02: Readiness check](../features/FEATURE-02.md) | backlog | 0/3 (0%) | - | FEATURE-01 | - |
 | [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md) | backlog | 0/4 (0%) | - | FEATURE-01 | - |
 | [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md) | backlog | 0/2 (0%) | - | - | - |

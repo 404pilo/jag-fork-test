@@ -4,7 +4,8 @@ title: Block private data in the repository
 description: A check on each pull request fails when the change adds a key, case content,
   private evaluation data, or an internal project name.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 parent: /epics/EPIC-05.md
 milestone: /milestones/MILESTONE-01.md
 traces:
@@ -22,7 +23,7 @@ A check on each pull request fails when the change adds a key, case content, pri
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-46: Fail a pull request that adds private data](../stories/STORY-46.md) | ready | - | - | - | - |
+| [STORY-46: Fail a pull request that adds private data](../stories/STORY-46.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

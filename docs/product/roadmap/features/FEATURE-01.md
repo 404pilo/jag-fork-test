@@ -4,7 +4,8 @@ title: Store a key one time
 description: The user stores a TypeSafe key one time; jag finds it on each search,
   never shows it, and tells a new user where to get one.
 status: draft
-state: blocked
+state: done
+actual_end_date: '2026-10-14'
 parent: /epics/EPIC-01.md
 blocked_by:
 - /features/FEATURE-17.md
@@ -34,11 +35,11 @@ The user stores a TypeSafe key one time; jag finds it on each search, never show
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-01: Store a key with setup](../stories/STORY-01.md) | ready | - | - | - | - |
-| [STORY-02: Find the key in a fixed order](../stories/STORY-02.md) | ready | - | - | - | - |
-| [STORY-03: Replace or remove the stored key](../stories/STORY-03.md) | ready | - | - | - | - |
-| [STORY-04: Keep the key private](../stories/STORY-04.md) | ready | - | - | - | - |
-| [STORY-05: Find where to get a key](../stories/STORY-05.md) | ready | - | - | - | - |
+| [STORY-01: Store a key with setup](../stories/STORY-01.md) | done | - | - | - | - |
+| [STORY-02: Find the key in a fixed order](../stories/STORY-02.md) | done | - | - | - | - |
+| [STORY-03: Replace or remove the stored key](../stories/STORY-03.md) | done | - | - | - | - |
+| [STORY-04: Keep the key private](../stories/STORY-04.md) | done | - | - | - | - |
+| [STORY-05: Find where to get a key](../stories/STORY-05.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

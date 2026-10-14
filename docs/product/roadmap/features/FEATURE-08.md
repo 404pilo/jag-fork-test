@@ -5,7 +5,7 @@ description: Each result shows the file, the line range, and the exact source te
   with each matching line marked, so the person or the agent can open the source at
   that line.
 status: draft
-state: blocked
+state: ready
 parent: /epics/EPIC-02.md
 blocked_by:
 - /features/FEATURE-04.md

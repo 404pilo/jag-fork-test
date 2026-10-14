@@ -5,7 +5,8 @@ description: As an operator (PERSONA-02), I want jag to read the key from two va
   and a config file in a fixed order, so that I can override the stored key for one
   shell or one job.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 spec: docs/superpowers/specs/2026-10-13-STORY-01-store-a-key-one-time-design.md
 parent: /features/FEATURE-01.md
 milestone: /milestones/MILESTONE-01.md

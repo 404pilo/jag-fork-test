@@ -4,7 +4,8 @@ title: Search a folder as grep -r does
 description: jag searches each subfolder of a folder, skips binary, hidden, and ignored
   files, and says how many files it skipped.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 parent: /epics/EPIC-02.md
 milestone: /milestones/MILESTONE-01.md
 traces:
@@ -24,8 +25,8 @@ jag searches each subfolder of a folder, skips binary, hidden, and ignored files
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-16: Search each subfolder of a folder](../stories/STORY-16.md) | ready | - | - | - | - |
-| [STORY-17: Skip noise files and count them](../stories/STORY-17.md) | ready | - | - | - | - |
+| [STORY-16: Search each subfolder of a folder](../stories/STORY-16.md) | done | - | - | - | - |
+| [STORY-17: Skip noise files and count them](../stories/STORY-17.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

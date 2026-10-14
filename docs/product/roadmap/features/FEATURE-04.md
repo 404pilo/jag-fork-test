@@ -6,7 +6,8 @@ description: The user runs `jag TERM "QUESTION" [PATH...]`, and jag ranks the li
 status: draft
 aliases:
 - FEATURE-07
-state: blocked
+state: done
+actual_end_date: '2026-10-14'
 parent: /epics/EPIC-02.md
 blocked_by:
 - /features/FEATURE-01.md
@@ -37,9 +38,9 @@ When no result answers the question well, jag shows the best results with a clea
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-13: Rank matching lines by a question](../stories/STORY-13.md) | ready | - | - | - | - |
-| [STORY-14: See the lines around a match](../stories/STORY-14.md) | ready | - | - | - | - |
-| [STORY-15: Know when no result answers well](../stories/STORY-15.md) | ready | - | - | - | - |
+| [STORY-13: Rank matching lines by a question](../stories/STORY-13.md) | done | - | - | - | - |
+| [STORY-14: See the lines around a match](../stories/STORY-14.md) | done | - | - | - | - |
+| [STORY-15: Know when no result answers well](../stories/STORY-15.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
