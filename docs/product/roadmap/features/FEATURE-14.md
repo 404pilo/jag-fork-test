@@ -35,9 +35,9 @@ With no path, jag searches the current folder or reads the pipe; the user can al
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-24: Label piped text](../stories/STORY-24.md) | backlog | - | - | - | - |
-| [STORY-39: Search with no path](../stories/STORY-39.md) | backlog | - | - | - | - |
-| [STORY-40: Search a mix of files and folders](../stories/STORY-40.md) | backlog | - | - | - | - |
+| [STORY-24: Label piped text](../stories/STORY-24.md) | ready | - | - | - | - |
+| [STORY-39: Search with no path](../stories/STORY-39.md) | ready | - | - | - | - |
+| [STORY-40: Search a mix of files and folders](../stories/STORY-40.md) | ready | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

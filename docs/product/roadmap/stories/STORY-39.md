@@ -5,7 +5,7 @@ description: As a shell power user (PERSONA-04), I want jag with no path to sear
   the current folder, or to read the pipe when text comes in through one, so that
   I use jag as I use grep.
 status: draft
-state: backlog
+state: ready
 github:
   number: 100
   node_id: I_kwDOVDCdD88AAAABXCBcOw
@@ -13,6 +13,7 @@ github:
   pushed_hash: c81fa9
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-13-STORY-24-files-folders-and-piped-text-design.md
 parent: /features/FEATURE-14.md
 milestone: /milestones/MILESTONE-02.md
 traces:

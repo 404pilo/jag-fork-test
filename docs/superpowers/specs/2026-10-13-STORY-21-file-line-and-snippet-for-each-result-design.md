@@ -1,7 +1,7 @@
 ---
 title: "File, line, and snippet for each result: the path form, the line range, the cut of long lines, and the standard input label"
 feature: FEATURE-08
-stories: [STORY-21, STORY-22, STORY-23, STORY-24]
+stories: [STORY-21, STORY-22, STORY-23]
 kind: build
 lifecycle_state: draft
 inherits: [IF-1, IF-6, C-search, C-scorer, C-output, CV-3, CV-4]

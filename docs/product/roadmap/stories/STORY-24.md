@@ -4,7 +4,7 @@ title: Label piped text
 description: As a shell power user (PERSONA-04), I want a result from piped text to
   have the label (standard input), so that I read a pipe result as a file result.
 status: draft
-state: backlog
+state: ready
 github:
   number: 85
   node_id: I_kwDOVDCdD88AAAABXCAUSA
@@ -12,7 +12,7 @@ github:
   pushed_hash: 07d8e5
   synced:
     state: backlog
-spec: docs/superpowers/specs/2026-10-13-STORY-21-file-line-and-snippet-for-each-result-design.md
+spec: docs/superpowers/specs/2026-10-13-STORY-24-files-folders-and-piped-text-design.md
 parent: /features/FEATURE-14.md
 milestone: /milestones/MILESTONE-02.md
 traces:

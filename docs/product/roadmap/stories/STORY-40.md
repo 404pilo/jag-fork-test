@@ -4,7 +4,7 @@ title: Search a mix of files and folders
 description: As a shell power user (PERSONA-04), I want to give several paths, each
   a file or a folder, so that I search exactly the places that I choose.
 status: draft
-state: backlog
+state: ready
 github:
   number: 101
   node_id: I_kwDOVDCdD88AAAABXCBgYw
@@ -12,6 +12,7 @@ github:
   pushed_hash: 8d008b
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-13-STORY-24-files-folders-and-piped-text-design.md
 parent: /features/FEATURE-14.md
 milestone: /milestones/MILESTONE-02.md
 traces:
