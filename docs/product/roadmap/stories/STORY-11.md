@@ -5,7 +5,8 @@ description: As an operator (PERSONA-02), I want jag to wait a fixed time and tr
   again one time before it reports the service as down, so that a short outage does
   not stop my search.
 status: draft
-state: backlog
+state: ready
+spec: docs/superpowers/specs/2026-10-13-STORY-09-clear-failure-when-the-model-is-not-available-design.md
 parent: /features/FEATURE-03.md
 milestone: /milestones/MILESTONE-02.md
 traces:
