@@ -4,7 +4,8 @@ title: Setup and readiness
 description: The user stores a TypeSafe key one time and runs one command that says
   jag is ready or what to fix.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 37
   node_id: I_kwDOVDCdD88AAAABXB8tJw
