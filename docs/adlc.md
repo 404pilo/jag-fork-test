@@ -20,7 +20,7 @@ The `sofa` skill fills these values when it copies the template.
 | Team prefix | `jag` (session names are `jag-<role>[-n]`) |
 | Orchestrator name | `jag-orchestrator` |
 | Product docs | `docs/product/prd`, `docs/product/roadmap` |
-| ADR folder | `docs/adr` (10 accepted ADRs on `main`) |
+| ADR folder | `docs/adr`. The list of ADRs and their status is in `docs/adr/README.md` |
 | Extra context files | `/home/jazz/dev/github.com/ai-ready-future/jag/docs/handoff.md`. It is not in git, so read it from the main folder. It points to the source of the earlier prototype. |
 
 Repository rules:
@@ -269,3 +269,4 @@ Send a DONE message to the orchestrator when you are ready. Then wait for TASK m
 | 2026-10-13 | Changed the HITL card (section 7): a header with the role and a plain title, plain words with no IDs, options with no numbers, ✅ and ❌ on the Pros and Cons lines, and `[recommended]` with no separate recommendation line | The user asked for this change. The cards must be easy to read with no knowledge of the IDs |
 | 2026-10-13 | Added rule 11: a story is `ready` only if its spec is merged, its feature is not blocked, and no open `ASK` blocks it. The orchestrator assigns a ready story to an implementer at once. The specifier and each PR that sets a feature to `done` set the story state by this rule | The user asked for this change. 9 stories showed `ready` but were blocked or had no spec |
 | 2026-10-14 | Added an Effort column to section 3. Orchestrator: `claude-opus-5-5`, `medium`. Hitl: `claude-sonnet-5-5`, `medium`. Planner: `claude-opus-5-5`, `medium`. Projecter: `claude-sonnet-5-5`, `medium`. Architect: `claude-opus-5-5`, `high`. Implementer: `claude-sonnet-5-5`, `high`. Verifier: `claude-opus-5-5`, `high`. Chores: `claude-sonnet-5-5`, `medium`. Retro: `claude-opus-5-5`, `medium`. Specifier: `claude-opus-5-5`, `xhigh`. Section 8 uses these values and restarts a session when its model or effort changes | The user asked for this change |
+| 2026-10-14 | Removed the ADR count from the ADR folder row in section 1. The row points to `docs/adr/README.md` | The count (10) was out of date: `main` has 18 accepted ADRs. A count goes out of date again |
