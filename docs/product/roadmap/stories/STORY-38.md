@@ -11,7 +11,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/99
   pushed_hash: b3558b
   synced:
-    state: backlog
+    state: ready
 spec: docs/superpowers/specs/2026-10-14-STORY-35-common-grep-options-and-exit-codes-design.md
 parent: /features/FEATURE-13.md
 milestone: /milestones/MILESTONE-02.md
