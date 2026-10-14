@@ -29,6 +29,10 @@ adrs:
   - 0011-build-jag-as-one-cargo-package-with-one-module-per-component.md
   - 0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md
   - 0013-exit-2-when-setup-runs-with-no-terminal.md
+  - 0014-call-the-model-service-with-ureq-and-serde-json-on-std.md
+  - 0015-read-the-base-url-and-the-model-name-from-config-base-url.md
+  - 0016-add-v1-to-a-base-url-whose-path-does-not-end-with-v1.md
+  - 0017-use-a-separate-key-for-an-ai-gateway.md
   - 0018-take-the-question-only-from-the-ask-option.md
 ---
 
@@ -165,7 +169,8 @@ Out of scope:
 - Environment: every mode, including a failure.
 - Artifact: the key store and every output path.
 - Response: the key never appears in the output. jag refuses a key file that
-  other users on the machine can read.
+  other users on the machine can read. jag sends a TypeSafe key only to the
+  TypeSafe API, and sends only a gateway key to a gateway.
 - Response measure: zero outputs that hold the key, in a test of every error
   path.
 - Importance: H. Risk: L, because one module owns the key.
@@ -196,7 +201,11 @@ flowchart LR
 - IF-1: jag to the TypeSafe API. Outbound HTTPS calls that score snippets
   with the Jev model. The default route (context-2). Owner: TypeSafe.
 - IF-2: jag to an AI gateway. The same calls as IF-1, through a gateway that
-  the user names with two settings: the base URL and the model name. Optional
+  the user names with two settings: the base URL and the model name. Each
+  setting comes from an option, a variable, or the config file
+  (0015-read-the-base-url-and-the-model-name-from-config-base-url.md).
+  jag adds `/v1` to a base URL whose path does not end with `/v1`
+  (0016-add-v1-to-a-base-url-whose-path-does-not-end-with-v1.md). Optional
   (CONSTRAINT-03). Owner: the gateway provider.
 
 ## Solution strategy
@@ -242,10 +251,10 @@ components:
   - id: C-config
     name: Key and settings
     kind: library
-    summary: Finds the key and the settings, checks the mode of the key file, and stores or removes the key. The one component that reads the key.
+    summary: Finds the key for the route of each call and the settings, reads the config file at most one time in each run, checks the mode of the file at each read, and stores or removes the key with no loss of the other keys of the file. The one component that reads the key.
     owns_entities: [ApiKey, Settings]
     depends_on: []
-    governed_by: [0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md, CV-6, CV-7]
+    governed_by: [0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md, 0015-read-the-base-url-and-the-model-name-from-config-base-url.md, 0016-add-v1-to-a-base-url-whose-path-does-not-end-with-v1.md, 0017-use-a-separate-key-for-an-ai-gateway.md, CV-6, CV-7]
     realizes: [CAPABILITY-01, QS-5]
     areas: [building-blocks, data, conventions]
   - id: C-search
@@ -280,7 +289,7 @@ components:
       - id: C-gateway
         style: sync
         contract: IF-2
-    governed_by: [0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md, 0003-decide-no-good-answer-with-a-fixed-threshold-on-the-top.md, 0004-ship-one-scoring-prompt-with-a-version-id-in-each-release.md, 0009-pin-the-jev-model-version-in-each-release.md, CV-2, CV-5, CV-6]
+    governed_by: [0002-score-the-top-200-results-in-calls-of-32-six-calls-in.md, 0003-decide-no-good-answer-with-a-fixed-threshold-on-the-top.md, 0004-ship-one-scoring-prompt-with-a-version-id-in-each-release.md, 0009-pin-the-jev-model-version-in-each-release.md, 0014-call-the-model-service-with-ureq-and-serde-json-on-std.md, CV-2, CV-5, CV-6]
     realizes: [CAPABILITY-02, CAPABILITY-07, QS-1, QS-2, QS-3, QS-4]
     areas: [building-blocks, strategy, contracts, conventions]
   - id: C-output
@@ -374,12 +383,13 @@ flowchart LR
 ## Data and ownership
 
 jag keeps no data between searches (data-2, DECISION-46) and builds no index
-(SCOPE-06). The only stored data is the key.
+(SCOPE-06). The only stored data is the config file: the TypeSafe key, the
+gateway key, the base URL, and the model name.
 
 | Entity | Owner | Store |
 |---|---|---|
-| ApiKey | C-config | The first of `JAG_TYPESAFE_API_KEY`, `TYPESAFE_API_KEY`, and `config.api-key` in `~/.config/jag/config.yml` (data-1, DECISION-03). The file has mode 600 or stricter (CV-6). |
-| Settings | C-config | Options and variables only. Other settings in the config file wait (DF-1). |
+| ApiKey | C-config | The direct route to the TypeSafe API: the first of `JAG_TYPESAFE_API_KEY`, `TYPESAFE_API_KEY`, and `config.api-key` in `~/.config/jag/config.yml` (data-1, DECISION-03). The gateway route: the first of `JAG_GATEWAY_API_KEY` and `config.gateway-api-key` in the same file (0017-use-a-separate-key-for-an-ai-gateway.md). The file has mode 600 or stricter (CV-6). |
+| Settings | C-config | The base URL and the model name: an option, a variable, or `config.base-url` and `config.model` in `~/.config/jag/config.yml`, in the order of CV-7 (0015-read-the-base-url-and-the-model-name-from-config-base-url.md). `--setup` and `--forget-key` keep these two keys. The gateway key is a key, not a setting (ApiKey). The other settings: options and variables only (DF-1). |
 | Result | C-search | Memory, for one search. |
 | Score, Cost | C-scorer | Memory, for one search. |
 
@@ -388,7 +398,7 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | ID | Provider | Consumer | Mechanism | Versioning rule |
 |---|---|---|---|---|
 | IF-1 | C-typesafe | C-scorer | HTTPS `POST /v1/systemone` with a Bearer key. One call holds the question and 32 snippets. The response gives the probabilities and the billed usage. | Each jag release pins the Jev model version that its prompt and threshold were tuned on. A setting can name another model (contracts-5). |
-| IF-2 | C-gateway | C-scorer | The same calls as IF-1, to the base URL that a setting names. | The same as IF-1. The user sets the model name for the gateway. |
+| IF-2 | C-gateway | C-scorer | The same calls as IF-1, to `<base URL>/systemone`. jag adds `/v1` to a base URL whose path does not end with `/v1` (0016-add-v1-to-a-base-url-whose-path-does-not-end-with-v1.md). | The same as IF-1. The user sets the model name for the gateway. A change to the address rule needs a new major version. |
 | IF-3 | C-cli | Agent, person | The command line: `jag [OPTIONS] TERM [PATH...]`. The question comes only from the option `--ask QUESTION`, with no short form, and each word after the term is a path (contracts-1). The grep form `jag [OPTIONS] -e TERM ... [PATH...]` also gives the term: `-e` can come more than one time, a line matches when it matches one of the terms, and each word is a path (FEATURE-13 spec decisions 10 and 31). With `--ask`, the model ranks the matches. With no `--ask`, jag works as plain grep, with no model call, no key, and no cost (DECISION-32). jag takes the grep options of DECISION-34. The options `--setup`, `--check`, and `--forget-key` run the setup, the readiness check, and the key removal (contracts-2). | Semantic versions of jag. A removed or changed option needs a new major version. |
 | IF-4 | C-cli | Agent, script | Exit codes: 0 results found, 1 no match or no good answer, 2 usage error or a path that does not exist (CRITERION-70), 3 key missing, 4 key not accepted, 5 no credit, 6 service down, 7 cost limit reached, 8 results left out by the size limit, 130 stopped with Ctrl-C (contracts-3). A failure stops jag with its own code: 2 for a usage error or a bad term, 3 to 6, and 130. A search that ends gives one code, in this order: 2 when a path does not exist, then 1, then 7, then 8, then 0 (DECISION-13, DECISION-47, FEATURE-14 spec decisions 7 and 20). The one exception: with `-q`, a match gives 0 also when a path does not exist, as `grep -q` does (FEATURE-13 spec decision 21). | A code never changes its meaning in one major version. |
 | IF-5 | C-output | Agent | Structured output: one JSON document on standard output, with `version`, `prompt_version`, `results`, and the summary fields of DECISION-28. An error is a JSON document of the same form (DECISION-07, CV-1). An output that does not parse means that jag stopped (contracts-4, DECISION-30). | `version` is the version of the form. In one major version, fields are only added (CONSTRAINT-05). |
@@ -422,13 +432,23 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 - CV-6: Only C-config reads the key. The key lives in a type that never
   prints itself in a message, an error, or debug text. No option takes the
   key, so it never shows in the process list. `--setup` reads it from the
-  terminal with no echo. jag refuses a key file that the group or other
-  users can read, and exits with code 3 and the fix (conventions-6, QS-5,
-  CONSTRAINT-02).
+  terminal with no echo. jag refuses a config file that the group or other
+  users can read, and exits with code 3 and the fix. This check applies to
+  each read of the file, also a read for the base URL or the model name
+  only, when the key comes from a variable. jag sends a key only on its own
+  route: a key from `JAG_TYPESAFE_API_KEY`, `TYPESAFE_API_KEY`, or
+  `config.api-key` goes only to the TypeSafe API, and only a key from
+  `JAG_GATEWAY_API_KEY` or `config.gateway-api-key` goes to a gateway.
+  With no key for the route, the search stops before the call with exit 3
+  (conventions-6, QS-5, CONSTRAINT-02,
+  0015-read-the-base-url-and-the-model-name-from-config-base-url.md,
+  0017-use-a-separate-key-for-an-ai-gateway.md).
 - CV-7: A setting takes its value from the first of these sources: the
   command option, the environment variable, the config file, and the
-  built-in default. The key has no option, and DECISION-03 gives its order
-  (conventions-7).
+  built-in default. The key has no option. DECISION-03 gives the order of
+  the TypeSafe key, and
+  0017-use-a-separate-key-for-an-ai-gateway.md gives the order of the
+  gateway key (conventions-7).
 - CV-8: jag sends no telemetry and writes no log file. A debug log waits
   (DF-2).
 
@@ -473,6 +493,7 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | building-blocks-2 | 0011-build-jag-as-one-cargo-package-with-one-module-per-component.md | accepted | building-blocks | The components inside the jag program | adr |
 | building-blocks-3 | |  | building-blocks | Where the tool lives that measures jag on your own questions | human:404pilo, 2026-10-12 |
 | building-blocks-4 | 0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md | accepted | building-blocks | The outside crates of setup and their test crates | adr |
+| building-blocks-5 | 0014-call-the-model-service-with-ureq-and-serde-json-on-std.md | accepted | building-blocks | The HTTP and JSON crates of the model calls, and how jag runs them in parallel | adr |
 | data-1 | |  | data | The store of the API key | human:404pilo, 2026-10-12 |
 | data-2 | |  | data | Nothing is kept between searches | human:404pilo, 2026-10-12 |
 | contracts-1 | 0018-take-the-question-only-from-the-ask-option.md | accepted | contracts | The command form of a search: `jag [OPTIONS] TERM [PATH...]`, with the question only in `--ask QUESTION` | adr |
@@ -482,6 +503,9 @@ jag keeps no data between searches (data-2, DECISION-46) and builds no index
 | contracts-5 | 0009-pin-the-jev-model-version-in-each-release.md | accepted | contracts | The Jev model version that jag calls | adr |
 | contracts-6 | |  | contracts | One result is a match with the lines around it | human:404pilo, 2026-10-12 |
 | contracts-7 | 0013-exit-2-when-setup-runs-with-no-terminal.md | accepted | contracts | The exit code when setup runs with no terminal | adr |
+| contracts-8 | 0015-read-the-base-url-and-the-model-name-from-config-base-url.md | accepted | contracts | The config file keys of the base URL and the model name | adr |
+| contracts-9 | 0016-add-v1-to-a-base-url-whose-path-does-not-end-with-v1.md | accepted | contracts | How jag makes the call address from a base URL | adr |
+| contracts-10 | 0017-use-a-separate-key-for-an-ai-gateway.md | accepted | contracts | The key that jag sends to an AI gateway, and its sources | adr |
 | conventions-1 | |  | conventions | The error shape in each output mode | human:404pilo, 2026-10-12 |
 | conventions-2 | |  | conventions | A model failure fails the full search | human:404pilo, 2026-10-12 |
 | conventions-3 | |  | conventions | Results go to standard output, and notices go to the error stream | human:404pilo, 2026-10-12 |
@@ -527,9 +551,13 @@ that it sends.
 
 ## Deferred
 
-- DF-1: Settings other than the key in the config file (data-3). Reason:
-  options and variables cover release 1, and no Feature needs a saved
-  default. Trigger: a user asks for a default that they can save.
+- DF-1: Settings other than the keys, the base URL, and the model name in
+  the config file (data-3). Reason: options and variables cover the other
+  settings of release 1, such as the times and the limits. The base URL
+  and the model name are in the file because a gateway route needs a saved
+  default
+  (0015-read-the-base-url-and-the-model-name-from-config-base-url.md).
+  Trigger: a user asks for another default that they can save.
 - DF-2: A debug log (conventions-8). Reason: jag has no telemetry and no log
   file, and the error message gives the cause and the fix. Trigger: the first
   setup-failure issue that the message does not explain.
