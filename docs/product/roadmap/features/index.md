@@ -9,7 +9,6 @@
 * [FEATURE-12: Plain grep with no question](FEATURE-12.md) - With a term and no question, jag returns the matching lines as grep does, makes no model call, and costs nothing.
 * [FEATURE-13: Common grep options and exit codes](FEATURE-13.md) - jag keeps the grep options that people use most and the grep exit codes 0, 1, and 2; any other option is a usage error that names it.
 * [FEATURE-14: Files, folders, and piped text](FEATURE-14.md) - With no path, jag searches the current folder or reads the pipe; the user can also give any mix of files and folders.
-* [FEATURE-15: Good behavior in a terminal and in a pipe](FEATURE-15.md) - jag shows progress and color only in a terminal, and it stops at once with no partial results when the user stops it or the pipe closes.
 * [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](FEATURE-18.md) - One version tag builds the jag binary for four platforms and publishes it on GitHub Releases, crates.io, and npm with the same version (ADR-0010).
 * [FEATURE-19: Go public with a clean history](FEATURE-19.md) - A scan lists the private data in the history. A new public repository gets a clean history, and a second scan finds none. This repository stays private.
 * [FEATURE-20: Show the cost of a search](FEATURE-20.md) - After each search, jag reports how many results it scored and skipped, and the billed cost in US dollars, as a text line or a structured field.

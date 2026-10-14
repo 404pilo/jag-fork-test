@@ -5,7 +5,8 @@ description: As a shell power user (PERSONA-04), I want a progress line on the e
   stream only when that stream is a terminal, so that a pipe or a log holds no progress
   noise.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 102
   node_id: I_kwDOVDCdD88AAAABXCBkqQ

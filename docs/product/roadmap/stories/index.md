@@ -18,9 +18,6 @@
 * [STORY-38: Keep the grep exit codes](STORY-38.md) - As a shell power user (PERSONA-04), I want the grep exit codes 0, 1, and 2, so that my scripts that test grep exit codes keep working.
 * [STORY-39: Search with no path](STORY-39.md) - As a shell power user (PERSONA-04), I want jag with no path to search the current folder, or to read the pipe when text comes in through one, so that I use jag as I use grep.
 * [STORY-40: Search a mix of files and folders](STORY-40.md) - As a shell power user (PERSONA-04), I want to give several paths, each a file or a folder, so that I search exactly the places that I choose.
-* [STORY-41: See progress only in a terminal](STORY-41.md) - As a shell power user (PERSONA-04), I want a progress line on the error stream only when that stream is a terminal, so that a pipe or a log holds no progress noise.
-* [STORY-42: Color the matches as grep does](STORY-42.md) - As a shell power user (PERSONA-04), I want jag to color the matching text only in a terminal, with --color=never and --color=always to change that, so that color works as grep --color=auto.
-* [STORY-43: Stop at once when stopped](STORY-43.md) - As a shell power user (PERSONA-04), I want jag to stop at once on Ctrl-C or a closed pipe, so that a stopped search wastes no more credit.
 * [STORY-45: Run the held-out evaluation before release](STORY-45.md) - As an agent builder (PERSONA-01), I want the held-out evaluation run done before release 1, so that I can trust that jag answers better than grep.
 * [STORY-47: Check the full history before jag goes public](STORY-47.md) - As an agent builder (PERSONA-01), I want each commit in the history checked for private data before jag goes public, so that no old commit shows it.
 * [STORY-48: Download a prebuilt binary from GitHub Releases](STORY-48.md) - As a shell power user (PERSONA-04), I want a prebuilt binary for my platform on GitHub Releases, so that I can install jag in seconds with no runtime.

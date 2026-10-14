@@ -29,14 +29,14 @@ This milestone holds the capabilities that make jag better to use and easier to 
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md) | backlog | 0/5 (0%) | - | - | - |
+| [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md) | backlog | 1/5 (20%) | - | - | - |
 | [EPIC-05: Safe public release](../epics/EPIC-05.md) | ready | 1/3 (33%) | - | - | - |
 | [FEATURE-02: Readiness check](../features/FEATURE-02.md) | done | 3/3 (100%) | - | FEATURE-01 | - |
 | [FEATURE-03: Clear failure when the model is not available](../features/FEATURE-03.md) | done | 4/4 (100%) | - | FEATURE-01 | - |
 | [FEATURE-12: Plain grep with no question](../features/FEATURE-12.md) | backlog | 0/2 (0%) | - | - | - |
 | [FEATURE-13: Common grep options and exit codes](../features/FEATURE-13.md) | backlog | 0/4 (0%) | - | - | - |
 | [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md) | backlog | 0/3 (0%) | - | FEATURE-05 | - |
-| [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md) | backlog | 0/3 (0%) | - | FEATURE-04 | - |
+| [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md) | done | 3/3 (100%) | - | FEATURE-04 | - |
 | [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](../features/FEATURE-18.md) | backlog | 0/4 (0%) | - | FEATURE-01, FEATURE-17, FEATURE-19 | - |
 | [FEATURE-19: Go public with a clean history](../features/FEATURE-19.md) | backlog | 0/5 (0%) | - | FEATURE-17 | - |
 | [FEATURE-20: Show the cost of a search](../features/FEATURE-20.md) | backlog | 0/4 (0%) | - | FEATURE-04, FEATURE-11 | - |

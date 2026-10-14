@@ -4,7 +4,8 @@ title: Good behavior in a terminal and in a pipe
 description: jag shows progress and color only in a terminal, and it stops at once
   with no partial results when the user stops it or the pipe closes.
 status: draft
-state: backlog
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 55
   node_id: I_kwDOVDCdD88AAAABXB-WMQ
@@ -37,9 +38,9 @@ jag shows progress and color only in a terminal, and it stops at once with no pa
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-41: See progress only in a terminal](../stories/STORY-41.md) | ready | - | - | - | - |
-| [STORY-42: Color the matches as grep does](../stories/STORY-42.md) | ready | - | - | - | - |
-| [STORY-43: Stop at once when stopped](../stories/STORY-43.md) | ready | - | - | - | - |
+| [STORY-41: See progress only in a terminal](../stories/STORY-41.md) | done | - | - | - | - |
+| [STORY-42: Color the matches as grep does](../stories/STORY-42.md) | done | - | - | - | - |
+| [STORY-43: Stop at once when stopped](../stories/STORY-43.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

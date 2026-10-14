@@ -23,3 +23,4 @@ generated:
 
 * [FEATURE-02: Readiness check](FEATURE-02.md) - One command examines five items, shows pass or fail for each one, and names the fix for each failure, with one call that costs almost nothing.
 * [FEATURE-03: Clear failure when the model is not available](FEATURE-03.md) - When the key is missing or out of credit, or the model service is down, jag stops with a message that names the cause and the fix, and exits with the code of that cause.
+* [FEATURE-15: Good behavior in a terminal and in a pipe](FEATURE-15.md) - jag shows progress and color only in a terminal, and it stops at once with no partial results when the user stops it or the pipe closes.

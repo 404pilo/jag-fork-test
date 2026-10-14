@@ -5,7 +5,8 @@ description: As a shell power user (PERSONA-04), I want jag to color the matchin
   text only in a terminal, with --color=never and --color=always to change that, so
   that color works as grep --color=auto.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 103
   node_id: I_kwDOVDCdD88AAAABXCBohA
