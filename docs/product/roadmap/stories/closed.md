@@ -58,6 +58,7 @@ generated:
 * [STORY-41: See progress only in a terminal](STORY-41.md) - As a shell power user (PERSONA-04), I want a progress line on the error stream only when that stream is a terminal, so that a pipe or a log holds no progress noise.
 * [STORY-42: Color the matches as grep does](STORY-42.md) - As a shell power user (PERSONA-04), I want jag to color the matching text only in a terminal, with --color=never and --color=always to change that, so that color works as grep --color=auto.
 * [STORY-43: Stop at once when stopped](STORY-43.md) - As a shell power user (PERSONA-04), I want jag to stop at once on Ctrl-C or a closed pipe, so that a stopped search wastes no more credit.
+* [STORY-47: Check the full history before jag goes public](STORY-47.md) - As an agent builder (PERSONA-01), I want each commit in the history checked for private data before jag goes public, so that no old commit shows it.
 * [STORY-53: See the cost after each search](STORY-53.md) - As a shell power user (PERSONA-04), I want a cost line after each search, so that I know what each search costs.
 * [STORY-54: Read the cost in structured output](STORY-54.md) - As an agent builder (PERSONA-01), I want the cost as a field of structured output, so that my agent can track what its searches cost.
 * [STORY-55: Know the cost when no figure is available](STORY-55.md) - As an agent builder (PERSONA-01), I want a clear cost report when jag makes no model call or the service gives no cost figure, so that the search still works.
