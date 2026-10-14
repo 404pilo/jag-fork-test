@@ -4,7 +4,8 @@ title: Cost limit on scoring
 description: When a term matches too many lines, jag scores only the best part up
   to a cost limit that the user can change, and says how many matches it skipped.
 status: draft
-state: ready
+state: in_progress
+actual_start_date: '2026-10-14'
 parent: /epics/EPIC-02.md
 blocked_by:
 - /features/FEATURE-04.md
