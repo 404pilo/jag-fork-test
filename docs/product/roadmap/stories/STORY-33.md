@@ -5,7 +5,8 @@ description: As a shell power user (PERSONA-04), I want jag with a term and no q
   to return the matching lines as grep does with no model call, so that a plain search
   costs nothing.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 94
   node_id: I_kwDOVDCdD88AAAABXCBAyg

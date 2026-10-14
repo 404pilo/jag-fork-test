@@ -4,7 +4,8 @@ title: Plain grep with no question
 description: With a term and no question, jag returns the matching lines as grep does,
   makes no model call, and costs nothing.
 status: draft
-state: backlog
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 52
   node_id: I_kwDOVDCdD88AAAABXB-KdQ
@@ -33,8 +34,8 @@ With a term and no question, jag returns the matching lines as grep does, makes 
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-33: Search with a term and no question](../stories/STORY-33.md) | ready | - | - | - | - |
-| [STORY-34: Use plain grep with no key](../stories/STORY-34.md) | ready | - | - | - | - |
+| [STORY-33: Search with a term and no question](../stories/STORY-33.md) | done | - | - | - | - |
+| [STORY-34: Use plain grep with no key](../stories/STORY-34.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

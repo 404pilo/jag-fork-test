@@ -10,8 +10,6 @@
 ## MILESTONE-02: Make it good
 
 * [STORY-24: Label piped text](STORY-24.md) - As a shell power user (PERSONA-04), I want a result from piped text to have the label (standard input), so that I read a pipe result as a file result.
-* [STORY-33: Search with a term and no question](STORY-33.md) - As a shell power user (PERSONA-04), I want jag with a term and no question to return the matching lines as grep does with no model call, so that a plain search costs nothing.
-* [STORY-34: Use plain grep with no key](STORY-34.md) - As a shell power user (PERSONA-04), I want plain grep mode to work with no stored key, so that I can use jag before I set it up.
 * [STORY-35: Use the common grep options](STORY-35.md) - As a shell power user (PERSONA-04), I want jag to accept the grep options that I use most, with their grep meaning, and -F to read the term as fixed text, so that I keep my habits.
 * [STORY-36: Set the lines around a match](STORY-36.md) - As a shell power user (PERSONA-04), I want -A, -B, and -C to set the lines around each match in a question search, so that I choose how much context I read.
 * [STORY-37: Get a usage error for an unknown option](STORY-37.md) - As a shell power user (PERSONA-04), I want any other option to give a usage error that names the option and exit code 2, so that a typo does not pass without a notice.
