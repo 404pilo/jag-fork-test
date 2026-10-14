@@ -11,7 +11,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/115
   pushed_hash: 54bb63
   synced:
-    state: backlog
+    state: ready
 spec: docs/superpowers/specs/2026-10-14-STORY-53-show-the-cost-of-a-search-design.md
 parent: /features/FEATURE-20.md
 milestone: /milestones/MILESTONE-02.md

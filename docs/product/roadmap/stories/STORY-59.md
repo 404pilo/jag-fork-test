@@ -12,7 +12,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/121
   pushed_hash: 54e23e
   synced:
-    state: backlog
+    state: cancelled
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
 ---
