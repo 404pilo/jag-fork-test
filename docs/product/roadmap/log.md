@@ -1,6 +1,11 @@
 # Log
 
 ## 2026-10-14
+* **State**: [FEATURE-06](features/FEATURE-06.md) in_progress -> done, by human:404pilo, at 2026-10-14T02:05:23Z
+* **State**: [STORY-20](stories/STORY-20.md) ready -> done, by human:404pilo, at 2026-10-14T02:05:23Z
+* **Plan**: [CRITERION-66](criteria/CRITERION-66.md) moved from STORY-20 (FEATURE-06) to STORY-26 (FEATURE-09); source: the user rule Q-ar (the end-to-end test goes to the feature that builds the other part) and FEATURE-06 spec decision 18 (the left-out notice and its end-to-end test belong to FEATURE-09), by agent:planner, at 2026-10-14T02:05:23Z
+* **State**: [STORY-19](stories/STORY-19.md) ready -> done, by human:404pilo, at 2026-10-14T02:04:26Z
+* **State**: [STORY-18](stories/STORY-18.md) ready -> done, by human:404pilo, at 2026-10-14T02:04:26Z
 * **Sync**: [FEATURE-18](features/FEATURE-18.md) pushed to GitHub, by system:github, at 2026-10-14T01:59:09Z
 * **Sync**: [FEATURE-01](features/FEATURE-01.md) pushed to GitHub, by system:github, at 2026-10-14T01:59:09Z
 * **Sync**: [STORY-61](stories/STORY-61.md) pushed to GitHub, by system:github, at 2026-10-14T01:48:55Z

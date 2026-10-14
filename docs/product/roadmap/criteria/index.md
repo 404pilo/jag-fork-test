@@ -93,7 +93,6 @@
 ## STORY-20: Tell a reached cost limit by its exit code
 
 * [CRITERION-28: Reaching the cost limit has its own exit code](CRITERION-28.md) - When jag reaches the cost limit, it exits with its own exit code, and exit code 1 wins when nothing answers well.
-* [CRITERION-66: Cost-limit code wins when both limits apply](CRITERION-66.md) - When a search reaches the cost limit and also leaves out results, jag exits with the cost-limit code, and the notice says that results were left out.
 
 ## STORY-21: See the file, the line, and the snippet of a result
 
@@ -123,6 +122,7 @@
 * [CRITERION-39: jag leaves out whole results with the lowest rank first](CRITERION-39.md) - To stay inside the limit, jag leaves out whole results, starting with the lowest rank.
 * [CRITERION-41: The notice gives the count and how to raise the limit](CRITERION-41.md) - When jag leaves out results, a notice gives their number and tells the user how to raise the limit.
 * [CRITERION-42: Leaving out results has its own exit code](CRITERION-42.md) - When jag leaves out results to stay inside the limit, it exits with its own exit code above 2.
+* [CRITERION-66: Cost-limit code wins when both limits apply](CRITERION-66.md) - When a search reaches the cost limit and also leaves out results, jag exits with the cost-limit code, and the notice says that results were left out.
 
 ## STORY-27: Cut a top result that is larger than the limit
 

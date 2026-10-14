@@ -4,8 +4,9 @@ title: Cost limit on scoring
 description: When a term matches too many lines, jag scores only the best part up
   to a cost limit that the user can change, and says how many matches it skipped.
 status: draft
-state: in_progress
+state: done
 actual_start_date: '2026-10-14'
+actual_end_date: '2026-10-14'
 github:
   number: 47
   node_id: I_kwDOVDCdD88AAAABXB9mRg
@@ -38,9 +39,9 @@ When a term matches too many lines, jag scores only the best part up to a cost l
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-18: Score only the best matches](../stories/STORY-18.md) | ready | - | - | - | - |
-| [STORY-19: Change the cost limit](../stories/STORY-19.md) | ready | - | - | - | - |
-| [STORY-20: Tell a reached cost limit by its exit code](../stories/STORY-20.md) | ready | - | - | - | - |
+| [STORY-18: Score only the best matches](../stories/STORY-18.md) | done | - | - | - | - |
+| [STORY-19: Change the cost limit](../stories/STORY-19.md) | done | - | - | - | - |
+| [STORY-20: Tell a reached cost limit by its exit code](../stories/STORY-20.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

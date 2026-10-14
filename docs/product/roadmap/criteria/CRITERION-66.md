@@ -4,7 +4,7 @@ title: Cost-limit code wins when both limits apply
 description: When a search reaches the cost limit and also leaves out results, jag
   exits with the cost-limit code, and the notice says that results were left out.
 status: draft
-item: /stories/STORY-20.md
+item: /stories/STORY-26.md
 ---
 
 # CRITERION-66: Cost-limit code wins when both limits apply
@@ -15,5 +15,5 @@ When a search reaches the cost limit and also leaves out results, jag exits with
 
 ## Links
 
-- item: [STORY-20: Tell a reached cost limit by its exit code](../stories/STORY-20.md)
+- item: [STORY-26: Leave out the lowest-ranked results](../stories/STORY-26.md)
 <!-- LINKS:END -->

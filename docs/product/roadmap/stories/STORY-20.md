@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want jag to exit with its own c
   when it reaches the cost limit, and the code to win over the left-out code, so that
   my agent knows the list is not complete.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 81
   node_id: I_kwDOVDCdD88AAAABXCAEOA
@@ -34,7 +35,6 @@ As an agent builder (PERSONA-01), I want jag to exit with its own code when it r
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
 | [CRITERION-28: Reaching the cost limit has its own exit code](../criteria/CRITERION-28.md) | - | - | - | - | - |
-| [CRITERION-66: Cost-limit code wins when both limits apply](../criteria/CRITERION-66.md) | - | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -46,5 +46,4 @@ As an agent builder (PERSONA-01), I want jag to exit with its own code when it r
 - traces: [DECISION-13: Reaching the cost limit has its own exit code](../../prd/decisions/DECISION-13.md)
 - traces: [DECISION-47: The cost-limit exit code wins over the left-out exit code](../../prd/decisions/DECISION-47.md)
 - criterion or run of: [CRITERION-28: Reaching the cost limit has its own exit code](../criteria/CRITERION-28.md)
-- criterion or run of: [CRITERION-66: Cost-limit code wins when both limits apply](../criteria/CRITERION-66.md)
 <!-- LINKS:END -->

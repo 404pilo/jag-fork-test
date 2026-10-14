@@ -21,6 +21,9 @@ generated:
 * [STORY-15: Know when no result answers well](STORY-15.md) - As an agent builder (PERSONA-01), I want jag to label the best results as weak and to exit with code 1 when no result answers the question well, so that my agent does not trust noise.
 * [STORY-16: Search each subfolder of a folder](STORY-16.md) - As a shell power user (PERSONA-04), I want jag to search each file in a folder and in each subfolder, so that a folder search works as grep -r does.
 * [STORY-17: Skip noise files and count them](STORY-17.md) - As a shell power user (PERSONA-04), I want jag to skip binary, hidden, and ignored files and to say how many files it skipped, so that I trust the search and see what it left out.
+* [STORY-18: Score only the best matches](STORY-18.md) - As an operator (PERSONA-02), I want jag to pre-rank a large set of matches by word match and score only the best ones, and to say how many it skipped, so that a broad term does not cost too much.
+* [STORY-19: Change the cost limit](STORY-19.md) - As an agent builder (PERSONA-01), I want a default cost limit that I can change with an option, so that I can trade cost for a wider search.
+* [STORY-20: Tell a reached cost limit by its exit code](STORY-20.md) - As an agent builder (PERSONA-01), I want jag to exit with its own code when it reaches the cost limit, and the code to win over the left-out code, so that my agent knows the list is not complete.
 * [STORY-46: Fail a pull request that adds private data](STORY-46.md) - As an agent builder (PERSONA-01), I want each pull request checked for private data, so that the public repository never holds keys, case content, private evaluation data, or internal project names.
 
 ## MILESTONE-02: Make it good

@@ -5,7 +5,8 @@ description: As an operator (PERSONA-02), I want jag to pre-rank a large set of 
   by word match and score only the best ones, and to say how many it skipped, so that
   a broad term does not cost too much.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 79
   node_id: I_kwDOVDCdD88AAAABXB_8tg

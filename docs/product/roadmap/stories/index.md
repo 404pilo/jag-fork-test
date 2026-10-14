@@ -2,9 +2,6 @@
 
 ## MILESTONE-01: Make it work
 
-* [STORY-18: Score only the best matches](STORY-18.md) - As an operator (PERSONA-02), I want jag to pre-rank a large set of matches by word match and score only the best ones, and to say how many it skipped, so that a broad term does not cost too much.
-* [STORY-19: Change the cost limit](STORY-19.md) - As an agent builder (PERSONA-01), I want a default cost limit that I can change with an option, so that I can trade cost for a wider search.
-* [STORY-20: Tell a reached cost limit by its exit code](STORY-20.md) - As an agent builder (PERSONA-01), I want jag to exit with its own code when it reaches the cost limit, and the code to win over the left-out code, so that my agent knows the list is not complete.
 * [STORY-21: See the file, the line, and the snippet of a result](STORY-21.md) - As a knowledge seeker (PERSONA-03), I want each result to show the file, the line, and the exact source text, so that I can open the source at that line.
 * [STORY-22: See the line range of a joined result](STORY-22.md) - As an agent builder (PERSONA-01), I want a joined result to give its first and last line and to mark each line that matches the term, so that my agent finds the exact match inside the range.
 * [STORY-23: Cut a very long line and mark the cut](STORY-23.md) - As an agent builder (PERSONA-01), I want jag to cut each line that is longer than a fixed length and to mark the cut, so that one long line does not fill the output.

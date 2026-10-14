@@ -4,7 +4,8 @@ title: Change the cost limit
 description: As an agent builder (PERSONA-01), I want a default cost limit that I
   can change with an option, so that I can trade cost for a wider search.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 80
   node_id: I_kwDOVDCdD88AAAABXCAA2w

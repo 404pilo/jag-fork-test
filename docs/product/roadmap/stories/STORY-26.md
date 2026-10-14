@@ -39,6 +39,7 @@ As an agent builder (PERSONA-01), I want jag to leave out whole results with the
 | [CRITERION-39: jag leaves out whole results with the lowest rank first](../criteria/CRITERION-39.md) | - | - | - | - | - |
 | [CRITERION-41: The notice gives the count and how to raise the limit](../criteria/CRITERION-41.md) | - | - | - | - | - |
 | [CRITERION-42: Leaving out results has its own exit code](../criteria/CRITERION-42.md) | - | - | - | - | - |
+| [CRITERION-66: Cost-limit code wins when both limits apply](../criteria/CRITERION-66.md) | - | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -54,4 +55,5 @@ As an agent builder (PERSONA-01), I want jag to leave out whole results with the
 - criterion or run of: [CRITERION-39: jag leaves out whole results with the lowest rank first](../criteria/CRITERION-39.md)
 - criterion or run of: [CRITERION-41: The notice gives the count and how to raise the limit](../criteria/CRITERION-41.md)
 - criterion or run of: [CRITERION-42: Leaving out results has its own exit code](../criteria/CRITERION-42.md)
+- criterion or run of: [CRITERION-66: Cost-limit code wins when both limits apply](../criteria/CRITERION-66.md)
 <!-- LINKS:END -->

@@ -22,12 +22,12 @@ This milestone holds the bare minimum to see jag work. The grep habits, the read
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
 | [EPIC-01: Setup and readiness](../epics/EPIC-01.md) | ready | 2/4 (50%) | - | - | - |
-| [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | ready | 2/5 (40%) | - | - | - |
+| [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | ready | 3/5 (60%) | - | - | - |
 | [EPIC-03: Output that fits an agent](../epics/EPIC-03.md) | ready | 0/3 (0%) | - | - | - |
 | [FEATURE-01: Store a key one time](../features/FEATURE-01.md) | done | 5/5 (100%) | - | FEATURE-17 | - |
 | [FEATURE-04: Rank matching lines by a question](../features/FEATURE-04.md) | done | 3/3 (100%) | - | FEATURE-01, FEATURE-05 | - |
 | [FEATURE-05: Search a folder as grep -r does](../features/FEATURE-05.md) | done | 2/2 (100%) | - | - | - |
-| [FEATURE-06: Cost limit on scoring](../features/FEATURE-06.md) | in_progress | 0/3 (0%) | - | FEATURE-04 | - |
+| [FEATURE-06: Cost limit on scoring](../features/FEATURE-06.md) | done | 3/3 (100%) | - | FEATURE-04 | - |
 | [FEATURE-08: File, line, and snippet for each result](../features/FEATURE-08.md) | ready | 0/4 (0%) | - | FEATURE-04 | - |
 | [FEATURE-09: Size limit on the text that jag returns](../features/FEATURE-09.md) | blocked | 0/4 (0%) | - | FEATURE-08 | - |
 | [FEATURE-11: Text output for a person and structured output for an agent](../features/FEATURE-11.md) | blocked | 0/4 (0%) | - | FEATURE-08 | - |

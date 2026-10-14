@@ -25,11 +25,11 @@ One roadmap bundle is one GitHub Project. The Project is
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
 | [EPIC-01: Setup and readiness](../epics/EPIC-01.md) | ready | 2/4 (50%) | - | - | - |
-| [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | ready | 2/5 (40%) | - | - | - |
+| [EPIC-02: Ranked search with file and line](../epics/EPIC-02.md) | ready | 3/5 (60%) | - | - | - |
 | [EPIC-03: Output that fits an agent](../epics/EPIC-03.md) | ready | 0/3 (0%) | - | - | - |
 | [EPIC-04: A shell user keeps their habits](../epics/EPIC-04.md) | backlog | 0/5 (0%) | - | - | - |
 | [EPIC-05: Safe public release](../epics/EPIC-05.md) | ready | 1/3 (33%) | - | - | - |
-| [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md) | - | 15/37 (40%) | - | - | - |
+| [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md) | - | 19/37 (51%) | - | - | - |
 | [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md) | - | 5/46 (10%) | - | - | - |
 | [MILESTONE-03: Make it fast](../milestones/MILESTONE-03.md) | - | 0/2 (0%) | - | - | - |
 <!-- STATUS:END -->
