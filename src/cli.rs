@@ -200,9 +200,7 @@ pub fn run() -> ExitCode {
             stdout_is_terminal: io::stdout().is_terminal(),
         };
         let result = search(&cli, &env, &context, &mut summary, &mut stdout, &mut stderr);
-        if !stop.claim_for_search() {
-            wait_for_the_end();
-        }
+        claim_or_wait(&stop);
         result
     };
     finish(result, mode, &mut summary, &mut stdout, &mut stderr)
@@ -294,9 +292,12 @@ fn finish(
     }
 }
 
-/// Write all output in one call. Gives `code` when the write works. When the
-/// reader closes the pipe, jag writes no message and also gives `code`
-/// (CV-4). Another write error writes the failure as text on the error
+/// Write all output in one call. Gives `code` when the write works. A closed
+/// pipe has two ends (decision 15). When the reader closes the pipe before
+/// the search flow claims the output, the watch thread of `stop.rs` ends jag
+/// by SIGPIPE, and this function does not run. When the reader closes it
+/// during this write, jag writes no message and gives `code` (CV-4). Another
+/// write error writes the failure as text on the error
 /// stream, because standard output does not work, and gives exit 2
 /// (decision 25).
 fn emit(stdout: &mut dyn Write, stderr: &mut dyn Write, bytes: &[u8], code: u8) -> u8 {
@@ -548,10 +549,16 @@ fn emit_claimed(
     bytes: &[u8],
     code: u8,
 ) -> u8 {
+    claim_or_wait(stop);
+    emit(stdout, stderr, bytes, code)
+}
+
+/// The search flow takes the output. When a stop owns it, the search flow
+/// waits for the end of the process.
+fn claim_or_wait(stop: &Stop) {
     if !stop.claim_for_search() {
         wait_for_the_end();
     }
-    emit(stdout, stderr, bytes, code)
 }
 
 /// The readiness check (FEATURE-02). Gives the exit code of the first item
