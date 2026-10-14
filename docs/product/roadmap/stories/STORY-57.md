@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want to give jag the base URL a
   the model name of my AI gateway, so that jag uses the gateway that my team already
   uses.
 status: draft
-state: backlog
+state: ready
 github:
   number: 119
   node_id: I_kwDOVDCdD88AAAABXCCpyA
@@ -13,6 +13,7 @@ github:
   pushed_hash: df3282
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-13-STORY-57-send-the-model-calls-through-an-ai-gateway-design.md
 parent: /features/FEATURE-21.md
 milestone: /milestones/MILESTONE-02.md
 ---

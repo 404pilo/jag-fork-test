@@ -21,6 +21,9 @@
 - [0008 — Write structured output as one JSON document](./0008-write-structured-output-as-one-json-document.md) — accepted — <!-- TODO: summary -->
 - [0009 — Pin the Jev model version in each release](./0009-pin-the-jev-model-version-in-each-release.md) — accepted — <!-- TODO: summary -->
 - [0013 — Exit 2 when setup runs with no terminal](./0013-exit-2-when-setup-runs-with-no-terminal.md) — accepted — <!-- TODO: summary -->
+- [0015 — Read the base URL and the model name from config.base-url and config.model](./0015-read-the-base-url-and-the-model-name-from-config-base-url.md) — accepted — <!-- TODO: summary -->
+- [0016 — Add /v1 to a base URL whose path does not end with /v1](./0016-add-v1-to-a-base-url-whose-path-does-not-end-with-v1.md) — accepted — <!-- TODO: summary -->
+- [0017 — Use a separate key for an AI gateway](./0017-use-a-separate-key-for-an-ai-gateway.md) — accepted — <!-- TODO: summary -->
 - [0018 — Take the question only from the --ask option](./0018-take-the-question-only-from-the-ask-option.md) — accepted — <!-- TODO: summary -->
 
 ### deployment — <!-- TODO: describe this area -->

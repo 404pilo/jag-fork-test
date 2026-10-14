@@ -21,6 +21,16 @@ source	relation	target	target_state	target_status	source_area	target_area	note
 0014-call-the-model-service-with-ureq-and-serde-json-on-std.md	related	0005-build-jag-as-one-rust-binary.md	live	accepted	building-blocks	building-blocks	-
 0014-call-the-model-service-with-ureq-and-serde-json-on-std.md	related	0010-ship-jag-on-github-releases-crates-io-and-npm.md	live	accepted	building-blocks	deployment	-
 0014-call-the-model-service-with-ureq-and-serde-json-on-std.md	related	0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md	live	accepted	building-blocks	building-blocks	-
+0015-read-the-base-url-and-the-model-name-from-config-base-url.md	parent_spec	docs/superpowers/specs/2026-10-13-STORY-57-send-the-model-calls-through-an-ai-gateway-design.md	doc	-	contracts	-	-
+0015-read-the-base-url-and-the-model-name-from-config-base-url.md	related	0006-run-setup-the-readiness-check-and-key-removal-as-options.md	live	accepted	contracts	contracts	-
+0015-read-the-base-url-and-the-model-name-from-config-base-url.md	related	0009-pin-the-jev-model-version-in-each-release.md	live	accepted	contracts	contracts	-
+0015-read-the-base-url-and-the-model-name-from-config-base-url.md	related	0017-use-a-separate-key-for-an-ai-gateway.md	live	accepted	contracts	contracts	-
+0016-add-v1-to-a-base-url-whose-path-does-not-end-with-v1.md	parent_spec	docs/superpowers/specs/2026-10-13-STORY-57-send-the-model-calls-through-an-ai-gateway-design.md	doc	-	contracts	-	-
+0016-add-v1-to-a-base-url-whose-path-does-not-end-with-v1.md	related	0014-call-the-model-service-with-ureq-and-serde-json-on-std.md	live	accepted	contracts	building-blocks	-
+0016-add-v1-to-a-base-url-whose-path-does-not-end-with-v1.md	related	0015-read-the-base-url-and-the-model-name-from-config-base-url.md	live	accepted	contracts	contracts	-
+0017-use-a-separate-key-for-an-ai-gateway.md	parent_spec	docs/superpowers/specs/2026-10-13-STORY-57-send-the-model-calls-through-an-ai-gateway-design.md	doc	-	contracts	-	-
+0017-use-a-separate-key-for-an-ai-gateway.md	related	0015-read-the-base-url-and-the-model-name-from-config-base-url.md	live	accepted	contracts	contracts	-
+0017-use-a-separate-key-for-an-ai-gateway.md	related	0016-add-v1-to-a-base-url-whose-path-does-not-end-with-v1.md	live	accepted	contracts	contracts	-
 0018-take-the-question-only-from-the-ask-option.md	parent_spec	docs/superpowers/specs/2026-10-14-STORY-33-plain-grep-with-no-question-design.md	doc	-	contracts	-	-
 0018-take-the-question-only-from-the-ask-option.md	related	0006-run-setup-the-readiness-check-and-key-removal-as-options.md	live	accepted	contracts	contracts	-
 0018-take-the-question-only-from-the-ask-option.md	related	0012-use-clap-serde-saphyr-and-rpassword-as-the-outside-crates.md	live	accepted	contracts	building-blocks	-

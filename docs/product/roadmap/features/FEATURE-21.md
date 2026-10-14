@@ -31,8 +31,8 @@ The user can set a base URL and a model name, so that jag sends the same model c
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-57: Send the model calls through an AI gateway](../stories/STORY-57.md) | backlog | - | - | - | - |
-| [STORY-58: Set the gateway as an option, a variable, or in the config file](../stories/STORY-58.md) | backlog | - | - | - | - |
+| [STORY-57: Send the model calls through an AI gateway](../stories/STORY-57.md) | ready | - | - | - | - |
+| [STORY-58: Set the gateway as an option, a variable, or in the config file](../stories/STORY-58.md) | ready | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
