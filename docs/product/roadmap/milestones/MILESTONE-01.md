@@ -29,7 +29,7 @@ This milestone holds the bare minimum to see jag work. The grep habits, the read
 | [FEATURE-05: Search a folder as grep -r does](../features/FEATURE-05.md) | done | 2/2 (100%) | - | - | - |
 | [FEATURE-06: Cost limit on scoring](../features/FEATURE-06.md) | done | 3/3 (100%) | - | FEATURE-04 | - |
 | [FEATURE-08: File, line, and snippet for each result](../features/FEATURE-08.md) | done | 3/3 (100%) | - | FEATURE-04 | - |
-| [FEATURE-09: Size limit on the text that jag returns](../features/FEATURE-09.md) | ready | 0/4 (0%) | - | FEATURE-08 | - |
+| [FEATURE-09: Size limit on the text that jag returns](../features/FEATURE-09.md) | in_progress | 0/4 (0%) | - | FEATURE-08 | - |
 | [FEATURE-11: Text output for a person and structured output for an agent](../features/FEATURE-11.md) | done | 4/4 (100%) | - | FEATURE-08 | - |
 | [FEATURE-17: Block private data in the repository](../features/FEATURE-17.md) | done | 1/1 (100%) | - | - | - |
 <!-- STATUS:END -->
