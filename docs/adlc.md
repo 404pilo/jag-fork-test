@@ -51,7 +51,7 @@ Repository rules:
 | planner | opus | 1 | Scope change, gap in PRD or roadmap, milestone done | prd:plan, prd:review, prd:explore | Gap or change | PR that updates PRD or roadmap |
 | projecter | sonnet | 1 | A PR that changes `docs/product` merges | prd:roadmap-sync | Merged roadmap | Board that matches `main` |
 | architect | opus | 1 | Only on request | adr:* | Design question | Answer, or PR with new or changed ADR |
-| specifier | opus | 1 | The orchestrator assigns a feature | prd:specifying-stories | Feature id | PR with the spec in the feature folder |
+| specifier | opus (effort `xhigh`) | 1–2 | The orchestrator assigns a feature | prd:specifying-stories | Feature id | PR with the spec in the feature folder |
 | implementer | sonnet | 1–4 | The orchestrator assigns a merged spec | relay (non-interactive), productivity:wrapping-up-sessions | Spec on `main` | PR, then merge and clean-up |
 | verifier | opus | 1–4 | An implementer opens a PR | pr-flow:reviewing-prs | PR number | Approve or request changes |
 | chores | sonnet | 1 | A manual step is necessary | — | Chore request | Checked state, after it guides the user through a user step if necessary |
@@ -63,6 +63,8 @@ Repository rules:
 - Start a feature only when the features it depends on are merged.
 - Run 2 features at the same time only if they do not change the same area.
 - Start more implementers and verifiers when the queue grows. The maximum is 4 of each.
+- Start a second specifier when 2 features are ready for a spec. The maximum is 2 specifiers.
+- Give each `ASK` a priority before you send it to hitl: `blocks code now` or `blocks later`.
 - Stop extra sessions when they have no work.
 - After a retro merge, tell every live session to read `docs/adlc.md` again.
 - After a PR that changes `docs/product` merges, send a `SYNC` to the projecter.
@@ -72,7 +74,8 @@ Repository rules:
 **hitl**
 - The only session that asks the user for decisions.
 - Use the card in section 7 for each question. Use the same card format each time.
-- Ask 1 card at a time. Use `AskUserQuestion` when the options are fixed.
+- Ask the cards in priority order. First ask the cards that block code now, then the cards that block later.
+- Ask the cards of 1 feature together, up to 4 cards at a time. Use `AskUserQuestion` when the options are fixed (it takes up to 4 questions).
 - Send the answer to the orchestrator as an `ANSWER` message.
 
 **retro**
@@ -99,6 +102,12 @@ Repository rules:
 - One feature gives one spec.
 - Writes the spec in the feature folder with `prd:specifying-stories`.
 - Lands the spec through a PR. The orchestrator assigns the spec to an implementer after the merge.
+- Uses effort `xhigh`. The goal is a specifier that needs the user as little as possible.
+- Infers each decision from the ADRs, the system design (`docs/product/system-design.md`), the PRD and the merged specs first. Records the source of each inferred decision in the spec.
+- Does not ask the user to confirm a decision that an ADR or the system design states, or that is clearly inferred from them.
+- Asks only for the decisions that it cannot infer.
+- Prefers questions about guidelines (a rule or a priority that applies to many cases) to questions about 1 detail. Then it infers the details from the answer.
+- Before it sends the cards, finds the questions whose answer also answers other questions. It sends those questions first, or only those questions.
 
 **implementer**
 - One spec gives one PR.
@@ -112,6 +121,7 @@ Repository rules:
 - Reviews a PR with `pr-flow:reviewing-prs`.
 - Checks the PR against the spec criteria, the tests and the ADRs.
 - Approves or requests changes on GitHub with `gh pr review`.
+- Document PRs (only files in `docs/` change): if a fix does not block, give the exact text of the fix with the approval. The author applies this text and merges with no new check. Code PRs always get a new check after a fix.
 - Sends the result to the orchestrator.
 
 **chores**
@@ -220,8 +230,10 @@ Rules:
 The orchestrator starts each session from the main folder:
 
 ```
-cd <main folder> && claude --bg -n <prefix>-<role>[-n] --model <model> --permission-mode bypassPermissions "<start prompt>"
+cd <main folder> && claude --bg -n <prefix>-<role>[-n] --model <model> [--effort <effort>] --permission-mode bypassPermissions "<start prompt>"
 ```
+
+Add `--effort` only if the Model column in section 3 gives an effort (for example, the specifier uses `--effort xhigh`).
 
 Start prompt:
 
@@ -242,3 +254,4 @@ Send a DONE message to the orchestrator when you are ready. Then wait for TASK m
 | 2026-10-13 | Replaced the HITL card in section 7 with the layout "Option C": 2 context lines, the question, a bordered options table, and 1 recommendation line | The user chose this layout. It gives the background first, and the table borders stay in line |
 | 2026-10-13 | The chores session can talk to the user directly and guide the user through manual steps. Decisions still go through hitl | The user asked for this change |
 | 2026-10-13 | Replaced the options table in the HITL card (section 7) with a bullet list. Each option has its pros and cons as indented bullets | The user asked for this change. A table does not show correctly on a mobile screen |
+| 2026-10-13 | Hitl asks the cards in priority order, up to 4 cards of 1 feature together. Up to 2 specifiers. The specifier uses effort `xhigh`, infers more from the ADRs and the system design, and asks guideline questions. For document PRs, an exact non-blocking fix merges with no new check | The user asked for these changes to make the team faster. Today, code work stopped for about 3 hours because specs waited for user answers |
