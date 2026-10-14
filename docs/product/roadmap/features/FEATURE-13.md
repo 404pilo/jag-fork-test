@@ -12,7 +12,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/53
   pushed_hash: cd8cdc
   synced:
-    state: backlog
+    state: done
 parent: /epics/EPIC-04.md
 blocked_by:
 - /features/FEATURE-12.md
