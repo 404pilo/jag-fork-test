@@ -61,14 +61,17 @@ def environment():
 def run_jag(jag, term, question, folder, env):
     """Run one search. Give the wall time and the exit code."""
     started = time.perf_counter()
-    done = subprocess.run(
-        [jag, "--ask", question, term, folder],
-        env=env,
-        stdin=subprocess.DEVNULL,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
+    try:
+        done = subprocess.run(
+            [jag, "--ask", question, term, folder],
+            env=env,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+    except OSError as error:
+        raise Stop(f"jag does not start: {error}") from error
     elapsed = time.perf_counter() - started
     if done.returncode not in ENDED:
         error = done.stderr.decode("utf-8", errors="replace").rstrip()
