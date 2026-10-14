@@ -21,6 +21,7 @@
 - [0008 — Write structured output as one JSON document](./0008-write-structured-output-as-one-json-document.md) — accepted — <!-- TODO: summary -->
 - [0009 — Pin the Jev model version in each release](./0009-pin-the-jev-model-version-in-each-release.md) — accepted — <!-- TODO: summary -->
 - [0013 — Exit 2 when setup runs with no terminal](./0013-exit-2-when-setup-runs-with-no-terminal.md) — accepted — <!-- TODO: summary -->
+- [0018 — Take the question only from the --ask option](./0018-take-the-question-only-from-the-ask-option.md) — accepted — <!-- TODO: summary -->
 
 ### deployment — <!-- TODO: describe this area -->
 - [0010 — Ship jag on GitHub Releases, crates.io, and npm](./0010-ship-jag-on-github-releases-crates-io-and-npm.md) — accepted — <!-- TODO: summary -->

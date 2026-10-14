@@ -1,8 +1,9 @@
 ---
 type: Feature
 title: Rank matching lines by a question
-description: The user runs `jag TERM "QUESTION" [PATH...]`, and jag ranks the lines
-  that match the term by how well they answer the question, and labels weak results.
+description: The user runs `jag --ask "QUESTION" TERM [PATH...]`, and jag ranks the
+  lines that match the term by how well they answer the question, and labels weak
+  results.
 status: draft
 aliases:
 - FEATURE-07
@@ -26,7 +27,7 @@ traces:
 - to: prd:/decisions/DECISION-10.md
   hash: 089ac2
 - to: prd:/decisions/DECISION-31.md
-  hash: 8d2856
+  hash: b55e32
 - to: prd:/decisions/DECISION-33.md
   hash: 8ed9c9
 - to: prd:/decisions/DECISION-11.md
@@ -35,7 +36,7 @@ traces:
 
 # FEATURE-04: Rank matching lines by a question
 
-The user runs `jag TERM "QUESTION" [PATH...]`, and jag ranks the lines that match the term by how well they answer the question.
+The user runs `jag --ask "QUESTION" TERM [PATH...]`, and jag ranks the lines that match the term by how well they answer the question.
 
 When no result answers the question well, jag shows the best results with a clear no-good-answer label and exits with code 1, so that an agent does not trust noise. This part was FEATURE-07.
 
@@ -60,7 +61,7 @@ When no result answers the question well, jag shows the best results with a clea
 - milestone: [MILESTONE-01: Make it work](../milestones/MILESTONE-01.md)
 - traces: [CAPABILITY-02: Term and question search](../../prd/capabilities/CAPABILITY-02.md)
 - traces: [DECISION-10: A result is a matching line with the lines around it](../../prd/decisions/DECISION-10.md)
-- traces: [DECISION-31: The command takes the term, then the question, then the paths](../../prd/decisions/DECISION-31.md)
+- traces: [DECISION-31: The command takes the term and the paths, and the question only from --ask](../../prd/decisions/DECISION-31.md)
 - traces: [DECISION-33: The term is a regular expression, and -F makes it fixed text](../../prd/decisions/DECISION-33.md)
 - traces: [DECISION-11: When nothing answers well, jag labels the best results and exits 1](../../prd/decisions/DECISION-11.md)
 - blocks: [FEATURE-06: Cost limit on scoring](FEATURE-06.md)

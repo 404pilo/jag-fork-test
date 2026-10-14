@@ -26,7 +26,7 @@ jag works in a shell pipe, uses options and exit codes like grep, and returns fa
 - constrained by: [CONSTRAINT-06: A typical search is one search on a medium code repository](../constraints/CONSTRAINT-06.md)
 - subject of: [DECISION-05: jag keeps grep exit codes and adds one code for each model failure](../decisions/DECISION-05.md)
 - subject of: [DECISION-27: Only an explicit option turns on structured output](../decisions/DECISION-27.md)
-- subject of: [DECISION-31: The command takes the term, then the question, then the paths](../decisions/DECISION-31.md)
+- subject of: [DECISION-31: The command takes the term and the paths, and the question only from --ask](../decisions/DECISION-31.md)
 - subject of: [DECISION-32: A term with no question works as plain grep](../decisions/DECISION-32.md)
 - subject of: [DECISION-33: The term is a regular expression, and -F makes it fixed text](../decisions/DECISION-33.md)
 - subject of: [DECISION-34: Release 1 keeps the grep options that people use most](../decisions/DECISION-34.md)

@@ -30,8 +30,8 @@
 * [DECISION-28: Structured output has a field for each item that the text shows](DECISION-28.md) - Each label, count, mark, and notice of the text is a named field; each result has its rank and no score.
 * [DECISION-29: In text mode, notices go to the error stream](DECISION-29.md) - Text mode writes results to standard output and notices to the error stream; structured mode writes all of it in the structure.
 * [DECISION-30: Structured mode always writes a complete output](DECISION-30.md) - With no results, structured mode writes an empty result list and the summary fields.
-* [DECISION-31: The command takes the term, then the question, then the paths](DECISION-31.md) - The form is jag TERM "QUESTION" [PATH...], with the term first as in grep.
-* [DECISION-32: A term with no question works as plain grep](DECISION-32.md) - With no question, jag makes no model call, has no cost, and works as grep.
+* [DECISION-31: The command takes the term and the paths, and the question only from --ask](DECISION-31.md) - The form is jag [OPTIONS] TERM [PATH...], with the term first as in grep. The question comes only from the option --ask "QUESTION".
+* [DECISION-32: A term with no question works as plain grep](DECISION-32.md) - With no question, that is with no --ask option, jag makes no model call, has no cost, and works as grep.
 * [DECISION-33: The term is a regular expression, and -F makes it fixed text](DECISION-33.md) - The term is a regular expression, as in grep; the -F option makes it fixed text.
 * [DECISION-34: Release 1 keeps the grep options that people use most](DECISION-34.md) - jag keeps a fixed set of grep options; any other option is a usage error that names it.
 * [DECISION-35: With no path, jag searches the current folder or reads the pipe](DECISION-35.md) - With no path, jag searches the current folder, or reads standard input when text comes in through a pipe.

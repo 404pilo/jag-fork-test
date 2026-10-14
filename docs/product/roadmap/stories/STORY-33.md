@@ -5,7 +5,7 @@ description: As a shell power user (PERSONA-04), I want jag with a term and no q
   to return the matching lines as grep does with no model call, so that a plain search
   costs nothing.
 status: draft
-state: backlog
+state: ready
 github:
   number: 94
   node_id: I_kwDOVDCdD88AAAABXCBAyg
@@ -13,11 +13,12 @@ github:
   pushed_hash: 6bf2fd
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-33-plain-grep-with-no-question-design.md
 parent: /features/FEATURE-12.md
 milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/decisions/DECISION-32.md
-  hash: 2d94c5
+  hash: 0d8491
 ---
 
 # STORY-33: Search with a term and no question

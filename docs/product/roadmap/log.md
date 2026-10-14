@@ -1,6 +1,8 @@
 # Log
 
 ## 2026-10-14
+* **State**: [STORY-34](stories/STORY-34.md) backlog -> ready, by human:404pilo, at 2026-10-14T12:20:16Z
+* **State**: [STORY-33](stories/STORY-33.md) backlog -> ready, by human:404pilo, at 2026-10-14T12:20:16Z
 * **Sync**: [STORY-47](stories/STORY-47.md) pushed to GitHub, by system:github, at 2026-10-14T12:00:31Z
 * **Sync**: [STORY-28](stories/STORY-28.md) pushed to GitHub, by system:github, at 2026-10-14T12:00:31Z
 * **Sync**: [STORY-27](stories/STORY-27.md) pushed to GitHub, by system:github, at 2026-10-14T12:00:31Z

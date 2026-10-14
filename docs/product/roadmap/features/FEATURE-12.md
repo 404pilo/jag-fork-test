@@ -18,7 +18,7 @@ traces:
 - to: prd:/capabilities/CAPABILITY-06.md
   hash: 79d5d3
 - to: prd:/decisions/DECISION-32.md
-  hash: 2d94c5
+  hash: 0d8491
 - to: prd:/decisions/DECISION-49.md
   hash: 7cd110
 ---
@@ -33,8 +33,8 @@ With a term and no question, jag returns the matching lines as grep does, makes 
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-33: Search with a term and no question](../stories/STORY-33.md) | backlog | - | - | - | - |
-| [STORY-34: Use plain grep with no key](../stories/STORY-34.md) | backlog | - | - | - | - |
+| [STORY-33: Search with a term and no question](../stories/STORY-33.md) | ready | - | - | - | - |
+| [STORY-34: Use plain grep with no key](../stories/STORY-34.md) | ready | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

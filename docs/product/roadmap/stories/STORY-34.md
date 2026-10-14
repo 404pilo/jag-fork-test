@@ -4,7 +4,7 @@ title: Use plain grep with no key
 description: As a shell power user (PERSONA-04), I want plain grep mode to work with
   no stored key, so that I can use jag before I set it up.
 status: draft
-state: backlog
+state: ready
 github:
   number: 95
   node_id: I_kwDOVDCdD88AAAABXCBGaw
@@ -12,6 +12,7 @@ github:
   pushed_hash: d65ab2
   synced:
     state: backlog
+spec: docs/superpowers/specs/2026-10-14-STORY-33-plain-grep-with-no-question-design.md
 parent: /features/FEATURE-12.md
 milestone: /milestones/MILESTONE-02.md
 traces:

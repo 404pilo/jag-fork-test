@@ -57,7 +57,7 @@
 
 ## STORY-13: Rank matching lines by a question
 
-* [CRITERION-18: The command takes the term, the question, and the paths](CRITERION-18.md) - jag accepts the form `jag TERM "QUESTION" [PATH...]`, with the term first as in grep.
+* [CRITERION-18: The command takes the term, the question, and the paths](CRITERION-18.md) - jag accepts the form `jag --ask "QUESTION" TERM [PATH...]`, with the term first as in grep.
 * [CRITERION-19: The best answer comes first](CRITERION-19.md) - jag returns the results that match the term in order of how well they answer the question, with the best answer first.
 * [CRITERION-20: The term is a regular expression](CRITERION-20.md) - jag reads the term as a regular expression, as grep does.
 * [CRITERION-71: A term with no matches makes no model call](CRITERION-71.md) - When the term matches no line, jag makes no model call, writes no results, and exits with code 1, as grep does.
@@ -160,7 +160,7 @@
 
 ## STORY-34: Use plain grep with no key
 
-* [CRITERION-68: Plain grep works with no key](CRITERION-68.md) - With no stored key, `jag TERM PATH` returns the grep matches and does not ask for a key.
+* [CRITERION-68: Plain grep works with no key](CRITERION-68.md) - With no stored key, `jag TERM PATH`, with no `--ask`, returns the grep matches and does not ask for a key.
 
 ## STORY-35: Use the common grep options
 

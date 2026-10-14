@@ -8,7 +8,7 @@ okf_version: "0.2"
 
 * [building-blocks](#building-blocks) - 4 decisions: 4 accepted
 * [context](#context) - 1 decision: 1 accepted
-* [contracts](#contracts) - 5 decisions: 5 accepted
+* [contracts](#contracts) - 6 decisions: 6 accepted
 * [deployment](#deployment) - 1 decision: 1 accepted
 * [strategy](#strategy) - 3 decisions: 3 accepted
 
@@ -36,6 +36,7 @@ okf_version: "0.2"
 * [0008: Write structured output as one JSON document](./0008-write-structured-output-as-one-json-document.md) - accepted. Open this when you change the form of structured output, or when agent code that reads jag output breaks.
 * [0009: Pin the Jev model version in each release](./0009-pin-the-jev-model-version-in-each-release.md) - accepted. Open this when you change the Jev model that jag calls, or when scores change with no jag release.
 * [0013: Exit 2 when setup runs with no terminal](./0013-exit-2-when-setup-runs-with-no-terminal.md) - accepted. Open this when you change what jag --setup does with no terminal, or when a script acts on the exit code of setup.
+* [0018: Take the question only from the --ask option](./0018-take-the-question-only-from-the-ask-option.md) - accepted. Open this when you change how jag gets the question on the command line, or when a script depends on the command form.
 
 ## deployment
 
