@@ -214,9 +214,9 @@
 * [CRITERION-74: A pull request that adds private data fails the check](CRITERION-74.md) - A pull request that adds a key, case content, private evaluation data, or an internal project name fails the check, and the pull request cannot merge.
 * [CRITERION-75: The check names the place and never shows the value](CRITERION-75.md) - For each finding, the check names the file and the line, and it never shows the found value in its output.
 
-## STORY-47: Check the full history before the repository goes public
+## STORY-47: Check the full history before jag goes public
 
-* [CRITERION-76: The history holds no private data before the repository goes public](CRITERION-76.md) - Before the repository goes public, a scan of each commit finds no key, case content, private evaluation data, or internal project name, and never shows a found value.
+* [CRITERION-76: The history scan lists each finding and never shows the value](CRITERION-76.md) - The scan finds each key, case content, private evaluation data, and internal project name in each commit, names its commit, file, and line, and never shows the value.
 
 ## STORY-48: Download a prebuilt binary from GitHub Releases
 
@@ -237,6 +237,12 @@
 * [CRITERION-82: One tag publishes each channel with the same version](CRITERION-82.md) - One version tag publishes the GitHub Release, the crate, and the npm packages, and each one has the same version.
 * [CRITERION-83: The repository stores no publish token](CRITERION-83.md) - The release publishes to crates.io and npm with trusted publishing, and the repository stores no publish token.
 * [CRITERION-84: The published packages hold no private data](CRITERION-84.md) - The archives, the crate, and the npm packages hold no key, no case content, no private evaluation data, and no internal project name.
+
+## STORY-52: Create the new public repository with a clean history
+
+* [CRITERION-86: The new public repository gets one clean history, after the scan](CRITERION-86.md) - After the history scan lists each finding, one new history that has none of the findings is made for the new public repository. The new history is not made before the scan.
+* [CRITERION-87: A second scan is clean before the new repository becomes public](CRITERION-87.md) - Before the new repository becomes public, a second scan of each of its refs finds no key, no case content, no private evaluation data, and no internal project name.
+* [CRITERION-102: This repository stays private](CRITERION-102.md) - After the new public repository is created, ai-ready-future/jag stays private, and its history is not rewritten.
 
 ## STORY-53: See the cost after each search
 
@@ -265,3 +271,17 @@
 ## STORY-58: Set the gateway as an option, a variable, or in the config file
 
 * [CRITERION-96: An option wins over a variable, and a variable wins over the config file](CRITERION-96.md) - For the base URL and the model name, the command option wins over the variable, the variable wins over the config file, and the config file wins over the default.
+
+## STORY-59: Limit guesses through the check results of fork pull requests
+
+* [CRITERION-98: A guard against guesses is in place before the new repository becomes public](CRITERION-98.md) - Before the new repository becomes public, a guard such as an approval step or a rate limit stops fast guesses through the check results of fork pull requests.
+
+## STORY-60: Run the private-data check on fork pull requests in the new public repository
+
+* [CRITERION-99: The Actions event policy lets the check run on fork pull requests](CRITERION-99.md) - Before the new repository becomes public, its Actions event policy allows pull_request_target for the private-data check, and a test fork pull request shows that the check runs.
+
+## STORY-61: Make the project board and the open issues public with the new repository
+
+* [CRITERION-100: The project board becomes public after the new repository](CRITERION-100.md) - After the new repository becomes public, the Project is linked to it and becomes public. Until then, it is private.
+* [CRITERION-101: The project board holds no private data when it becomes public](CRITERION-101.md) - Before the new repository and the Project become public, the items, the issues, and their comments hold no private data.
+* [CRITERION-103: The open issues move to the new repository while it is private](CRITERION-103.md) - While the new repository is private, each open issue moves to it with gh issue transfer. The same labels and milestones exist in it first.

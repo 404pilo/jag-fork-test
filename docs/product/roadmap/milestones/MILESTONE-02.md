@@ -38,7 +38,7 @@ This milestone holds the capabilities that make jag better to use and easier to 
 | [FEATURE-14: Files, folders, and piped text](../features/FEATURE-14.md) | backlog | 0/2 (0%) | - | FEATURE-05 | - |
 | [FEATURE-15: Good behavior in a terminal and in a pipe](../features/FEATURE-15.md) | backlog | 0/3 (0%) | - | FEATURE-04 | - |
 | [FEATURE-18: Install jag from GitHub Releases, crates.io, or npm](../features/FEATURE-18.md) | backlog | 0/4 (0%) | - | FEATURE-01, FEATURE-17, FEATURE-19 | - |
-| [FEATURE-19: Go public with a clean history](../features/FEATURE-19.md) | backlog | 0/1 (0%) | - | FEATURE-17 | - |
+| [FEATURE-19: Go public with a clean history](../features/FEATURE-19.md) | backlog | 0/5 (0%) | - | FEATURE-17 | - |
 | [FEATURE-20: Show the cost of a search](../features/FEATURE-20.md) | backlog | 0/4 (0%) | - | FEATURE-04, FEATURE-11 | - |
 | [FEATURE-21: Send the model calls through an AI gateway](../features/FEATURE-21.md) | backlog | 0/2 (0%) | - | FEATURE-04 | - |
 <!-- STATUS:END -->
@@ -83,15 +83,19 @@ This milestone holds the capabilities that make jag better to use and easier to 
 - item of: [STORY-42: Color the matches as grep does](../stories/STORY-42.md)
 - item of: [STORY-43: Stop at once when stopped](../stories/STORY-43.md)
 - item of: [STORY-45: Run the held-out evaluation before release](../stories/STORY-45.md)
-- item of: [STORY-47: Check the full history before the repository goes public](../stories/STORY-47.md)
+- item of: [STORY-47: Check the full history before jag goes public](../stories/STORY-47.md)
 - item of: [STORY-48: Download a prebuilt binary from GitHub Releases](../stories/STORY-48.md)
 - item of: [STORY-49: Install jag with cargo from crates.io](../stories/STORY-49.md)
 - item of: [STORY-50: Install or run jag with npm](../stories/STORY-50.md)
 - item of: [STORY-51: Publish each channel from one tag](../stories/STORY-51.md)
+- item of: [STORY-52: Create the new public repository with a clean history](../stories/STORY-52.md)
 - item of: [STORY-53: See the cost after each search](../stories/STORY-53.md)
 - item of: [STORY-54: Read the cost in structured output](../stories/STORY-54.md)
 - item of: [STORY-55: Know the cost when no figure is available](../stories/STORY-55.md)
 - item of: [STORY-56: Know the cost of a failed or stopped search](../stories/STORY-56.md)
 - item of: [STORY-57: Send the model calls through an AI gateway](../stories/STORY-57.md)
 - item of: [STORY-58: Set the gateway as an option, a variable, or in the config file](../stories/STORY-58.md)
+- item of: [STORY-59: Limit guesses through the check results of fork pull requests](../stories/STORY-59.md)
+- item of: [STORY-60: Run the private-data check on fork pull requests in the new public repository](../stories/STORY-60.md)
+- item of: [STORY-61: Make the project board and the open issues public with the new repository](../stories/STORY-61.md)
 <!-- LINKS:END -->

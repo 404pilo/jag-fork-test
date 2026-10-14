@@ -1,20 +1,20 @@
 ---
 type: AcceptanceCriterion
-title: The history holds no private data before the repository goes public
-description: Before the repository goes public, a scan of each commit finds no key,
-  case content, private evaluation data, or internal project name, and never shows
-  a found value.
+title: The history scan lists each finding and never shows the value
+description: The scan finds each key, case content, private evaluation data, and internal
+  project name in each commit, names its commit, file, and line, and never shows the
+  value.
 status: draft
 item: /stories/STORY-47.md
 ---
 
-# CRITERION-76: The history holds no private data before the repository goes public
+# CRITERION-76: The history scan lists each finding and never shows the value
 
-Before the repository goes public, a scan of each commit finds no key, case content, private evaluation data, or internal project name, and never shows a found value.
+The scan finds each key, case content, private evaluation data, and internal project name in each commit, names its commit, file, and line, and never shows the value.
 
 <!-- LINKS:START (generated, do not edit) -->
 
 ## Links
 
-- item: [STORY-47: Check the full history before the repository goes public](../stories/STORY-47.md)
+- item: [STORY-47: Check the full history before jag goes public](../stories/STORY-47.md)
 <!-- LINKS:END -->

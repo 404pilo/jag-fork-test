@@ -1,18 +1,17 @@
 ---
 type: Story
-title: Check the full history before the repository goes public
+title: Check the full history before jag goes public
 description: As an agent builder (PERSONA-01), I want each commit in the history checked
-  for private data before the repository goes public, so that no old commit shows
-  it.
+  for private data before jag goes public, so that no old commit shows it.
 status: draft
 state: ready
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
 ---
 
-# STORY-47: Check the full history before the repository goes public
+# STORY-47: Check the full history before jag goes public
 
-As an agent builder (PERSONA-01), I want each commit in the history checked for private data before the repository goes public, so that no old commit shows it.
+As an agent builder (PERSONA-01), I want each commit in the history checked for private data before jag goes public, so that no old commit shows it.
 
 <!-- STATUS:START (generated, do not edit) -->
 
@@ -20,7 +19,7 @@ As an agent builder (PERSONA-01), I want each commit in the history checked for 
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [CRITERION-76: The history holds no private data before the repository goes public](../criteria/CRITERION-76.md) | - | - | - | - | - |
+| [CRITERION-76: The history scan lists each finding and never shows the value](../criteria/CRITERION-76.md) | - | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->
@@ -29,5 +28,5 @@ As an agent builder (PERSONA-01), I want each commit in the history checked for 
 
 - parent: [FEATURE-19: Go public with a clean history](../features/FEATURE-19.md)
 - milestone: [MILESTONE-02: Make it good](../milestones/MILESTONE-02.md)
-- criterion or run of: [CRITERION-76: The history holds no private data before the repository goes public](../criteria/CRITERION-76.md)
+- criterion or run of: [CRITERION-76: The history scan lists each finding and never shows the value](../criteria/CRITERION-76.md)
 <!-- LINKS:END -->

@@ -50,3 +50,4 @@
 * [DECISION-48: The readiness check exits 0 or with the code of the first cause](DECISION-48.md) - The readiness check exits with code 0 when all five items pass, and otherwise with the code of the first cause that fails.
 * [DECISION-49: Plain grep mode needs no key](DECISION-49.md) - A term with no question makes no model call, so jag works with no stored key.
 * [DECISION-50: The -A, -B, and -C options set the context lines of a result](DECISION-50.md) - The grep context options set the lines around each match; with no option, jag uses its default.
+* [DECISION-51: jag goes public as a new repository with a clean history](DECISION-51.md) - A new public repository gets a clean history. ai-ready-future/jag stays private, and its history is not rewritten.
