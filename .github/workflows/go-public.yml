@@ -1,0 +1,121 @@
+name: go-public
+
+# The scans and the clean step of FEATURE-19. A person with write access
+# starts this workflow by hand. It holds secrets: no step may run, source, or
+# read as config a file of the folder "repo.git" or a file of the issues.
+# The log holds only places, rule ids, and counts. Do not add a "ref:" to the
+# checkout. The spec is
+# docs/superpowers/specs/2026-10-14-STORY-47-go-public-with-a-clean-history-design.md.
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "history: scan each commit. clean: make the clean history. issues: scan the issues."
+        type: choice
+        required: true
+        options:
+          - history
+          - clean
+          - issues
+      refs:
+        description: "For history: the refs to scan."
+        type: choice
+        default: main
+        options:
+          - main
+          - all
+      state:
+        description: "For issues: the issues to scan."
+        type: choice
+        default: all
+        options:
+          - open
+          - all
+      old_repo:
+        description: "For clean: the name of the private repository that a short reference (#N) names."
+        type: string
+        default: ai-ready-future/jag-private
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  go-public:
+    name: go-public
+    runs-on: ubuntu-latest
+    steps:
+      # The code of the branch that the person names (main). The scripts come from this folder only.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: base
+          persist-credentials: false
+
+      # A mirror clone has each ref, also each refs/pull/* ref. The token is not in its config.
+      - name: Clone the repository as a mirror
+        if: inputs.mode == 'history' || inputs.mode == 'clean'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh repo clone "$GITHUB_REPOSITORY" "$RUNNER_TEMP/repo.git" -- --mirror
+
+      - name: Download gitleaks
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/gitleaks"
+          cd "$RUNNER_TEMP/gitleaks"
+          curl -sSfL -o gitleaks.tar.gz \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+
+      - name: Download git-filter-repo
+        if: inputs.mode == 'clean'
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/filter-repo"
+          cd "$RUNNER_TEMP/filter-repo"
+          curl -sSfL -o git-filter-repo.tar.xz \
+            https://github.com/newren/git-filter-repo/releases/download/v2.47.0/git-filter-repo-2.47.0.tar.xz
+          echo "4662cbe5918196a9f1b5b3e1211a32e61cff1812419c21df4f47c5439f09e902  git-filter-repo.tar.xz" | sha256sum -c -
+          tar -xJf git-filter-repo.tar.xz git-filter-repo-2.47.0/git-filter-repo
+
+      - name: Scan the history
+        if: inputs.mode == 'history'
+        env:
+          PRIVATE_PATTERNS: ${{ secrets.PRIVATE_PATTERNS }}
+          HISTORY: ${{ inputs.refs }}
+          GITLEAKS: ${{ runner.temp }}/gitleaks/gitleaks
+          REPO_DIR: ${{ runner.temp }}/repo.git
+        run: base/scripts/private-data/check.sh
+
+      - name: Make the clean history
+        if: inputs.mode == 'clean'
+        env:
+          PRIVATE_PATTERNS: ${{ secrets.PRIVATE_PATTERNS }}
+          CLEAN_MAILMAP: ${{ secrets.CLEAN_MAILMAP }}
+          OLD_REPO: ${{ inputs.old_repo }}
+          OUT_DIR: ${{ runner.temp }}/out
+          GITLEAKS: ${{ runner.temp }}/gitleaks/gitleaks
+          FILTER_REPO: ${{ runner.temp }}/filter-repo/git-filter-repo-2.47.0/git-filter-repo
+          REPO_DIR: ${{ runner.temp }}/repo.git
+        run: base/scripts/private-data/clean-history.sh
+
+      - name: Scan the issues
+        if: inputs.mode == 'issues'
+        env:
+          PRIVATE_PATTERNS: ${{ secrets.PRIVATE_PATTERNS }}
+          REPO: ${{ github.repository }}
+          STATE: ${{ inputs.state }}
+          GH_TOKEN: ${{ github.token }}
+          GITLEAKS: ${{ runner.temp }}/gitleaks/gitleaks
+        run: base/scripts/private-data/issues.sh
+
+      - name: Keep the clean history
+        if: inputs.mode == 'clean'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: clean-history
+          path: ${{ runner.temp }}/out/clean.bundle
+          retention-days: 1
+          if-no-files-found: error

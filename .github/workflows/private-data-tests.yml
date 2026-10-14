@@ -26,8 +26,19 @@ jobs:
           echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  gitleaks.tar.gz" | sha256sum -c -
           tar -xzf gitleaks.tar.gz gitleaks
 
+      - name: Download git-filter-repo
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/filter-repo"
+          cd "$RUNNER_TEMP/filter-repo"
+          curl -sSfL -o git-filter-repo.tar.xz \
+            https://github.com/newren/git-filter-repo/releases/download/v2.47.0/git-filter-repo-2.47.0.tar.xz
+          echo "4662cbe5918196a9f1b5b3e1211a32e61cff1812419c21df4f47c5439f09e902  git-filter-repo.tar.xz" | sha256sum -c -
+          tar -xJf git-filter-repo.tar.xz git-filter-repo-2.47.0/git-filter-repo
+
       # No secret. The tests use invented patterns only.
       - name: Run the tests of the check
         env:
           GITLEAKS: ${{ runner.temp }}/gitleaks/gitleaks
+          FILTER_REPO: ${{ runner.temp }}/filter-repo/git-filter-repo-2.47.0/git-filter-repo
         run: scripts/private-data/test.sh
