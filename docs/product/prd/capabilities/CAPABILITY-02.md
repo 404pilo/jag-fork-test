@@ -42,7 +42,7 @@ The user gives a folder, a term, and a question in plain language. jag finds the
 - depended on by: [CAPABILITY-10: Question without a term](CAPABILITY-10.md)
 - depended on by: [CAPABILITY-11: Agent instructions to copy](CAPABILITY-11.md)
 - depended on by: [CAPABILITY-12: Measure jag on your own questions](CAPABILITY-12.md)
-- constrained by: [CONSTRAINT-07: jag fails within 10 seconds when the model service is down](../constraints/CONSTRAINT-07.md)
+- constrained by: [CONSTRAINT-07: jag fails within 2 × timeout + retry wait when the model service is down](../constraints/CONSTRAINT-07.md)
 - subject of: [DECISION-10: A result is a matching line with the lines around it](../decisions/DECISION-10.md)
 - subject of: [DECISION-11: When nothing answers well, jag labels the best results and exits 1](../decisions/DECISION-11.md)
 - subject of: [DECISION-12: The cost limit has a default that the user can change](../decisions/DECISION-12.md)
