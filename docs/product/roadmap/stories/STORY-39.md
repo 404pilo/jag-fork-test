@@ -12,7 +12,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/100
   pushed_hash: c81fa9
   synced:
-    state: backlog
+    state: ready
 spec: docs/superpowers/specs/2026-10-13-STORY-24-files-folders-and-piped-text-design.md
 parent: /features/FEATURE-14.md
 milestone: /milestones/MILESTONE-02.md
