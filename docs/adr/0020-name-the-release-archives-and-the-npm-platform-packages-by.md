@@ -3,7 +3,7 @@ type: adr
 title: Name the release archives and the npm platform packages by platform
 description: Open this when you change the name of a release archive, its checksum file, or an npm package of a platform, or when you add a platform.
 area: deployment
-status: proposed
+status: accepted
 date: 2026-10-14
 supersedes: null
 superseded_by: null
