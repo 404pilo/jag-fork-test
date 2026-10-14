@@ -222,6 +222,18 @@ mod tests {
     }
 
     #[test]
+    fn the_request_cuts_a_line_that_was_set_directly() {
+        let mut one = snippet("a.txt", &["x"]);
+        one.lines[0].text = "é".repeat(1000).into_bytes();
+        let body: serde_json::Value =
+            serde_json::from_str(&request_body("m", "q", &[one])).expect("json");
+        let lines = body["state"]["snippets"][0]["lines"]
+            .as_str()
+            .expect("text");
+        assert_eq!(lines.chars().count(), 300);
+    }
+
+    #[test]
     fn a_line_that_is_not_utf8_is_made_into_text() {
         let mut one = snippet("a.txt", &["x"]);
         one.lines[0].text = vec![b'a', 0xff, b'b'];

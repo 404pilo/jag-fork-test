@@ -9,6 +9,7 @@ use clap::Parser;
 use clap::error::ErrorKind;
 use grep_regex::RegexMatcherBuilder;
 
+use crate::check;
 use crate::config::{
     self, Env, RealFs, SettingSource, TimeSetting, TtyPrompter, cost_limit, find_key,
     model_settings, parse_cost_limit, parse_seconds,
@@ -16,7 +17,7 @@ use crate::config::{
 use crate::failure::Failure;
 use crate::output::write_text;
 use crate::prerank;
-use crate::scorer::{ScoreSettings, rank, score};
+use crate::scorer::{ScoreSettings, probe, rank, score};
 use crate::search::snippet::{match_texts, plan_windows, read_snippets};
 use crate::search::{ScanOptions, scan};
 
@@ -33,9 +34,13 @@ const USAGE_ERROR: &str = "jag: the command line is not valid. Run jag --help to
     name = "jag",
     version,
     arg_required_else_help = true,
-    override_usage = "jag [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]\n       jag --setup\n       jag --forget-key"
+    override_usage = "jag [--timeout SECONDS] [--retry-wait SECONDS] [--max-scored COUNT] TERM \"QUESTION\" [PATH...]\n       jag --check [--timeout SECONDS] [--retry-wait SECONDS]\n       jag --setup\n       jag --forget-key"
 )]
 struct Cli {
+    /// Check that jag is ready: the key, the service, and the key file
+    #[arg(long, conflicts_with_all = ["setup", "forget_key", "cost_limit", "term", "question", "paths"])]
+    check: bool,
+
     /// Store your TypeSafe API key, with no echo
     #[arg(long, conflicts_with_all = ["forget_key", "term", "question", "paths"])]
     setup: bool,
@@ -97,6 +102,8 @@ pub fn run() -> ExitCode {
         config::forget_key(&env, &RealFs, &mut stdout)
             .map(|()| 0)
             .map_err(Failure::from)
+    } else if cli.check {
+        check(&cli, &env, &mut stdout, &mut stderr)
     } else {
         search(&cli, &env, &mut stdout, &mut stderr)
     };
@@ -293,6 +300,42 @@ fn search(
         cost_limit_reached,
         left_out: false,
     }))
+}
+
+/// The readiness check (FEATURE-02). Gives the exit code of the first item
+/// that fails, or 0. A usage error stops the check before the first item
+/// (decision 17).
+fn check(
+    cli: &Cli,
+    env: &Env,
+    stdout: &mut dyn Write,
+    stderr: &mut dyn Write,
+) -> Result<u8, Failure> {
+    // The timeout is checked first.
+    let timeout = parse_option(cli.timeout.as_deref(), TimeSetting::Timeout)?;
+    let retry_wait = parse_option(cli.retry_wait.as_deref(), TimeSetting::RetryWait)?;
+    let settings = model_settings(env, (timeout, retry_wait)).map_err(Failure::from)?;
+    let settings = ScoreSettings::new(settings.base_url, settings.model, settings.times);
+    let report = check::run(env, &RealFs, &|key| probe(key, &settings));
+
+    // The lines first, then the failures. A reader that closes the pipe gives
+    // no message and keeps the exit code (CV-4).
+    let mut lines = report.lines().into_bytes();
+    match stdout.write_all(&lines).and_then(|()| stdout.flush()) {
+        Ok(()) => {}
+        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => {}
+        Err(_) => return Err(write_failure()),
+    }
+    lines.clear();
+    for failure in report.failures() {
+        lines.extend_from_slice(failure.render().as_bytes());
+    }
+    match stderr.write_all(&lines).and_then(|()| stderr.flush()) {
+        Ok(()) => {}
+        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => {}
+        Err(_) => return Err(write_failure()),
+    }
+    Ok(report.exit_code())
 }
 
 /// What a search that got its scores found.

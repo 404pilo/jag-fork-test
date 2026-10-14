@@ -6,13 +6,14 @@
 mod client;
 pub mod prompt;
 
+use std::path::PathBuf;
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 use crate::config::{ApiKey, KEYS_PAGE, Times};
 use crate::failure::Failure;
-use crate::search::snippet::Snippet;
+use crate::search::snippet::{Snippet, SnippetLine, Source};
 use client::{Attempt, Client};
 
 /// The version of the scoring prompt (ADR-0004).
@@ -193,6 +194,22 @@ impl Run<'_> {
         }
         Some(self.attempt(body, count).map_err(|attempt| attempt.error))
     }
+}
+
+/// The question and the one result of the readiness check call.
+pub const CHECK_QUESTION: &str = "Is jag ready?";
+pub const CHECK_PATH: &str = "jag-check";
+pub const CHECK_LINE: &[u8] = b"jag is ready";
+
+/// One small call that tests the key, the credit, and the service
+/// (FEATURE-02). It has the CV-5 retry and the deadline of `score`. Any score
+/// passes: the check tests the service, not the answer.
+pub fn probe(key: &ApiKey, settings: &ScoreSettings) -> Result<(), ScoreError> {
+    let snippet = Snippet {
+        source: Source::File(PathBuf::from(CHECK_PATH)),
+        lines: vec![SnippetLine::new(1, CHECK_LINE, true)],
+    };
+    score(&[snippet], CHECK_QUESTION, key, settings).map(|_| ())
 }
 
 /// Score each snippet from 0 to 1. The scores are in the order of the input.

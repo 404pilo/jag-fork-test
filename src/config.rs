@@ -419,6 +419,22 @@ pub(crate) fn open_key_file(
     }
 }
 
+/// The path and the mode (`mode & 0o777`) of the key file, or `None` when
+/// there is no `$HOME` or no file. jag never reads the text of the file here
+/// (FEATURE-02, decision 9).
+pub(crate) fn key_file_mode(env: &Env, fs: &dyn Fs) -> Result<Option<(PathBuf, u32)>, ConfigError> {
+    let Some(path) = env.key_path() else {
+        return Ok(None);
+    };
+    let Some(file) = open_key_file(fs, &path)? else {
+        return Ok(None);
+    };
+    let mode = file
+        .mode()
+        .map_err(|_| ConfigError::KeyFileUnreadable { path: path.clone() })?;
+    Ok(Some((path, mode & 0o777)))
+}
+
 pub(crate) fn read_open_file(file: &mut dyn OpenFile, path: &Path) -> Result<String, ConfigError> {
     file.read_to_string()
         .map_err(|_| ConfigError::KeyFileUnreadable {
@@ -499,6 +515,107 @@ pub(crate) mod testing {
         std::fs::write(&path, text).unwrap();
         std::fs::set_permissions(&path, std::fs::Permissions::from_mode(mode)).unwrap();
         path
+    }
+}
+
+#[cfg(test)]
+mod mode_tests {
+    use std::io;
+
+    use super::testing::*;
+    use super::*;
+
+    /// An open file that panics when jag reads its text.
+    struct NoReadFile(u32);
+
+    impl OpenFile for NoReadFile {
+        fn mode(&self) -> io::Result<u32> {
+            Ok(self.0)
+        }
+        fn read_to_string(&mut self) -> io::Result<String> {
+            panic!("key_file_mode must not read the text of the file");
+        }
+    }
+
+    struct NoReadFs(u32);
+
+    impl Fs for NoReadFs {
+        fn open(&self, _: &Path) -> io::Result<Box<dyn OpenFile>> {
+            Ok(Box::new(NoReadFile(self.0)))
+        }
+        fn is_symlink(&self, _: &Path) -> io::Result<bool> {
+            Ok(false)
+        }
+        fn is_special(&self, _: &Path) -> io::Result<bool> {
+            Ok(false)
+        }
+        fn create_dir_all(&self, _: &Path) -> io::Result<()> {
+            unreachable!()
+        }
+        fn create_private_dir(&self, _: &Path) -> io::Result<()> {
+            unreachable!()
+        }
+        fn create_private_file(&self, _: &Path, _: &str) -> io::Result<()> {
+            unreachable!()
+        }
+        fn rename(&self, _: &Path, _: &Path) -> io::Result<()> {
+            unreachable!()
+        }
+        fn remove_file(&self, _: &Path) -> io::Result<()> {
+            unreachable!()
+        }
+    }
+
+    fn mode_of(home: Option<&Path>, fs: &dyn Fs) -> Result<Option<(PathBuf, u32)>, ConfigError> {
+        let vars = vars(&[]);
+        let env = Env {
+            vars: &vars,
+            home: home.map(Path::to_owned),
+        };
+        key_file_mode(&env, fs)
+    }
+
+    #[test]
+    fn key_file_mode_gives_none_for_no_home() {
+        assert_eq!(mode_of(None, &RealFs), Ok(None));
+    }
+
+    #[test]
+    fn key_file_mode_gives_none_for_a_missing_file() {
+        let home = tempfile::tempdir().expect("temporary folder");
+        assert_eq!(mode_of(Some(home.path()), &RealFs), Ok(None));
+    }
+
+    #[test]
+    fn key_file_mode_gives_the_mode_of_a_file() {
+        let home = tempfile::tempdir().expect("temporary folder");
+        let path = write_file(home.path(), "config: {}\n", 0o644);
+        assert_eq!(mode_of(Some(home.path()), &RealFs), Ok(Some((path, 0o644))));
+        let path = write_file(home.path(), "config: {}\n", 0o600);
+        assert_eq!(mode_of(Some(home.path()), &RealFs), Ok(Some((path, 0o600))));
+    }
+
+    #[test]
+    fn key_file_mode_refuses_a_folder() {
+        let home = tempfile::tempdir().expect("temporary folder");
+        let path = home.path().join(".config").join("jag").join("config.yml");
+        std::fs::create_dir_all(&path).expect("make folders");
+        assert_eq!(
+            mode_of(Some(home.path()), &RealFs),
+            Err(ConfigError::KeyFileNotRegular { path })
+        );
+    }
+
+    #[test]
+    fn key_file_mode_never_reads_the_text() {
+        let result = mode_of(Some(Path::new("/home/user")), &NoReadFs(0o100644));
+        assert_eq!(
+            result,
+            Ok(Some((
+                PathBuf::from("/home/user/.config/jag/config.yml"),
+                0o644
+            )))
+        );
     }
 }
 
