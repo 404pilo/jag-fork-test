@@ -5,7 +5,8 @@ description: Each result shows the file, the line range, and the exact source te
   with each matching line marked, so the person or the agent can open the source at
   that line.
 status: draft
-state: ready
+state: in_progress
+actual_start_date: '2026-10-14'
 github:
   number: 49
   node_id: I_kwDOVDCdD88AAAABXB99aA
