@@ -10,7 +10,7 @@ use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
-use crate::config::{ApiKey, KEYS_PAGE};
+use crate::config::{ApiKey, KEYS_PAGE, Times};
 use crate::failure::Failure;
 use crate::search::snippet::Snippet;
 use client::{Attempt, Client};
@@ -23,6 +23,8 @@ pub const THRESHOLD: f64 = 0.4;
 pub const MAX_SCORED: usize = 200;
 /// The calls that run at the same time.
 const MAX_THREADS: usize = 6;
+/// The page where the user adds credit (the docs give no page for it).
+const CONSOLE_PAGE: &str = "https://console.typesafe.ai";
 
 /// The address, the model, and the times of CV-5.
 #[derive(Clone, Debug)]
@@ -39,18 +41,16 @@ pub struct ScoreSettings {
 }
 
 impl ScoreSettings {
-    /// The times of CV-5: 4 seconds for a call, 1 second before the retry,
-    /// and 9 seconds for all calls. The deadline is
-    /// `2 x timeout + retry_wait`.
-    pub fn new(base_url: String, model: String) -> Self {
-        let timeout = Duration::from_secs(4);
-        let retry_wait = Duration::from_secs(1);
+    /// The times of CV-5. The deadline is `2 x timeout + retry_wait`: 9
+    /// seconds with the defaults (4 s and 1 s), 180 seconds with the largest
+    /// values (decision 5 of FEATURE-03).
+    pub fn new(base_url: String, model: String, times: Times) -> Self {
         Self {
             base_url,
             model,
-            timeout,
-            retry_wait,
-            deadline: 2 * timeout + retry_wait,
+            timeout: times.timeout,
+            retry_wait: times.retry_wait,
+            deadline: 2 * times.timeout + times.retry_wait,
         }
     }
 }
@@ -80,38 +80,55 @@ pub enum ScoreError {
 }
 
 impl From<ScoreError> for Failure {
+    /// One cause text and one fix text for each cause (FEATURE-03, decision
+    /// 12). No text holds the key, an address, or a body.
     fn from(error: ScoreError) -> Failure {
-        let (cause, exit_code) = match error {
+        let (cause, fix, exit_code) = match error {
             ScoreError::KeyNotAccepted { status } => (
                 format!("the TypeSafe API did not accept the key (HTTP {status})."),
+                format!("Check the key at {KEYS_PAGE}, then run jag --setup."),
                 4,
             ),
             ScoreError::NoCredit => (
                 "the TypeSafe account has no credit (HTTP 402).".to_owned(),
+                format!("Add credit at {CONSOLE_PAGE}, then try again."),
                 5,
             ),
-            ScoreError::TimedOut => ("the TypeSafe API did not answer in time.".to_owned(), 6),
-            ScoreError::CannotConnect => ("jag cannot connect to the model service.".to_owned(), 6),
+            ScoreError::TimedOut => (
+                "the TypeSafe API did not answer in time.".to_owned(),
+                "Try again later, or give each call more time with --timeout.".to_owned(),
+                6,
+            ),
+            ScoreError::CannotConnect => (
+                "jag cannot connect to the model service.".to_owned(),
+                "Check the network connection and JAG_BASE_URL, then try again.".to_owned(),
+                6,
+            ),
             ScoreError::RateLimited => (
                 "the TypeSafe API refused more calls (HTTP 429).".to_owned(),
+                "Wait one minute, then try again.".to_owned(),
                 6,
             ),
-            ScoreError::ServerFailed { status } => {
-                (format!("the TypeSafe API failed (HTTP {status})."), 6)
-            }
-            ScoreError::Redirect => ("the model service sent a redirect.".to_owned(), 6),
-            ScoreError::UnexpectedStatus { status } => {
-                (format!("the TypeSafe API gave HTTP {status}."), 6)
-            }
+            ScoreError::ServerFailed { status } => (
+                format!("the TypeSafe API failed (HTTP {status})."),
+                "Try again later.".to_owned(),
+                6,
+            ),
+            ScoreError::Redirect => (
+                "the model service sent a redirect.".to_owned(),
+                "Check JAG_BASE_URL, or unset it.".to_owned(),
+                6,
+            ),
+            ScoreError::UnexpectedStatus { status } => (
+                format!("the TypeSafe API gave HTTP {status}."),
+                "Check JAG_BASE_URL and JAG_MODEL, or unset them.".to_owned(),
+                6,
+            ),
             ScoreError::BadResponse => (
                 "the TypeSafe API gave a response that jag cannot read.".to_owned(),
+                "Check JAG_BASE_URL, or unset it.".to_owned(),
                 6,
             ),
-        };
-        let fix = match exit_code {
-            4 => format!("Check the key at {KEYS_PAGE}, then run jag --setup."),
-            5 => "Add credit to the TypeSafe account.".to_owned(),
-            _ => "Try again later.".to_owned(),
         };
         Failure {
             cause,
@@ -349,11 +366,32 @@ mod tests {
         }
     }
 
+    fn deadline(timeout: u64, retry_wait: u64) -> Duration {
+        let times = Times {
+            timeout: Duration::from_secs(timeout),
+            retry_wait: Duration::from_secs(retry_wait),
+        };
+        ScoreSettings::new("u".into(), "m".into(), times).deadline
+    }
+
     #[test]
-    fn the_standard_deadline_is_two_timeouts_and_one_wait() {
-        let settings = ScoreSettings::new("u".into(), "m".into());
+    fn the_deadline_is_two_timeouts_and_one_wait() {
+        // Compared with the formula, not with a fixed 10 s (Q-as).
+        for (timeout, retry_wait) in [(4, 1), (10, 5), (60, 60), (1, 1)] {
+            assert_eq!(
+                deadline(timeout, retry_wait),
+                Duration::from_secs(2 * timeout + retry_wait)
+            );
+        }
+        assert_eq!(deadline(4, 1), Duration::from_secs(9));
+        assert_eq!(deadline(10, 5), Duration::from_secs(25));
+        assert_eq!(deadline(60, 60), Duration::from_secs(180));
+    }
+
+    #[test]
+    fn the_settings_hold_the_times() {
+        let settings = ScoreSettings::new("u".into(), "m".into(), Times::default());
         assert_eq!(settings.timeout, Duration::from_secs(4));
         assert_eq!(settings.retry_wait, Duration::from_secs(1));
-        assert_eq!(settings.deadline, Duration::from_secs(9));
     }
 }

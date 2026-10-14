@@ -3,12 +3,16 @@
 use std::io::{self, IsTerminal, Write};
 use std::path::PathBuf;
 use std::process::ExitCode;
+use std::time::Duration;
 
 use clap::Parser;
 use clap::error::ErrorKind;
 use grep_regex::RegexMatcherBuilder;
 
-use crate::config::{self, Env, RealFs, TtyPrompter, find_key, model_settings};
+use crate::config::{
+    self, Env, RealFs, TimeSetting, TimeSource, TtyPrompter, find_key, model_settings,
+    parse_seconds,
+};
 use crate::failure::Failure;
 use crate::output::write_text;
 use crate::scorer::{MAX_SCORED, ScoreSettings, rank, score};
@@ -28,7 +32,7 @@ const USAGE_ERROR: &str = "jag: the command line is not valid. Run jag --help to
     name = "jag",
     version,
     arg_required_else_help = true,
-    override_usage = "jag TERM \"QUESTION\" [PATH...]\n       jag --setup\n       jag --forget-key"
+    override_usage = "jag [--timeout SECONDS] [--retry-wait SECONDS] TERM \"QUESTION\" [PATH...]\n       jag --setup\n       jag --forget-key"
 )]
 struct Cli {
     /// Store your TypeSafe API key, with no echo
@@ -38,6 +42,14 @@ struct Cli {
     /// Remove the stored TypeSafe API key
     #[arg(long = "forget-key", conflicts_with_all = ["term", "question", "paths"])]
     forget_key: bool,
+
+    /// Seconds to wait for one model call, from 1 to 60 (default 4)
+    #[arg(long, value_name = "SECONDS", conflicts_with_all = ["setup", "forget_key"])]
+    timeout: Option<String>,
+
+    /// Seconds to wait before the one retry, from 1 to 60 (default 1)
+    #[arg(long = "retry-wait", value_name = "SECONDS", conflicts_with_all = ["setup", "forget_key"])]
+    retry_wait: Option<String>,
 
     /// The regular expression that the lines must match
     #[arg(value_name = "TERM")]
@@ -131,6 +143,8 @@ struct SearchArgs<'a> {
     term: &'a str,
     question: &'a str,
     paths: &'a [PathBuf],
+    /// The parsed `--timeout` and `--retry-wait`.
+    times: (Option<Duration>, Option<Duration>),
 }
 
 /// Step 1: the arguments of a search. No message shows a value.
@@ -165,11 +179,22 @@ fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
             "Use a shorter question.",
         ));
     }
+    // The time options come after the other checks and before the key
+    // (decision 11). The timeout is checked first.
+    let timeout = parse_option(cli.timeout.as_deref(), TimeSetting::Timeout)?;
+    let retry_wait = parse_option(cli.retry_wait.as_deref(), TimeSetting::RetryWait)?;
     Ok(SearchArgs {
         term,
         question,
         paths: &cli.paths,
+        times: (timeout, retry_wait),
     })
+}
+
+fn parse_option(text: Option<&str>, setting: TimeSetting) -> Result<Option<Duration>, Failure> {
+    text.map(|text| parse_seconds(text, setting, TimeSource::Option))
+        .transpose()
+        .map_err(Failure::from)
 }
 
 /// The search flow (spec "The search flow"). Gives the exit code: 0 for a
@@ -183,7 +208,7 @@ fn search(
     let args = search_args(cli)?;
     // The key comes before any file read (decision 18).
     let (key, _source) = find_key(env, &RealFs).map_err(Failure::from)?;
-    let settings = model_settings(env).map_err(Failure::from)?;
+    let settings = model_settings(env, args.times).map_err(Failure::from)?;
 
     let matcher = RegexMatcherBuilder::new()
         .line_terminator(Some(b'\n'))
@@ -216,7 +241,7 @@ fn search(
         let _ = writeln!(stderr, "jag: scored {MAX_SCORED} of {planned} results");
     }
 
-    let score_settings = ScoreSettings::new(settings.base_url, settings.model);
+    let score_settings = ScoreSettings::new(settings.base_url, settings.model, settings.times);
     let scores = score(&snippets, args.question, &key, &score_settings).map_err(Failure::from)?;
     let ranked = rank(snippets, scores);
 

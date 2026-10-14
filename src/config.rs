@@ -19,7 +19,7 @@ use crate::failure::Failure;
 
 pub use change::{ChangeState, load_for_change, write_key_file};
 pub use fs::{Fs, OpenFile, RealFs};
-pub use model::{ModelSettings, model_settings};
+pub use model::{ModelSettings, TimeSetting, TimeSource, Times, model_settings, parse_seconds};
 pub use setup::{Prompter, TtyPrompter, forget_key, setup};
 
 /// The page where a user gets a key (DECISION-09).
@@ -149,6 +149,12 @@ pub enum ConfigError {
     BaseUrlBad,
     /// `JAG_MODEL` is not text. The text never shows it.
     ModelBad,
+    /// A time option or a time variable is not a whole number of seconds
+    /// from 1 to 60. The text never shows the value.
+    TimeBad {
+        setting: TimeSetting,
+        source: TimeSource,
+    },
 }
 
 impl From<ConfigError> for Failure {
@@ -268,6 +274,33 @@ impl From<ConfigError> for Failure {
                 "Set JAG_MODEL to a model name, or unset it.".to_owned(),
                 2,
             ),
+            ConfigError::TimeBad { setting, source } => {
+                let (name, option, example) = match (setting, source) {
+                    (TimeSetting::Timeout, TimeSource::Option) => {
+                        ("the value of --timeout", "--timeout", 10)
+                    }
+                    (TimeSetting::Timeout, TimeSource::Variable) => {
+                        ("JAG_TIMEOUT", "JAG_TIMEOUT", 10)
+                    }
+                    (TimeSetting::RetryWait, TimeSource::Option) => {
+                        ("the value of --retry-wait", "--retry-wait", 2)
+                    }
+                    (TimeSetting::RetryWait, TimeSource::Variable) => {
+                        ("JAG_RETRY_WAIT", "JAG_RETRY_WAIT", 2)
+                    }
+                };
+                let fix = match source {
+                    TimeSource::Option => format!("Use a number such as {option} {example}."),
+                    TimeSource::Variable => {
+                        format!("Set {option} to a number such as {example}, or unset it.")
+                    }
+                };
+                (
+                    format!("{name} is not a whole number of seconds from 1 to 60."),
+                    fix,
+                    2,
+                )
+            }
         };
         Failure {
             cause,

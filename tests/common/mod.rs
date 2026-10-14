@@ -32,7 +32,9 @@ pub fn jag_bare(home: &Path) -> Command {
         .env_remove("JAG_TYPESAFE_API_KEY")
         .env_remove("TYPESAFE_API_KEY")
         .env_remove("JAG_BASE_URL")
-        .env_remove("JAG_MODEL");
+        .env_remove("JAG_MODEL")
+        .env_remove("JAG_TIMEOUT")
+        .env_remove("JAG_RETRY_WAIT");
     for name in PROXY_VARIABLES {
         command.env_remove(name);
     }

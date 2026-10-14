@@ -41,7 +41,11 @@ fn help_and_version_exit_0() {
         .arg("--help")
         .assert()
         .success()
-        .stdout(predicate::str::contains("jag TERM \"QUESTION\" [PATH...]"));
+        .stdout(predicate::str::contains(
+            "jag [--timeout SECONDS] [--retry-wait SECONDS] TERM \"QUESTION\" [PATH...]",
+        ))
+        .stdout(predicate::str::contains("--timeout <SECONDS>"))
+        .stdout(predicate::str::contains("--retry-wait <SECONDS>"));
     jag_bare(home.path())
         .arg("--version")
         .assert()
@@ -208,4 +212,96 @@ fn localhost_is_an_allowed_plain_http_host() {
     .output()
     .expect("run jag");
     assert_ne!(output.status.code(), Some(2));
+}
+
+// FEATURE-03: the time options and the time variables.
+const TIME_MESSAGE: &str = "is not a whole number of seconds from 1 to 60.";
+
+/// A search in a folder with one match, with the made-up key.
+fn time_search(extra: &[&str], environment: &[(&str, &str)]) -> std::process::Output {
+    let server = FakeServer::constant(0.8);
+    let home = home();
+    let dir = tempfile::tempdir().expect("temporary folder");
+    write(dir.path(), "a.txt", b"needle\n");
+    let mut command = jag(home.path(), &server.base_url());
+    for (name, value) in environment {
+        command.env(name, value);
+    }
+    let output = command
+        .args(extra)
+        .args(["needle", "which line?"])
+        .arg(dir.path())
+        .output()
+        .expect("run jag");
+    assert!(server.requests().is_empty() || output.status.success());
+    output
+}
+
+#[test]
+fn a_bad_time_value_exits_2_and_no_message_shows_it() {
+    let bad = "SENTINEL-SENTINEL-SENTINEL";
+    type Case<'a> = (&'a [&'a str], &'a [(&'a str, &'a str)], &'a str);
+    let cases: [Case; 4] = [
+        (&["--timeout", bad], &[], "the value of --timeout"),
+        (&["--retry-wait", bad], &[], "the value of --retry-wait"),
+        (&[], &[("JAG_TIMEOUT", bad)], "JAG_TIMEOUT"),
+        (&[], &[("JAG_RETRY_WAIT", bad)], "JAG_RETRY_WAIT"),
+    ];
+    for (extra, environment, name) in cases {
+        let output = time_search(extra, environment);
+        let err = String::from_utf8_lossy(&output.stderr).into_owned();
+        assert_eq!(output.status.code(), Some(2), "{name}");
+        assert!(output.stdout.is_empty(), "{name}");
+        assert!(err.contains(name) && err.contains(TIME_MESSAGE), "{err}");
+        assert!(!err.contains("SENTINEL"), "{err}");
+    }
+}
+
+#[test]
+fn a_time_value_out_of_range_exits_2() {
+    for value in ["0", "61", "1.5", "-1", "4s"] {
+        let output = time_search(&["--timeout", value], &[]);
+        assert_eq!(output.status.code(), Some(2), "{value}");
+        let output = time_search(&[], &[("JAG_RETRY_WAIT", value)]);
+        assert_eq!(output.status.code(), Some(2), "{value}");
+    }
+}
+
+#[test]
+fn a_bad_time_option_comes_before_the_key_and_a_bad_variable_comes_after() {
+    let dir = tempfile::tempdir().expect("temporary folder");
+    write(dir.path(), "a.txt", b"needle\n");
+    for option in ["--timeout", "--retry-wait"] {
+        let home = home();
+        jag_bare(home.path())
+            .args([option, "abc", "needle", "which line?"])
+            .arg(dir.path())
+            .assert()
+            .code(2);
+    }
+    for variable in ["JAG_TIMEOUT", "JAG_RETRY_WAIT"] {
+        let home = home();
+        jag_bare(home.path())
+            .env(variable, "abc")
+            .args(["needle", "which line?"])
+            .arg(dir.path())
+            .assert()
+            .code(3);
+    }
+}
+
+#[test]
+fn a_time_option_with_setup_or_forget_key_gives_the_fixed_line() {
+    for args in [
+        ["--setup", "--timeout", "5"],
+        ["--forget-key", "--retry-wait", "5"],
+    ] {
+        let home = home();
+        jag_bare(home.path())
+            .args(args)
+            .assert()
+            .code(2)
+            .stdout(predicate::str::is_empty())
+            .stderr(FIXED_LINE);
+    }
 }
