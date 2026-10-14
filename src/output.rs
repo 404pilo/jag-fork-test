@@ -509,7 +509,7 @@ pub fn write_files(
     let items: Vec<Vec<u8>> = files
         .iter()
         .filter(|file| !file.lines.is_empty())
-        .map(|file| colored_line(colored, &[(PATH, file.path.as_os_str().as_encoded_bytes())]))
+        .map(|file| colored_line(colored, &[(PATH, file.source.label())]))
         .collect();
     write_whole_lines(out, &items, limit)
 }
@@ -528,13 +528,7 @@ pub fn write_counts(
         .iter()
         .map(|file| {
             let count = file.lines.len().to_string();
-            let mut line = colored_line(
-                colored,
-                &[
-                    (PATH, file.path.as_os_str().as_encoded_bytes()),
-                    (SEPARATOR, b":"),
-                ],
-            );
+            let mut line = colored_line(colored, &[(PATH, file.source.label()), (SEPARATOR, b":")]);
             // The line ends with `\n`: put the count before it.
             line.pop();
             line.extend_from_slice(count.as_bytes());
@@ -1338,7 +1332,7 @@ mod tests {
 
     fn found(path: &str, count: u64) -> FileMatches {
         FileMatches {
-            path: PathBuf::from(path),
+            source: crate::search::Source::File(PathBuf::from(path)),
             lines: (1..=count)
                 .map(|number| crate::search::walk::MatchLine {
                     line_number: number,

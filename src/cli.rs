@@ -10,6 +10,7 @@ use std::process::ExitCode;
 use std::sync::Arc;
 use std::time::Duration;
 
+use clap::builder::TypedValueParser;
 use clap::error::ErrorKind;
 use clap::{CommandFactory, FromArgMatches, Parser};
 use grep_matcher::Matcher;
@@ -28,10 +29,14 @@ use crate::output::{
 };
 use crate::prerank;
 use crate::scorer::{ScoreError, ScoreSettings, probe, rank, score};
+use crate::search::input::{Input, no_path_input};
 use crate::search::snippet::{
     ContextLines, Snippet, line_windows, match_texts, plan_windows, read_snippets,
 };
-use crate::search::{FileFilter, GlobKind, ScanOptions, ScanReport, WalkWarning, scan};
+use crate::search::{
+    FileFilter, GlobKind, ScanOptions, ScanReport, WalkWarning, scan, scan_current_folder,
+    scan_input,
+};
 use grep::{MatchOptions, Report, build_matcher};
 use stop::Stop;
 
@@ -173,8 +178,14 @@ struct Cli {
     #[arg(value_name = "TERM")]
     term: Option<OsString>,
 
-    /// The files and folders to search
-    #[arg(value_name = "PATH")]
+    /// The files and folders to search. With no path, jag searches the text of a pipe or the current folder
+    // The default parser of `PathBuf` refuses an empty path with the fixed line
+    // of an argument error. This parser keeps it for the failure of
+    // FEATURE-14 decision 8.
+    #[arg(
+        value_name = "PATH",
+        value_parser = clap::builder::OsStringValueParser::new().map(PathBuf::from)
+    )]
     paths: Vec<PathBuf>,
 }
 
@@ -464,7 +475,7 @@ fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
         let Some((term, rest)) = words.split_first() else {
             return Err(usage_failure(
                 "a search needs a term.",
-                "Use: jag [OPTIONS] TERM PATH...",
+                "Use: jag [OPTIONS] TERM [PATH...]",
             ));
         };
         let term = term.to_str().ok_or_else(argument_failure)?;
@@ -472,11 +483,21 @@ fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
     } else {
         (cli.terms.iter().map(String::as_str).collect(), words)
     };
-    if path_words.is_empty() {
-        return Err(usage_failure(
-            "a search needs a path.",
-            "Searching standard input comes later.",
-        ));
+    // A search needs no path. The paths `-` and "" are usage errors, in the
+    // order of the command line (FEATURE-14, decision 8).
+    for path in &path_words {
+        if *path == OsStr::new("-") {
+            return Err(usage_failure(
+                "the path - is not valid.",
+                "To search the text of a pipe, give no path. To search a file with the name -, give ./-.",
+            ));
+        }
+        if path.is_empty() {
+            return Err(usage_failure(
+                "a path is empty.",
+                "Give the path of a file or a folder, or give no path.",
+            ));
+        }
     }
     let question = cli.ask.as_deref();
     if let Some(question) = question {
@@ -626,7 +647,7 @@ fn search(
         files: args.files.clone(),
         ..ScanOptions::default()
     };
-    let report = scan(&args.paths, &matcher, &options);
+    let (report, input) = scan_search(&args.paths, &matcher, &options);
     let windows = plan_windows(&report.files, args.context.unwrap_or(ContextLines::DEFAULT));
     let total = windows.len();
     // Only a search with more results than the limit pre-ranks them, from
@@ -641,7 +662,7 @@ fn search(
     } else {
         windows
     };
-    let (snippets, read_warnings) = read_snippets(&kept);
+    let (snippets, read_warnings) = read_snippets(&kept, input.as_deref());
 
     // A failure after this point finds in the summary what jag counted.
     record(
@@ -654,7 +675,7 @@ fn search(
     );
 
     if snippets.is_empty() {
-        return no_result(context, summary, size, stdout, stderr);
+        return no_result(&report, context, summary, size, stdout, stderr);
     }
     let cost_limit_reached = total > limit;
     if cost_limit_reached && mode == Mode::Text {
@@ -692,6 +713,7 @@ fn search(
     let no_good_answer = is_no_good_answer(&ranked);
     let exit_code = |left_out: bool| {
         search_exit_code(SearchOutcome {
+            path_missing: report.path_missing(),
             no_good_answer,
             cost_limit_reached,
             left_out,
@@ -755,7 +777,7 @@ fn plain(
         keep_files_with_no_match: args.report == Report::Counts,
         ..ScanOptions::default()
     };
-    let report = scan(&args.paths, &matcher, &options);
+    let (report, input) = scan_search(&args.paths, &matcher, &options);
     if args.report != Report::Lines {
         let colored = colored(cli, env, stdout_is_terminal);
         return grep::write_report(
@@ -774,7 +796,7 @@ fn plain(
         Some(lines) => plan_windows(&report.files, lines),
         None => line_windows(&report.files),
     };
-    let (lines, read_warnings) = read_snippets(&windows);
+    let (lines, read_warnings) = read_snippets(&windows, input.as_deref());
     record(
         summary,
         &report,
@@ -785,10 +807,13 @@ fn plain(
     );
 
     if lines.is_empty() {
-        return no_result(context, summary, size, stdout, stderr);
+        return no_result(&report, context, summary, size, stdout, stderr);
     }
+    // A path that does not exist gives 2 also when lines match, as in grep
+    // (FEATURE-14, decision 20).
     let exit_code = |left_out: bool| {
         search_exit_code(SearchOutcome {
+            path_missing: report.path_missing(),
             no_good_answer: false,
             cost_limit_reached: false,
             left_out,
@@ -868,20 +893,48 @@ fn record(
     }
 }
 
-/// A search with no result: exit 1, and in structured mode the document.
+/// A search with no result: exit 2 when a path does not exist, else 1
+/// (FEATURE-14, decision 20), and in structured mode the document.
 fn no_result(
+    report: &ScanReport,
     context: &Context,
     summary: &mut Summary,
     limit: Option<usize>,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> Result<u8, Failure> {
+    let code = if report.path_missing() { 2 } else { 1 };
     if context.mode == Mode::Json {
         let mut buffer = Vec::new();
-        write_document(&mut buffer, summary, &[], limit, &|_| 1).map_err(|_| write_failure())?;
-        return Ok(emit_claimed(context.stop, stdout, stderr, &buffer, 1));
+        write_document(&mut buffer, summary, &[], limit, &|_| code).map_err(|_| write_failure())?;
+        return Ok(emit_claimed(context.stop, stdout, stderr, &buffer, code));
     }
-    Ok(1)
+    Ok(code)
+}
+
+/// The scan of a search (FEATURE-14, "The search flow"). With paths, jag
+/// never reads standard input (decision 4). With no path, it searches the
+/// piped text or the current folder. Gives the report and the piped text.
+fn scan_search(
+    paths: &[PathBuf],
+    matcher: &RegexMatcher,
+    options: &ScanOptions,
+) -> (ScanReport, Option<Vec<u8>>) {
+    if !paths.is_empty() {
+        return (scan(paths, matcher, options), None);
+    }
+    match no_path_input() {
+        Input::PipedText(bytes) => {
+            let report = scan_input(&bytes, matcher, options.keep_files_with_no_match);
+            (report, Some(bytes))
+        }
+        Input::CurrentFolder => (scan_current_folder(matcher, options), None),
+        Input::ReadError(warning) => {
+            let mut report = ScanReport::empty();
+            report.warnings.push(warning);
+            (report, None)
+        }
+    }
 }
 
 /// `emit` for the search flow: it takes the output first. When a stop owns
@@ -947,15 +1000,20 @@ fn check(
 
 /// What a search that got its scores found.
 struct SearchOutcome {
+    /// A path of the command line does not exist (FEATURE-14, decision 7).
+    path_missing: bool,
     no_good_answer: bool,
     cost_limit_reached: bool,
     /// The size limit left out a result or cut the top result.
     left_out: bool,
 }
 
-/// IF-4 order: 1 wins, then 7, then 8, then 0 (DECISION-13, DECISION-47).
+/// IF-4 order with FEATURE-14 decision 20: 2 wins, then 1, then 7, then 8,
+/// then 0 (DECISION-13, DECISION-47).
 fn search_exit_code(outcome: SearchOutcome) -> u8 {
-    if outcome.no_good_answer {
+    if outcome.path_missing {
+        2
+    } else if outcome.no_good_answer {
         1
     } else if outcome.cost_limit_reached {
         7
@@ -1113,7 +1171,17 @@ mod tests {
     }
 
     fn code(no_good_answer: bool, cost_limit_reached: bool, left_out: bool) -> u8 {
+        code_with(false, no_good_answer, cost_limit_reached, left_out)
+    }
+
+    fn code_with(
+        path_missing: bool,
+        no_good_answer: bool,
+        cost_limit_reached: bool,
+        left_out: bool,
+    ) -> u8 {
         search_exit_code(SearchOutcome {
+            path_missing,
             no_good_answer,
             cost_limit_reached,
             left_out,
@@ -1121,15 +1189,53 @@ mod tests {
     }
 
     #[test]
-    fn the_exit_code_follows_the_order_1_7_8_0() {
-        for cost_limit_reached in [false, true] {
-            for left_out in [false, true] {
-                assert_eq!(code(true, cost_limit_reached, left_out), 1);
+    fn the_exit_code_follows_the_order_2_1_7_8_0() {
+        for no_good_answer in [false, true] {
+            for cost_limit_reached in [false, true] {
+                for left_out in [false, true] {
+                    assert_eq!(
+                        code_with(true, no_good_answer, cost_limit_reached, left_out),
+                        2
+                    );
+                    if no_good_answer {
+                        assert_eq!(code(true, cost_limit_reached, left_out), 1);
+                    }
+                }
             }
         }
         assert_eq!(code(false, true, true), 7);
         assert_eq!(code(false, true, false), 7);
         assert_eq!(code(false, false, true), 8);
         assert_eq!(code(false, false, false), 0);
+    }
+
+    fn search_failure(list: &[&str]) -> Option<String> {
+        let mut all = vec!["jag"];
+        all.extend_from_slice(list);
+        let cli = Cli::try_parse_from(all).expect("parse");
+        search_args(&cli).err().map(|failure| failure.render())
+    }
+
+    // Decision 1 of FEATURE-14: a search needs no path.
+    #[test]
+    fn a_search_with_no_path_passes_step_1() {
+        assert_eq!(search_failure(&["needle"]), None);
+        assert_eq!(search_failure(&["--ask", "q", "needle"]), None);
+        let failure = search_failure(&["--json"]).expect("no term");
+        assert!(failure.contains("Use: jag [OPTIONS] TERM [PATH...]"));
+    }
+
+    // Decision 8 of FEATURE-14.
+    #[test]
+    fn the_paths_dash_and_empty_are_usage_errors_in_the_order_of_the_command_line() {
+        let dash = search_failure(&["needle", "a.txt", "-"]).expect("dash");
+        assert!(dash.contains("the path - is not valid."));
+        assert!(dash.contains("give ./-."));
+        let empty = search_failure(&["needle", "a.txt", ""]).expect("empty");
+        assert!(empty.contains("a path is empty."));
+        assert!(!empty.contains("  "));
+        let first = search_failure(&["needle", "", "-"]).expect("both");
+        assert!(first.contains("a path is empty."));
+        assert_eq!(search_failure(&["needle", "./-"]), None);
     }
 }

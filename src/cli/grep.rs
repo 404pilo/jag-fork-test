@@ -242,8 +242,8 @@ pub(super) fn file_filter(globs: &[(GlobKind, String)]) -> Result<FileFilter, Fa
 /// goes to the error stream and the exit code is 8 (FEATURE-09). `-q` writes
 /// nothing, so the limit has no effect on it.
 ///
-/// FEATURE-14 gives exit 2 here for a path that does not exist, except for
-/// `-q` with a match (decision 21).
+/// A path that does not exist gives exit 2, except for `-q` with a match
+/// (decision 21).
 pub(super) fn write_report(
     report: Report,
     colored: bool,
@@ -272,17 +272,17 @@ pub(super) fn write_report(
     if let Some(notice) = size_notice(&shown, size) {
         context.stop.notice(stderr, &notice);
     }
-    // IF-4: 1 comes before 8, so `-c` with no match exits with 1 (decision 29).
-    let code = if found == 0 {
-        1
-    } else if shown.limited() {
-        search_exit_code(SearchOutcome {
-            no_good_answer: false,
-            cost_limit_reached: false,
-            left_out: true,
-        })
-    } else {
+    // IF-4 and FEATURE-14 decision 20: 2 comes first, then 1, then 8. `-q` with
+    // a match exits 0 even with a missing path (decision 21).
+    let code = if report == Report::Quiet && found > 0 {
         0
+    } else {
+        search_exit_code(SearchOutcome {
+            path_missing: scan.path_missing(),
+            no_good_answer: found == 0,
+            cost_limit_reached: false,
+            left_out: shown.limited(),
+        })
     };
     Ok(emit_claimed(context.stop, stdout, stderr, &buffer, code))
 }
@@ -439,8 +439,9 @@ mod tests {
         assert_eq!(paths(&args), ["q", "needle"]);
 
         let cli = parsed(&["-e", "needle"]);
-        let failure = search_args(&cli).expect_err("a failure");
-        assert_eq!(failure.cause, "a search needs a path.");
+        let args = search_args(&cli).expect("args");
+        assert_eq!(args.terms, ["needle"]);
+        assert!(args.paths.is_empty());
     }
 
     #[test]

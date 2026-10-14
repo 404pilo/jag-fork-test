@@ -10,7 +10,8 @@ use std::path::{Path, PathBuf};
 
 use grep_regex::RegexMatcher;
 use jag::search::{
-    FileFilter, GlobKind, ScanOptions, ScanReport, SkipCounts, WalkWarning, WarningKind, scan,
+    FileFilter, GlobKind, ScanOptions, ScanReport, SkipCounts, Source, WalkWarning, WarningKind,
+    scan,
 };
 use tempfile::TempDir;
 
@@ -47,7 +48,9 @@ fn names(report: &ScanReport, root: &Path) -> Vec<String> {
         .files
         .iter()
         .map(|file| {
-            file.path
+            file.source
+                .path()
+                .expect("a file")
                 .strip_prefix(root)
                 .expect("a path under the root")
                 .display()
@@ -316,7 +319,7 @@ fn a_root_that_is_a_file_is_searched() {
     let file = dir.path().join("a.txt");
     let report = run_roots(std::slice::from_ref(&file));
     assert_eq!(report.files.len(), 1);
-    assert_eq!(report.files[0].path, file);
+    assert_eq!(report.files[0].source, Source::File(file));
 }
 
 #[test]
@@ -408,7 +411,7 @@ mod unix {
         symlink(root.join("target.txt"), &link).expect("make link");
         let report = run_roots(std::slice::from_ref(&link));
         assert_eq!(report.files.len(), 1);
-        assert_eq!(report.files[0].path, link);
+        assert_eq!(report.files[0].source, Source::File(link));
     }
 
     #[test]
@@ -422,7 +425,11 @@ mod unix {
         let report = run_roots(std::slice::from_ref(&link));
         assert_eq!(names(&report, &link), ["a.txt", "x/b.txt"]);
         for file in &report.files {
-            assert!(file.path.starts_with(&link));
+            assert!(
+                file.source
+                    .path()
+                    .is_some_and(|path| path.starts_with(&link))
+            );
         }
     }
 }
@@ -438,6 +445,91 @@ fn files_come_in_the_order_of_the_paths_on_the_command_line() {
     assert_eq!(names(&report, root), ["b/1.txt", "a/10.txt", "a/2.txt"]);
     let report = run_roots(&[root.join("a"), root.join("b")]);
     assert_eq!(names(&report, root), ["a/10.txt", "a/2.txt", "b/1.txt"]);
+}
+
+fn run_eight_threads(roots: &[PathBuf]) -> ScanReport {
+    let matcher = RegexMatcher::new("needle").expect("a valid pattern");
+    let options = ScanOptions {
+        threads: 8,
+        ..options()
+    };
+    scan(roots, &matcher, &options)
+}
+
+// CRITERION-61 and decision 6 of FEATURE-14: the order of the paths on the
+// command line, then the byte order inside each path, with 8 threads.
+#[test]
+fn files_and_folders_come_in_the_order_of_the_command_line_with_8_threads() {
+    let dir = TempDir::new().expect("temporary folder");
+    let root = dir.path();
+    for file in ["z.txt", "dir/b.txt", "dir/a.txt", "a.txt"] {
+        write(root, file, b"needle\n");
+    }
+    let roots = [root.join("z.txt"), root.join("dir"), root.join("a.txt")];
+    for _ in 0..20 {
+        let report = run_eight_threads(&roots);
+        assert_eq!(
+            names(&report, root),
+            ["z.txt", "dir/a.txt", "dir/b.txt", "a.txt"]
+        );
+    }
+}
+
+// Decision 6 of FEATURE-14: a path two times and paths that overlap, as
+// `grep -r needle dir dir/sub dir`.
+#[test]
+fn a_path_two_times_and_paths_that_overlap_keep_the_order_with_8_threads() {
+    let dir = TempDir::new().expect("temporary folder");
+    let root = dir.path();
+    write(root, "dir/a.txt", b"needle\n");
+    write(root, "dir/sub/c.txt", b"needle\n");
+    let roots = [root.join("dir"), root.join("dir/sub"), root.join("dir")];
+    for _ in 0..20 {
+        let report = run_eight_threads(&roots);
+        assert_eq!(
+            names(&report, root),
+            [
+                "dir/a.txt",
+                "dir/sub/c.txt",
+                "dir/sub/c.txt",
+                "dir/a.txt",
+                "dir/sub/c.txt"
+            ]
+        );
+    }
+}
+
+// Decision 7 of FEATURE-14: each path that does not exist gives one warning,
+// in the order of the command line.
+#[test]
+fn paths_that_do_not_exist_give_warnings_in_the_order_of_the_command_line() {
+    let dir = TempDir::new().expect("temporary folder");
+    let root = dir.path();
+    write(root, "a.txt", b"needle\n");
+    let roots = [
+        root.join("nofile2"),
+        root.join("a.txt"),
+        root.join("nofile1"),
+    ];
+    for _ in 0..20 {
+        let report = run_eight_threads(&roots);
+        assert_eq!(names(&report, root), ["a.txt"]);
+        assert_eq!(
+            report.warnings,
+            [
+                WalkWarning {
+                    path: Some(root.join("nofile2")),
+                    kind: WarningKind::Missing,
+                },
+                WalkWarning {
+                    path: Some(root.join("nofile1")),
+                    kind: WarningKind::Missing,
+                },
+            ]
+        );
+        assert!(report.path_missing());
+        assert_eq!(report.skipped, SkipCounts::default());
+    }
 }
 
 // FEATURE-13: the globs of --include and --exclude, and the files with no match.

@@ -400,8 +400,12 @@ fn decision_1_the_old_form_makes_no_call_and_names_the_path() {
     );
     assert!(server.requests().is_empty());
     assert_eq!(run.stdout, THREE_LINES);
+    // FEATURE-14, decisions 7 and 20: the warning of a path that does not
+    // exist, and exit 2 at the end.
+    assert_eq!(run.code, Some(2));
     assert!(
-        run.stderr.contains("cannot read which line says retry"),
+        run.stderr
+            .contains("jag: the path which line says retry does not exist"),
         "{}",
         run.stderr
     );

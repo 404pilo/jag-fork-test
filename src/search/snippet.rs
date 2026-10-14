@@ -5,8 +5,8 @@
 //! gives the lines of each window.
 
 use std::borrow::Cow;
-use std::path::PathBuf;
 
+pub use super::Source;
 use super::walk::{FileMatches, WalkWarning, WarningKind};
 
 /// The lines before and after a match.
@@ -16,26 +16,6 @@ pub const MAX_LINES: u64 = 12;
 
 /// The most characters of a line in a request and in the output (decision 21).
 pub const MAX_LINE_CHARS: usize = 300;
-
-/// Where the text of a result came from.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum Source {
-    File(PathBuf),
-    StandardInput,
-}
-
-impl Source {
-    /// The label of standard input, in the place of a path.
-    pub const STANDARD_INPUT_LABEL: &'static str = "(standard input)";
-
-    /// The bytes that show the source: the path as typed, or the label.
-    pub fn label(&self) -> &[u8] {
-        match self {
-            Source::File(path) => path.as_os_str().as_encoded_bytes(),
-            Source::StandardInput => Self::STANDARD_INPUT_LABEL.as_bytes(),
-        }
-    }
-}
 
 /// One line of a result.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -153,7 +133,7 @@ impl ContextLines {
 /// The plan of one result. The plan uses only line numbers.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Window {
-    pub path: PathBuf,
+    pub source: Source,
     pub start: u64,
     pub end: u64,
     /// The numbers of the matching lines in the window, in line order.
@@ -178,7 +158,7 @@ pub fn plan_windows(files: &[FileMatches], context: ContextLines) -> Vec<Window>
         for line in &file.lines {
             let m = line.line_number;
             current = Some(match current.take() {
-                None => open_window(&file.path, m, 1, context),
+                None => open_window(&file.source, m, 1, context),
                 Some(mut window) => {
                     if m <= last_line(window.start)
                         && m.saturating_sub(context.before) <= window.end.saturating_add(1)
@@ -192,7 +172,7 @@ pub fn plan_windows(files: &[FileMatches], context: ContextLines) -> Vec<Window>
                     } else {
                         let first_free = window.end.saturating_add(1);
                         windows.push(window);
-                        open_window(&file.path, m, first_free, context)
+                        open_window(&file.source, m, first_free, context)
                     }
                 }
             });
@@ -203,9 +183,9 @@ pub fn plan_windows(files: &[FileMatches], context: ContextLines) -> Vec<Window>
 }
 
 /// A new window for the match `m`. No line before `first_free` is in it.
-fn open_window(path: &std::path::Path, m: u64, first_free: u64, context: ContextLines) -> Window {
+fn open_window(source: &Source, m: u64, first_free: u64, context: ContextLines) -> Window {
     Window {
-        path: path.to_path_buf(),
+        source: source.clone(),
         start: m.saturating_sub(context.before).max(first_free),
         end: m.saturating_add(context.after),
         matches: vec![m],
@@ -219,7 +199,7 @@ pub fn line_windows(files: &[FileMatches]) -> Vec<Window> {
         .iter()
         .flat_map(|file| {
             file.lines.iter().map(|line| Window {
-                path: file.path.clone(),
+                source: file.source.clone(),
                 start: line.line_number,
                 end: line.line_number,
                 matches: vec![line.line_number],
@@ -256,25 +236,35 @@ pub fn match_texts<'a>(files: &'a [FileMatches], windows: &[Window]) -> Vec<Vec<
 }
 
 /// Read each file of the windows one time and give the lines of each window.
+/// A window of standard input takes its lines from `input`, the piped text
+/// that the scan searched (decision 13 of FEATURE-14).
 ///
 /// A file that jag cannot read gives a warning and no result. The file can
 /// change after the scan, so the end of a window stops at the last line, and
 /// a match past the last line is dropped.
-pub fn read_snippets(windows: &[Window]) -> (Vec<Snippet>, Vec<WalkWarning>) {
+pub fn read_snippets(windows: &[Window], input: Option<&[u8]>) -> (Vec<Snippet>, Vec<WalkWarning>) {
     let mut snippets = Vec::new();
     let mut warnings = Vec::new();
     let mut index = 0;
     while index < windows.len() {
-        let path = &windows[index].path;
+        let source = &windows[index].source;
         let group_end = windows[index..]
             .iter()
-            .position(|window| &window.path != path)
+            .position(|window| &window.source != source)
             .map_or(windows.len(), |offset| index + offset);
-        match std::fs::read(path) {
-            Err(error) => warnings.push(WalkWarning {
-                path: Some(path.clone()),
-                kind: WarningKind::Read(error.kind()),
-            }),
+        let bytes = match source {
+            Source::File(path) => {
+                std::fs::read(path)
+                    .map(Cow::Owned)
+                    .map_err(|error| WalkWarning {
+                        path: Some(path.clone()),
+                        kind: WarningKind::Read(error.kind()),
+                    })
+            }
+            Source::StandardInput => Ok(Cow::Borrowed(input.unwrap_or_default())),
+        };
+        match bytes {
+            Err(warning) => warnings.push(warning),
             Ok(bytes) => {
                 let bytes = decode(&bytes);
                 let lines = split_lines(&bytes);
@@ -351,7 +341,7 @@ fn snippet_of(window: &Window, lines: &[&[u8]]) -> Option<Snippet> {
         })
         .collect();
     Some(Snippet {
-        source: Source::File(window.path.clone()),
+        source: window.source.clone(),
         lines,
     })
 }
@@ -360,7 +350,7 @@ fn snippet_of(window: &Window, lines: &[&[u8]]) -> Option<Snippet> {
 mod tests {
     use std::fs;
     use std::io;
-    use std::path::Path;
+    use std::path::{Path, PathBuf};
 
     use tempfile::TempDir;
 
@@ -369,7 +359,7 @@ mod tests {
 
     fn file(path: &str, numbers: &[u64]) -> FileMatches {
         FileMatches {
-            path: PathBuf::from(path),
+            source: Source::File(PathBuf::from(path)),
             lines: numbers
                 .iter()
                 .map(|number| MatchLine {
@@ -387,7 +377,7 @@ mod tests {
             .iter()
             .map(|window| {
                 (
-                    window.path.to_str().expect("text"),
+                    window.source.path().and_then(Path::to_str).expect("text"),
                     window.start,
                     window.end,
                     window.matches.clone(),
@@ -410,7 +400,7 @@ mod tests {
         fs::write(dir.path().join("a.txt"), b"one\r\ntwo\nthree\n").expect("write");
         let path = dir.path().join("a.txt");
         let files = [FileMatches {
-            path,
+            source: Source::File(path),
             lines: vec![
                 MatchLine {
                     line_number: 1,
@@ -422,7 +412,7 @@ mod tests {
                 },
             ],
         }];
-        let (snippets, warnings) = read_snippets(&line_windows(&files));
+        let (snippets, warnings) = read_snippets(&line_windows(&files), None);
         assert!(warnings.is_empty());
         assert_eq!(snippets.len(), 2);
         assert_eq!(snippets[0].lines.len(), 1);
@@ -566,7 +556,7 @@ mod tests {
     #[test]
     fn a_file_line_of_1000_characters_is_read_as_300_and_a_cut_of_700() {
         let (_dir, path) = folder_with("a.txt", format!("{}\n", "x".repeat(1000)).as_bytes());
-        let (snippets, _) = read_snippets(&[window(&path, 1, 1, &[1])]);
+        let (snippets, _) = read_snippets(&[window(&path, 1, 1, &[1])], None);
         assert_eq!(snippets[0].lines[0].text.len(), 300);
         assert_eq!(snippets[0].lines[0].cut, 700);
     }
@@ -629,8 +619,8 @@ mod tests {
     #[test]
     fn windows_follow_the_order_of_the_files() {
         let windows = plan_windows(&[file("a", &[1]), file("b", &[1])], ContextLines::DEFAULT);
-        assert_eq!(windows[0].path, PathBuf::from("a"));
-        assert_eq!(windows[1].path, PathBuf::from("b"));
+        assert_eq!(windows[0].source, Source::File(PathBuf::from("a")));
+        assert_eq!(windows[1].source, Source::File(PathBuf::from("b")));
     }
 
     #[test]
@@ -660,7 +650,7 @@ mod tests {
     fn match_texts_refuses_windows_that_do_not_match_the_files() {
         let files = [file("a", &[10])];
         let windows = [Window {
-            path: PathBuf::from("a"),
+            source: Source::File(PathBuf::from("a")),
             start: 1,
             end: 5,
             matches: vec![3],
@@ -677,7 +667,7 @@ mod tests {
 
     fn window(path: &Path, start: u64, end: u64, matches: &[u64]) -> Window {
         Window {
-            path: path.to_path_buf(),
+            source: Source::File(path.to_path_buf()),
             start,
             end,
             matches: matches.to_vec(),
@@ -691,7 +681,7 @@ mod tests {
     #[test]
     fn a_match_on_the_last_line_ends_at_the_last_line() {
         let (_dir, path) = folder_with("a.txt", b"1\n2\n3\n4\n5\n");
-        let (snippets, warnings) = read_snippets(&[window(&path, 2, 8, &[5])]);
+        let (snippets, warnings) = read_snippets(&[window(&path, 2, 8, &[5])], None);
         assert!(warnings.is_empty());
         assert_eq!(numbers(&snippets[0]), [2, 3, 4, 5]);
         let last = snippets[0].lines.last().expect("a last line");
@@ -702,15 +692,17 @@ mod tests {
     #[test]
     fn a_file_with_no_final_newline_gives_the_same_lines() {
         let (_dir, path) = folder_with("a.txt", b"1\n2\n3\n4\n5");
-        let (snippets, _) = read_snippets(&[window(&path, 2, 8, &[5])]);
+        let (snippets, _) = read_snippets(&[window(&path, 2, 8, &[5])], None);
         assert_eq!(numbers(&snippets[0]), [2, 3, 4, 5]);
     }
 
     #[test]
     fn a_match_past_the_last_line_is_dropped() {
         let (_dir, path) = folder_with("a.txt", b"1\n2\n3\n");
-        let (snippets, _) =
-            read_snippets(&[window(&path, 1, 6, &[2, 9]), window(&path, 20, 26, &[23])]);
+        let (snippets, _) = read_snippets(
+            &[window(&path, 1, 6, &[2, 9]), window(&path, 20, 26, &[23])],
+            None,
+        );
         assert_eq!(snippets.len(), 1);
         let marks: Vec<bool> = snippets[0].lines.iter().map(|l| l.is_match).collect();
         assert_eq!(marks, [false, true, false]);
@@ -737,7 +729,7 @@ mod tests {
     fn a_utf16_file_with_a_mark_gives_the_lines_as_text() {
         for little in [true, false] {
             let (_dir, path) = folder_with("a.txt", &utf16("one\ntwo é\nthree\n", little));
-            let (snippets, warnings) = read_snippets(&[window(&path, 1, 3, &[2])]);
+            let (snippets, warnings) = read_snippets(&[window(&path, 1, 3, &[2])], None);
             assert!(warnings.is_empty());
             let texts: Vec<&[u8]> = snippets[0]
                 .lines
@@ -752,14 +744,14 @@ mod tests {
     #[test]
     fn a_utf8_mark_is_not_part_of_the_first_line() {
         let (_dir, path) = folder_with("a.txt", b"\xEF\xBB\xBFone\ntwo\n");
-        let (snippets, _) = read_snippets(&[window(&path, 1, 2, &[1])]);
+        let (snippets, _) = read_snippets(&[window(&path, 1, 2, &[1])], None);
         assert_eq!(snippets[0].lines[0].text, b"one");
     }
 
     #[test]
     fn a_carriage_return_stays_at_the_end_of_a_line() {
         let (_dir, path) = folder_with("a.txt", b"one\r\ntwo\r\n");
-        let (snippets, _) = read_snippets(&[window(&path, 1, 2, &[1])]);
+        let (snippets, _) = read_snippets(&[window(&path, 1, 2, &[1])], None);
         assert_eq!(snippets[0].lines[0].text, b"one\r");
     }
 
@@ -767,7 +759,7 @@ mod tests {
     fn a_file_that_jag_cannot_read_gives_a_warning_and_no_result() {
         let dir = TempDir::new().expect("temporary folder");
         let missing = dir.path().join("missing.txt");
-        let (snippets, warnings) = read_snippets(&[window(&missing, 1, 4, &[1])]);
+        let (snippets, warnings) = read_snippets(&[window(&missing, 1, 4, &[1])], None);
         assert!(snippets.is_empty());
         assert_eq!(
             warnings,
@@ -792,17 +784,53 @@ mod tests {
             .collect();
         let windows = plan_windows(&files, ContextLines::DEFAULT);
         assert_eq!(windows.len(), 250);
-        let (snippets, warnings) = read_snippets(&windows[..200]);
+        let (snippets, warnings) = read_snippets(&windows[..200], None);
         assert_eq!(snippets.len(), 200);
         assert!(warnings.is_empty());
+    }
+
+    // CRITERION-35: the lines of piped text come from the text that the scan
+    // searched, with the label of standard input.
+    #[test]
+    fn a_window_of_standard_input_reads_the_piped_text() {
+        let text = b"a\nb\nc\nd\ne\nf\nneedle\n";
+        let windows = [
+            Window {
+                source: Source::StandardInput,
+                start: 4,
+                end: 10,
+                matches: vec![7],
+            },
+            Window {
+                source: Source::StandardInput,
+                start: 1,
+                end: 1,
+                matches: vec![1],
+            },
+        ];
+        let (snippets, warnings) = read_snippets(&windows, Some(text));
+        assert!(warnings.is_empty());
+        assert_eq!(snippets.len(), 2);
+        assert_eq!(snippets[0].source, Source::StandardInput);
+        assert_eq!(numbers(&snippets[0]), [4, 5, 6, 7]);
+        let marks: Vec<bool> = snippets[0].lines.iter().map(|l| l.is_match).collect();
+        assert_eq!(marks, [false, false, false, true]);
+        assert_eq!(snippets[0].lines[3].text, b"needle");
+        assert_eq!(snippets[1].lines[0].text, b"a");
+        assert_eq!(
+            snippets[0].source.label(),
+            Source::STANDARD_INPUT_LABEL.as_bytes()
+        );
     }
 
     #[test]
     fn two_windows_of_one_file_read_the_file_one_time() {
         let text: String = (1..=40).map(|number| format!("line {number}\n")).collect();
         let (_dir, path) = folder_with("a.txt", text.as_bytes());
-        let (snippets, _) =
-            read_snippets(&[window(&path, 7, 13, &[10]), window(&path, 27, 33, &[30])]);
+        let (snippets, _) = read_snippets(
+            &[window(&path, 7, 13, &[10]), window(&path, 27, 33, &[30])],
+            None,
+        );
         assert_eq!(snippets.len(), 2);
         assert_eq!(numbers(&snippets[1]).first(), Some(&27));
     }

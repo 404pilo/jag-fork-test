@@ -154,7 +154,7 @@ fails.
 With no question, jag works as `grep -rnH` does:
 
 ```
-$ jag TERM PATH...
+$ jag TERM [PATH...]
 ```
 
 jag shows each matching line as `path:N:text`. It makes no call to the model
@@ -181,6 +181,31 @@ $ jag --ask="-v or --verbose?" verbose src
   `--base-url`, and `--model` have no effect on the search, except that
   `--max-chars` still limits the output. jag still checks the values of the
   options.
+
+## Where jag searches
+
+- jag searches each file and each folder that you give. It searches a folder
+  as `grep -r` does. You can give any mix of files and folders.
+- With no path, jag searches the text of a pipe, and each result shows
+  `(standard input)` in the place of a path. An empty pipe gives no match and
+  exit 1, as in rg.
+- With no path and no pipe, for example in a terminal or with `/dev/null` as
+  standard input, jag searches the current folder, and the paths have no `./`
+  at the start.
+- jag reads all piped text before it ranks the results, so it waits until the
+  pipe closes.
+- An agent gives a path, for example `.`. Some tools keep standard input open,
+  and then jag waits for text that does not come. Other tools give an empty
+  pipe, and then jag finds no match.
+- A path that does not exist gives a warning that names the path. jag searches
+  the other paths, and it exits with 2 at the end, as grep does. With `--ask`,
+  the results of the other paths cost model calls.
+- `-` is not standard input in jag. To search a pipe, give no path.
+
+```
+$ printf 'one\nneedle here\n' | jag needle
+(standard input):2:needle here
+```
 
 ## The size limit
 
@@ -264,8 +289,10 @@ input), `first_line`, `last_line`, and `lines`. Each line has `number`,
 end of the line, or `0`). The document has no score. With no question, each
 result has one line, and the results come in the order of the text output.
 
-When no line matches, the document has an empty `results` list and `exit_code`
-1. When jag fails, `error` holds the cause and the fix, `results` is empty,
+When no line matches, the document has an empty `results` list and an
+`exit_code` of 1. When a path does not exist, `exit_code` is 2, `error` is `null`,
+`warnings` names the path, and `results` holds the results of the other
+paths. When jag fails, `error` holds the cause and the fix, `results` is empty,
 and the other fields hold what jag counted before the failure.
 
 In one major version of jag, jag does not remove or rename a field. It can add

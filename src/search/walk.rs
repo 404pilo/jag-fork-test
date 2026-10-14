@@ -2,6 +2,8 @@
 //!
 //! `scan` walks each root with the `ignore` crate, searches each regular file
 //! with `grep-searcher`, and counts the entries that the walk skips.
+//! `scan_input` searches the piped text with the same searcher, and
+//! `scan_current_folder` walks `.` for a search with no path (FEATURE-14).
 
 use std::collections::{HashMap, HashSet};
 use std::ffi::OsStr;
@@ -14,6 +16,7 @@ use grep_matcher::Matcher;
 use grep_searcher::{BinaryDetection, Searcher, SearcherBuilder, Sink, SinkFinish, SinkMatch};
 use ignore::{DirEntry, WalkBuilder, WalkState};
 
+use super::Source;
 use super::filter::FileFilter;
 
 /// The options of a scan. `ScanOptions::default()` is what jag uses.
@@ -53,11 +56,12 @@ pub struct MatchLine {
     pub text: Vec<u8>,
 }
 
-/// The matching lines of one file.
+/// The matching lines of one file, or of the piped text.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FileMatches {
-    /// The root joined with the rest of the path, as the walk gives it.
-    pub path: PathBuf,
+    /// For a file, the root joined with the rest of the path, as the walk
+    /// gives it. For the piped text, `Source::StandardInput`.
+    pub source: Source,
     /// The matching lines, sorted by line number.
     pub lines: Vec<MatchLine>,
 }
@@ -100,6 +104,11 @@ pub enum WarningKind {
     IgnoreRule,
     /// Any other error of the `ignore` crate.
     Other,
+    /// A path of the command line that does not exist (FEATURE-14,
+    /// decision 7).
+    Missing,
+    /// An error of the read of standard input (FEATURE-14, decision 12).
+    StandardInput(io::ErrorKind),
 }
 
 /// A problem that did not stop the walk.
@@ -130,6 +139,13 @@ impl WalkWarning {
             }
             (WarningKind::Other, Some(path)) => format!("cannot walk {}", path.display()),
             (WarningKind::Other, None) => "cannot walk a folder".to_string(),
+            (WarningKind::Missing, Some(path)) => {
+                format!("the path {} does not exist", path.display())
+            }
+            (WarningKind::Missing, None) => "a path does not exist".to_string(),
+            (WarningKind::StandardInput(kind), _) => {
+                format!("cannot read standard input: {kind}")
+            }
         }
     }
 
@@ -155,6 +171,25 @@ pub struct ScanReport {
     pub warnings: Vec<WalkWarning>,
 }
 
+impl ScanReport {
+    /// A report with no file, no skip, and no warning.
+    pub fn empty() -> ScanReport {
+        ScanReport {
+            files: Vec::new(),
+            skipped: SkipCounts::default(),
+            warnings: Vec::new(),
+        }
+    }
+
+    /// True when a path of the command line does not exist (FEATURE-14,
+    /// decisions 7 and 20).
+    pub fn path_missing(&self) -> bool {
+        self.warnings
+            .iter()
+            .any(|warning| warning.kind == WarningKind::Missing)
+    }
+}
+
 /// The state that the threads of the walk share.
 #[derive(Default)]
 struct Shared {
@@ -178,11 +213,7 @@ where
     M: Matcher + Sync,
 {
     let Some((first, rest)) = roots.split_first() else {
-        return ScanReport {
-            files: Vec::new(),
-            skipped: SkipCounts::default(),
-            warnings: Vec::new(),
-        };
+        return ScanReport::empty();
     };
     let mut builder = WalkBuilder::new(first);
     for root in rest {
@@ -196,10 +227,7 @@ where
 
     let shared = Shared::default();
     builder.build_parallel().run(|| {
-        let mut searcher = SearcherBuilder::new()
-            .binary_detection(BinaryDetection::quit(b'\0'))
-            .line_number(true)
-            .build();
+        let mut searcher = searcher();
         let shared = &shared;
         Box::new(move |result| {
             match result {
@@ -210,6 +238,75 @@ where
         })
     });
     finish(shared, roots)
+}
+
+/// Search the piped text with the searcher of a file, so that the binary
+/// rule and the byte order mark rule are the same (FEATURE-14, decision 11).
+/// Text with no byte gives no file and no warning (decision 3). With
+/// `keep_no_match` (`-c`), text with no match gives a file with no line, also
+/// when it has no byte (FEATURE-13, decision 20).
+pub fn scan_input<M: Matcher>(bytes: &[u8], matcher: &M, keep_no_match: bool) -> ScanReport {
+    let mut report = ScanReport::empty();
+    let mut sink = LineSink::default();
+    match searcher().search_reader(matcher, bytes, &mut sink) {
+        Err(error) => report.warnings.push(WalkWarning {
+            path: None,
+            kind: WarningKind::StandardInput(error.kind()),
+        }),
+        Ok(()) if sink.binary => report.skipped.binary = 1,
+        Ok(()) if keep_no_match || !sink.lines.is_empty() => report.files.push(FileMatches {
+            source: Source::StandardInput,
+            lines: sink.lines,
+        }),
+        Ok(()) => {}
+    }
+    report
+}
+
+/// Walk `.` for a search with no path, and remove the `./` at the start of
+/// each path: the user typed no root (FEATURE-14, decision 5).
+pub fn scan_current_folder<M>(matcher: &M, options: &ScanOptions) -> ScanReport
+where
+    M: Matcher + Sync,
+{
+    without_current_folder_prefix(scan(&[PathBuf::from(".")], matcher, options))
+}
+
+/// Remove the first `.` of each path of a scan of `.`, then sort the two
+/// lists again with the keys of `order_files` and `finish`.
+fn without_current_folder_prefix(mut report: ScanReport) -> ScanReport {
+    for file in &mut report.files {
+        if let Source::File(path) = &mut file.source {
+            *path = without_current_folder(path);
+        }
+    }
+    for warning in &mut report.warnings {
+        if let Some(path) = &mut warning.path {
+            *path = without_current_folder(path);
+        }
+    }
+    report
+        .files
+        .sort_by(|a, b| a.source.label().cmp(b.source.label()));
+    sort_warnings(&mut report.warnings, &[]);
+    report
+}
+
+/// `./a.txt` gives `a.txt`. The path `.` alone, and a path that does not
+/// start with `.`, stay as they are.
+fn without_current_folder(path: &Path) -> PathBuf {
+    match path.strip_prefix(".") {
+        Ok(rest) if !rest.as_os_str().is_empty() => rest.to_path_buf(),
+        _ => path.to_path_buf(),
+    }
+}
+
+/// The searcher of a file and of the piped text.
+fn searcher() -> Searcher {
+    SearcherBuilder::new()
+        .binary_detection(BinaryDetection::quit(b'\0'))
+        .line_number(true)
+        .build()
 }
 
 fn visit_entry<M: Matcher>(
@@ -303,7 +400,7 @@ fn search_file<M: Matcher>(
             (
                 root.to_path_buf(),
                 FileMatches {
-                    path: path.to_path_buf(),
+                    source: Source::File(path.to_path_buf()),
                     lines: sink.lines,
                 },
             ),
@@ -372,6 +469,21 @@ fn finish(shared: Shared, roots: &[PathBuf]) -> ScanReport {
 
     let files = order_files(shared.files.into_inner().unwrap_or_default(), roots);
     let mut warnings = shared.warnings.into_inner().unwrap_or_default();
+    sort_warnings(&mut warnings, roots);
+    ScanReport {
+        files,
+        skipped: SkipCounts {
+            binary: shared.binary.into_inner(),
+            hidden,
+            ignored,
+        },
+        warnings,
+    }
+}
+
+/// Sort the warnings by the place of their root, then by path, then by
+/// message.
+fn sort_warnings(warnings: &mut [WalkWarning], roots: &[PathBuf]) {
     warnings.sort_by_cached_key(|warning| {
         (
             warning
@@ -382,15 +494,6 @@ fn finish(shared: Shared, roots: &[PathBuf]) -> ScanReport {
             warning.message(),
         )
     });
-    ScanReport {
-        files,
-        skipped: SkipCounts {
-            binary: shared.binary.into_inner(),
-            hidden,
-            ignored,
-        },
-        warnings,
-    }
 }
 
 fn push<T>(list: &Mutex<Vec<T>>, item: T) {
@@ -411,12 +514,13 @@ fn order_files(found: Vec<(PathBuf, FileMatches)>, roots: &[PathBuf]) -> Vec<Fil
     }
     let mut found = found;
     found.sort_by(|(root_a, a), (root_b, b)| {
-        (root_a, path_key(&a.path)).cmp(&(root_b, path_key(&b.path)))
+        (root_a, a.source.label()).cmp(&(root_b, b.source.label()))
     });
     let mut placed: Vec<(usize, FileMatches)> = Vec::with_capacity(found.len());
     let mut copy = 0;
     for (index, (root, file)) in found.iter().enumerate() {
-        let same = index > 0 && found[index - 1].0 == *root && found[index - 1].1.path == file.path;
+        let same =
+            index > 0 && found[index - 1].0 == *root && found[index - 1].1.source == file.source;
         copy = if same { copy + 1 } else { 0 };
         let own = places.get(root.as_path()).map_or(&[][..], Vec::as_slice);
         // A root that the table does not know goes to place 0.
@@ -428,7 +532,7 @@ fn order_files(found: Vec<(PathBuf, FileMatches)>, roots: &[PathBuf]) -> Vec<Fil
         placed.push((place, file.clone()));
     }
     placed.sort_by(|(place_a, a), (place_b, b)| {
-        (place_a, path_key(&a.path)).cmp(&(place_b, path_key(&b.path)))
+        (place_a, a.source.label()).cmp(&(place_b, b.source.label()))
     });
     placed.into_iter().map(|(_, file)| file).collect()
 }
@@ -478,9 +582,22 @@ fn is_rule_error(error: &ignore::Error) -> bool {
     }
 }
 
+/// An error at depth 0 is an error of a root: the walk reads the metadata of
+/// each root, and follows a symbolic link. `NotFound` and `NotADirectory`
+/// there mean that the path does not exist (FEATURE-14, decision 7). Another
+/// error of a root, for example `PermissionDenied`, is a read error
+/// (decision 10).
 fn make_warning(error: &ignore::Error) -> WalkWarning {
     let kind = if let Some(io_error) = error.io_error() {
-        WarningKind::Read(io_error.kind())
+        let missing = matches!(
+            io_error.kind(),
+            io::ErrorKind::NotFound | io::ErrorKind::NotADirectory
+        );
+        if missing && error.depth() == Some(0) {
+            WarningKind::Missing
+        } else {
+            WarningKind::Read(io_error.kind())
+        }
     } else if error.is_partial() || is_rule_error(error) {
         WarningKind::IgnoreRule
     } else {
@@ -567,7 +684,7 @@ mod tests {
         (
             PathBuf::from(root),
             FileMatches {
-                path: PathBuf::from(path),
+                source: Source::File(PathBuf::from(path)),
                 lines: Vec::new(),
             },
         )
@@ -577,7 +694,7 @@ mod tests {
         let roots: Vec<PathBuf> = roots.iter().map(PathBuf::from).collect();
         order_files(found, &roots)
             .iter()
-            .map(|file| file.path.display().to_string())
+            .map(|file| String::from_utf8_lossy(file.source.label()).into_owned())
             .collect()
     }
 
@@ -647,6 +764,162 @@ mod tests {
                 Some(PathBuf::from("/up")),
                 Some(PathBuf::from("b/f")),
                 Some(PathBuf::from("a/f")),
+            ]
+        );
+    }
+
+    /// The error that the walk gives for a root that it cannot read:
+    /// `Error::Io(err).with_depth(depth).with_path(path)`.
+    fn root_error(kind: io::ErrorKind, depth: usize, path: &str) -> ignore::Error {
+        ignore::Error::WithPath {
+            path: PathBuf::from(path),
+            err: Box::new(ignore::Error::WithDepth {
+                depth,
+                err: Box::new(ignore::Error::Io(io::Error::from(kind))),
+            }),
+        }
+    }
+
+    // Decision 7 of FEATURE-14.
+    #[test]
+    fn a_root_that_does_not_exist_gives_the_warning_of_a_missing_path() {
+        let warning = make_warning(&root_error(io::ErrorKind::NotFound, 0, "nofile"));
+        assert_eq!(warning, self::warning(Some("nofile"), WarningKind::Missing));
+        assert_eq!(warning.text(), "the path nofile does not exist");
+        assert_eq!(warning.message(), "jag: the path nofile does not exist");
+        let warning = make_warning(&root_error(io::ErrorKind::NotADirectory, 0, "a.txt/x"));
+        assert_eq!(warning.kind, WarningKind::Missing);
+    }
+
+    // Decision 10 of FEATURE-14.
+    #[test]
+    fn other_errors_of_the_walk_stay_read_warnings() {
+        let warning = make_warning(&root_error(io::ErrorKind::NotFound, 1, "dir/gone"));
+        assert_eq!(warning.kind, WarningKind::Read(io::ErrorKind::NotFound));
+        let warning = make_warning(&root_error(io::ErrorKind::PermissionDenied, 0, "locked"));
+        assert_eq!(
+            warning.kind,
+            WarningKind::Read(io::ErrorKind::PermissionDenied)
+        );
+    }
+
+    #[test]
+    fn a_report_knows_when_a_path_is_missing() {
+        let mut report = ScanReport::empty();
+        assert!(!report.path_missing());
+        report.warnings.push(warning(
+            Some("x"),
+            WarningKind::Read(io::ErrorKind::NotFound),
+        ));
+        assert!(!report.path_missing());
+        report
+            .warnings
+            .push(warning(Some("nofile"), WarningKind::Missing));
+        assert!(report.path_missing());
+    }
+
+    #[test]
+    fn a_read_error_of_standard_input_has_its_own_text() {
+        let warning = warning(None, WarningKind::StandardInput(io::ErrorKind::Other));
+        assert_eq!(
+            warning.message(),
+            "jag: cannot read standard input: other error"
+        );
+    }
+
+    fn matcher() -> grep_regex::RegexMatcher {
+        grep_regex::RegexMatcher::new("needle").expect("a valid pattern")
+    }
+
+    // Decision 3 of FEATURE-14.
+    #[test]
+    fn piped_text_with_no_byte_gives_an_empty_report() {
+        assert_eq!(scan_input(b"", &matcher(), false), ScanReport::empty());
+    }
+
+    /// The line numbers and the texts of a report.
+    fn lines(report: &ScanReport) -> Vec<(u64, Vec<u8>)> {
+        report
+            .files
+            .iter()
+            .flat_map(|file| file.lines.iter())
+            .map(|line| (line.line_number, line.text.clone()))
+            .collect()
+    }
+
+    // CRITERION-35 and decision 11 of FEATURE-14: the piped text gives the
+    // lines of a file with the same bytes.
+    #[test]
+    fn piped_text_gives_the_lines_of_a_file_with_the_same_bytes() {
+        let mut utf16_little = vec![0xFF, 0xFE];
+        let mut utf16_big = vec![0xFE, 0xFF];
+        for unit in "x\nneedle é\n".encode_utf16() {
+            utf16_little.extend(unit.to_le_bytes());
+            utf16_big.extend(unit.to_be_bytes());
+        }
+        let texts: [&[u8]; 4] = [
+            b"x\nneedle here\r\nneedle\n",
+            b"\xEF\xBB\xBFneedle\nx\n",
+            &utf16_little,
+            &utf16_big,
+        ];
+        for text in texts {
+            let dir = tempfile::tempdir().expect("temporary folder");
+            let file = dir.path().join("a.txt");
+            std::fs::write(&file, text).expect("write file");
+            let from_file = scan(&[file], &matcher(), &ScanOptions::default());
+            let from_pipe = scan_input(text, &matcher(), false);
+            assert!(!from_pipe.files.is_empty());
+            assert_eq!(lines(&from_pipe), lines(&from_file));
+            assert_eq!(from_pipe.files[0].source, Source::StandardInput);
+            assert!(from_pipe.warnings.is_empty());
+        }
+    }
+
+    // Decision 11 of FEATURE-14: the binary rule of a file.
+    #[test]
+    fn binary_piped_text_gives_no_file_and_one_skip() {
+        let report = scan_input(b"needle\0\n", &matcher(), false);
+        assert!(report.files.is_empty());
+        assert_eq!(
+            report.skipped,
+            SkipCounts {
+                binary: 1,
+                ..SkipCounts::default()
+            }
+        );
+    }
+
+    // Decision 5 of FEATURE-14.
+    #[test]
+    fn a_scan_of_the_current_folder_gives_paths_with_no_dot() {
+        let file = |path: &str| FileMatches {
+            source: Source::File(PathBuf::from(path)),
+            lines: Vec::new(),
+        };
+        let report = ScanReport {
+            files: vec![file("./sub/b.txt"), file("./a.txt")],
+            skipped: SkipCounts::default(),
+            warnings: vec![
+                warning(Some("./x"), WarningKind::Other),
+                warning(Some("."), WarningKind::Other),
+                warning(Some("/up/.ignore"), WarningKind::IgnoreRule),
+            ],
+        };
+        let report = without_current_folder_prefix(report);
+        let names: Vec<_> = report
+            .files
+            .iter()
+            .map(|file| String::from_utf8_lossy(file.source.label()).into_owned())
+            .collect();
+        assert_eq!(names, ["a.txt", "sub/b.txt"]);
+        let paths: Vec<_> = report.warnings.iter().map(|w| w.path.clone()).collect();
+        assert_eq!(
+            paths,
+            [
+                Some(PathBuf::from(".")),
+                Some(PathBuf::from("/up/.ignore")),
+                Some(PathBuf::from("x")),
             ]
         );
     }

@@ -91,34 +91,6 @@ fn no_argument_shows_the_help_and_exits_2() {
 }
 
 #[test]
-fn a_term_with_no_path_exits_2_and_makes_no_call() {
-    let server = FakeServer::constant(0.8);
-    let home = home();
-    jag(home.path(), &server.base_url())
-        .arg("needle")
-        .assert()
-        .code(2)
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains("needs a path"))
-        .stderr(predicate::str::contains("needle").not());
-    assert!(server.requests().is_empty());
-}
-
-#[test]
-fn a_term_and_a_question_with_no_path_exit_2_and_make_no_call() {
-    let server = FakeServer::constant(0.8);
-    let home = home();
-    jag(home.path(), &server.base_url())
-        .args(["--ask", "which line?", "needle"])
-        .assert()
-        .code(2)
-        .stdout(predicate::str::is_empty())
-        .stderr(predicate::str::contains("needs a path"))
-        .stderr(predicate::str::contains("which line?").not());
-    assert!(server.requests().is_empty());
-}
-
-#[test]
 fn a_usage_error_comes_before_the_key_lookup() {
     // No key at all, and still exit 2 for a blank question.
     let home = home();
