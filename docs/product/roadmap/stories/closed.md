@@ -66,3 +66,7 @@ generated:
 * [STORY-57: Send the model calls through an AI gateway](STORY-57.md) - As an agent builder (PERSONA-01), I want to give jag the base URL and the model name of my AI gateway, so that jag uses the gateway that my team already uses.
 * [STORY-58: Set the gateway as an option, a variable, or in the config file](STORY-58.md) - As an operator (PERSONA-02), I want to set the base URL and the model name as an option, a variable, or in the config file, so that I can change them for one search, one job, or each search.
 * [STORY-59: Limit guesses through the check results of fork pull requests](STORY-59.md) - As an agent builder (PERSONA-01), I want a guard against guesses through the pass or fail of the private-data check on fork pull requests, so that no one can find private data by many tries.
+
+## MILESTONE-03: Make it fast
+
+* [STORY-44: Return a typical search in under 5 seconds](STORY-44.md) - As a shell power user (PERSONA-04), I want a typical search to return in under 5 seconds, so that I do not go back to grep.

@@ -4,7 +4,8 @@ title: Fast enough to replace grep
 description: A typical search returns in under 5 seconds, so that a shell user does
   not go back to grep.
 status: draft
-state: backlog
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 56
   node_id: I_kwDOVDCdD88AAAABXB-Z-A
@@ -36,7 +37,7 @@ A typical search returns in under 5 seconds, so that a shell user does not go ba
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-44: Return a typical search in under 5 seconds](../stories/STORY-44.md) | ready | - | - | - | - |
+| [STORY-44: Return a typical search in under 5 seconds](../stories/STORY-44.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

@@ -4,7 +4,8 @@ title: Return a typical search in under 5 seconds
 description: As a shell power user (PERSONA-04), I want a typical search to return
   in under 5 seconds, so that I do not go back to grep.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 105
   node_id: I_kwDOVDCdD88AAAABXCBxaA

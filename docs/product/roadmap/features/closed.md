@@ -30,3 +30,7 @@ generated:
 * [FEATURE-15: Good behavior in a terminal and in a pipe](FEATURE-15.md) - jag shows progress and color only in a terminal, and it stops at once with no partial results when the user stops it or the pipe closes.
 * [FEATURE-20: Show the cost of a search](FEATURE-20.md) - After each search, jag reports how many results it scored and skipped, and the billed cost in US dollars, as a text line or a structured field.
 * [FEATURE-21: Send the model calls through an AI gateway](FEATURE-21.md) - The user can set a base URL and a model name, so that jag sends the same model calls through an AI gateway. With no setting, jag calls TypeSafe directly.
+
+## MILESTONE-03: Make it fast
+
+* [FEATURE-16: Fast enough to replace grep](FEATURE-16.md) - A typical search returns in under 5 seconds, so that a shell user does not go back to grep.

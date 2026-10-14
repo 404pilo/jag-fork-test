@@ -22,7 +22,7 @@ This milestone holds the improvements to speed and cost. It holds FEATURE-16, th
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [FEATURE-16: Fast enough to replace grep](../features/FEATURE-16.md) | backlog | 0/1 (0%) | - | FEATURE-04, FEATURE-06 | - |
+| [FEATURE-16: Fast enough to replace grep](../features/FEATURE-16.md) | done | 1/1 (100%) | - | FEATURE-04, FEATURE-06 | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

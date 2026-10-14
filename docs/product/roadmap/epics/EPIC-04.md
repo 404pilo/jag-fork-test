@@ -4,7 +4,8 @@ title: A shell user keeps their habits
 description: jag works in a pipe, uses grep-like options and exit codes, and is fast
   enough to replace grep.
 status: draft
-state: backlog
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 40
   node_id: I_kwDOVDCdD88AAAABXB84Cw

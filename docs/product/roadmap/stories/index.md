@@ -10,7 +10,3 @@
 * [STORY-52: Create the new public repository with a clean history](STORY-52.md) - As an agent builder (PERSONA-01), I want a new public repository with a clean history, so that no public commit holds private data, and the private repository stays as it is.
 * [STORY-60: Run the private-data check on fork pull requests in the new public repository](STORY-60.md) - As an agent builder (PERSONA-01), I want the private-data check to run on each fork pull request in the new public repository, so that no fork pull request skips the check.
 * [STORY-61: Make the project board and all issues public with the new repository](STORY-61.md) - As an agent builder (PERSONA-01), I want the board and all issues of jag, open and closed, to become public with the new repository, so that outside contributors can see them.
-
-## MILESTONE-03: Make it fast
-
-* [STORY-44: Return a typical search in under 5 seconds](STORY-44.md) - As a shell power user (PERSONA-04), I want a typical search to return in under 5 seconds, so that I do not go back to grep.
