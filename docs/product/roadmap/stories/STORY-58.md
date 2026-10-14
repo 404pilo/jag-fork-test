@@ -5,7 +5,8 @@ description: As an operator (PERSONA-02), I want to set the base URL and the mod
   name as an option, a variable, or in the config file, so that I can change them
   for one search, one job, or each search.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 120
   node_id: I_kwDOVDCdD88AAAABXCCt5A

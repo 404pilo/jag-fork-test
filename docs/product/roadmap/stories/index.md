@@ -20,8 +20,6 @@
 * [STORY-54: Read the cost in structured output](STORY-54.md) - As an agent builder (PERSONA-01), I want the cost as a field of structured output, so that my agent can track what its searches cost.
 * [STORY-55: Know the cost when no figure is available](STORY-55.md) - As an agent builder (PERSONA-01), I want a clear cost report when jag makes no model call or the service gives no cost figure, so that the search still works.
 * [STORY-56: Know the cost of a failed or stopped search](STORY-56.md) - As an agent builder (PERSONA-01), I want to know what a failed or stopped search cost, so that no cost is hidden from me.
-* [STORY-57: Send the model calls through an AI gateway](STORY-57.md) - As an agent builder (PERSONA-01), I want to give jag the base URL and the model name of my AI gateway, so that jag uses the gateway that my team already uses.
-* [STORY-58: Set the gateway as an option, a variable, or in the config file](STORY-58.md) - As an operator (PERSONA-02), I want to set the base URL and the model name as an option, a variable, or in the config file, so that I can change them for one search, one job, or each search.
 * [STORY-60: Run the private-data check on fork pull requests in the new public repository](STORY-60.md) - As an agent builder (PERSONA-01), I want the private-data check to run on each fork pull request in the new public repository, so that no fork pull request skips the check.
 * [STORY-61: Make the project board and all issues public with the new repository](STORY-61.md) - As an agent builder (PERSONA-01), I want the board and all issues of jag, open and closed, to become public with the new repository, so that outside contributors can see them.
 

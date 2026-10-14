@@ -4,7 +4,8 @@ title: Send the model calls through an AI gateway
 description: The user can set a base URL and a model name, so that jag sends the same
   model calls through an AI gateway. With no setting, jag calls TypeSafe directly.
 status: draft
-state: backlog
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 61
   node_id: I_kwDOVDCdD88AAAABXB-vVw
@@ -31,8 +32,8 @@ The user can set a base URL and a model name, so that jag sends the same model c
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-57: Send the model calls through an AI gateway](../stories/STORY-57.md) | ready | - | - | - | - |
-| [STORY-58: Set the gateway as an option, a variable, or in the config file](../stories/STORY-58.md) | ready | - | - | - | - |
+| [STORY-57: Send the model calls through an AI gateway](../stories/STORY-57.md) | done | - | - | - | - |
+| [STORY-58: Set the gateway as an option, a variable, or in the config file](../stories/STORY-58.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

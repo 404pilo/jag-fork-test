@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want to give jag the base URL a
   the model name of my AI gateway, so that jag uses the gateway that my team already
   uses.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 119
   node_id: I_kwDOVDCdD88AAAABXCCpyA
