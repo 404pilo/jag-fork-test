@@ -13,7 +13,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/79
   pushed_hash: fe3b7c
   synced:
-    state: ready
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-18-cost-limit-on-scoring-design.md
 parent: /features/FEATURE-06.md
 milestone: /milestones/MILESTONE-01.md

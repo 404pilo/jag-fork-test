@@ -9,7 +9,7 @@ github:
   number: 85
   node_id: I_kwDOVDCdD88AAAABXCAUSA
   url: https://github.com/ai-ready-future/jag/issues/85
-  pushed_hash: ca7b01
+  pushed_hash: 07d8e5
   synced:
     state: ready
 spec: docs/superpowers/specs/2026-10-13-STORY-21-file-line-and-snippet-for-each-result-design.md

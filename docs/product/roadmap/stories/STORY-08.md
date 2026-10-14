@@ -13,7 +13,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/69
   pushed_hash: 5ae687
   synced:
-    state: backlog
+    state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-06-readiness-check-design.md
 parent: /features/FEATURE-02.md
 milestone: /milestones/MILESTONE-02.md

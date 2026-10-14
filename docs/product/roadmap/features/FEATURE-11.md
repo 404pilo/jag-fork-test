@@ -14,7 +14,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/51
   pushed_hash: e6e9b3
   synced:
-    state: blocked
+    state: ready
 parent: /epics/EPIC-03.md
 blocked_by:
 - /features/FEATURE-08.md
