@@ -10,9 +10,9 @@ github:
   number: 114
   node_id: I_kwDOVDCdD88AAAABXCCT-Q
   url: https://github.com/ai-ready-future/jag/issues/114
-  pushed_hash: a3c9e4
+  pushed_hash: 41c585
   synced:
-    state: backlog
+    state: ready
 spec: docs/superpowers/specs/2026-10-14-STORY-47-go-public-with-a-clean-history-design.md
 parent: /features/FEATURE-19.md
 milestone: /milestones/MILESTONE-02.md
