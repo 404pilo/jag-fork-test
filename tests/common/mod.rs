@@ -35,7 +35,8 @@ pub fn jag_bare(home: &Path) -> Command {
         .env_remove("JAG_MODEL")
         .env_remove("JAG_TIMEOUT")
         .env_remove("JAG_RETRY_WAIT")
-        .env_remove("JAG_MAX_SCORED");
+        .env_remove("JAG_MAX_SCORED")
+        .env_remove("JAG_MAX_CHARS");
     for name in PROXY_VARIABLES {
         command.env_remove(name);
     }
@@ -64,7 +65,8 @@ pub fn jag_std(home: &Path, base_url: &str) -> std::process::Command {
         .env_remove("JAG_MODEL")
         .env_remove("JAG_TIMEOUT")
         .env_remove("JAG_RETRY_WAIT")
-        .env_remove("JAG_MAX_SCORED");
+        .env_remove("JAG_MAX_SCORED")
+        .env_remove("JAG_MAX_CHARS");
     for name in PROXY_VARIABLES {
         command.env_remove(name);
     }

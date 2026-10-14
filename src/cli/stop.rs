@@ -20,6 +20,7 @@ use signal_hook::iterator::Signals;
 use signal_hook::low_level::emulate_default_handler;
 
 use super::{Mode, error_document};
+use crate::config::DEFAULT_SIZE_LIMIT;
 use crate::failure::Failure;
 use crate::output::Summary;
 use crate::output::progress::Progress;
@@ -43,6 +44,9 @@ pub struct Stop {
     owner: Mutex<Owner>,
     /// What jag counted, for the document of a stop in structured mode.
     counted: Mutex<Summary>,
+    /// The size limit that jag knows: the default, until it reads the option
+    /// and the variable. `None` for no limit.
+    size_limit: Mutex<Option<usize>>,
     mode: Mode,
     progress: Arc<Progress>,
 }
@@ -58,6 +62,7 @@ impl Stop {
             flag: AtomicBool::new(false),
             owner: Mutex::new(Owner::Nobody),
             counted: Mutex::new(Summary::default()),
+            size_limit: Mutex::new(Some(DEFAULT_SIZE_LIMIT)),
             mode,
             progress,
         }
@@ -90,6 +95,16 @@ impl Stop {
         if *owner != Owner::Stop {
             let _ = writeln!(stderr, "{text}");
         }
+    }
+
+    /// The search flow calls it when it knows the size limit.
+    pub fn set_size_limit(&self, limit: Option<usize>) {
+        *lock(&self.size_limit) = limit;
+    }
+
+    /// The size limit that jag knows.
+    pub fn size_limit(&self) -> Option<usize> {
+        *lock(&self.size_limit)
     }
 
     /// The search flow calls it after it counts.
@@ -125,7 +140,7 @@ impl Stop {
             }
             Mode::Json => {
                 let mut summary = lock(&self.counted).clone();
-                let buffer = error_document(&mut summary, failure);
+                let buffer = error_document(&mut summary, failure, self.size_limit());
                 let _ = stdout.write_all(&buffer).and_then(|()| stdout.flush());
             }
         }

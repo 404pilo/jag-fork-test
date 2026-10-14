@@ -49,6 +49,8 @@ fn help_and_version_exit_0() {
         .stdout(predicate::str::contains("--json"))
         .stdout(predicate::str::contains("--color[=<WHEN>]"))
         .stdout(predicate::str::contains("--max-scored <COUNT>"))
+        .stdout(predicate::str::contains("--max-chars <COUNT>"))
+        .stdout(predicate::str::contains("--no-max-chars"))
         .stdout(predicate::str::contains("--timeout <SECONDS>"))
         .stdout(predicate::str::contains("--retry-wait <SECONDS>"));
     jag_bare(home.path())
@@ -373,6 +375,113 @@ fn the_limit_option_with_setup_or_forget_key_gives_the_fixed_line() {
     for args in [
         ["--setup", "--max-scored", "5"],
         ["--forget-key", "--max-scored", "5"],
+    ] {
+        let home = home();
+        jag_bare(home.path())
+            .args(args)
+            .assert()
+            .code(2)
+            .stdout(predicate::str::is_empty())
+            .stderr(FIXED_LINE);
+    }
+}
+
+// FEATURE-09, CRITERION-43: the size limit option and variable.
+const OPTION_TEXT: &str = "jag: the value of --max-chars is not a whole number of 1,000 or more.\n\
+     Use a number such as --max-chars 40000, or turn the limit off with --no-max-chars.\n";
+const VARIABLE_TEXT: &str = "jag: JAG_MAX_CHARS is not a whole number of 1,000 or more.\n\
+     Set JAG_MAX_CHARS to a number such as 40000, or unset it.\n";
+
+const BAD_SIZES: [&str; 10] = [
+    "0", "999", "0999", "abc", "1.5", "1e4", "+1000", "20,000", "off", " ",
+];
+
+#[test]
+fn criterion_43_a_size_limit_that_is_not_valid_exits_2_with_the_exact_text() {
+    for value in BAD_SIZES {
+        let output = time_search(&["--max-chars", value], &[]);
+        assert_eq!(output.status.code(), Some(2), "{value:?}");
+        assert!(output.stdout.is_empty());
+        assert_eq!(String::from_utf8_lossy(&output.stderr), OPTION_TEXT);
+        let output = time_search(&[], &[("JAG_MAX_CHARS", value)]);
+        // A blank variable is the default.
+        if value.trim().is_empty() {
+            assert_eq!(output.status.code(), Some(0));
+            continue;
+        }
+        assert_eq!(output.status.code(), Some(2), "{value:?}");
+        assert!(output.stdout.is_empty());
+        assert_eq!(String::from_utf8_lossy(&output.stderr), VARIABLE_TEXT);
+    }
+}
+
+#[test]
+fn criterion_43_a_negative_limit_exits_2() {
+    let output = time_search(&["--max-chars=-1"], &[]);
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(String::from_utf8_lossy(&output.stderr), OPTION_TEXT);
+    let output = time_search(&["--max-chars", "-1"], &[]);
+    assert_eq!(output.status.code(), Some(2));
+    let output = time_search(&[], &[("JAG_MAX_CHARS", "-1")]);
+    assert_eq!(output.status.code(), Some(2));
+    assert_eq!(String::from_utf8_lossy(&output.stderr), VARIABLE_TEXT);
+}
+
+#[test]
+fn a_size_limit_of_1000_or_more_is_valid() {
+    for value in ["1000", "01000", " 40000 ", "99999999999999999999999"] {
+        let output = time_search(&["--max-chars", value], &[]);
+        assert_eq!(output.status.code(), Some(0), "{value:?}");
+        let output = time_search(&[], &[("JAG_MAX_CHARS", value)]);
+        assert_eq!(output.status.code(), Some(0), "{value:?}");
+    }
+    assert_eq!(time_search(&["--no-max-chars"], &[]).status.code(), Some(0));
+}
+
+#[test]
+fn a_bad_size_limit_never_shows_its_value() {
+    let bad = "SENTINEL-SENTINEL-SENTINEL";
+    let option = time_search(&["--max-chars", bad], &[]);
+    assert_eq!(option.status.code(), Some(2));
+    assert_eq!(String::from_utf8_lossy(&option.stderr), OPTION_TEXT);
+    let variable = time_search(&[], &[("JAG_MAX_CHARS", bad)]);
+    assert_eq!(variable.status.code(), Some(2));
+    assert_eq!(String::from_utf8_lossy(&variable.stderr), VARIABLE_TEXT);
+}
+
+#[test]
+fn a_bad_size_option_comes_before_the_key_and_a_bad_variable_after() {
+    let dir = tempfile::tempdir().expect("temporary folder");
+    write(dir.path(), "a.txt", b"needle\n");
+    let home = home();
+    jag_bare(home.path())
+        .args(["--max-chars", "abc", "--ask", "which line?", "needle"])
+        .arg(dir.path())
+        .assert()
+        .code(2);
+    jag_bare(home.path())
+        .env("JAG_MAX_CHARS", "abc")
+        .args(["--ask", "which line?", "needle"])
+        .arg(dir.path())
+        .assert()
+        .code(3);
+    // With no question, jag reads no key, so the variable gives exit 2.
+    jag_bare(home.path())
+        .env("JAG_MAX_CHARS", "abc")
+        .args(["needle"])
+        .arg(dir.path())
+        .assert()
+        .code(2);
+}
+
+#[test]
+fn the_size_options_conflict_with_each_other_and_with_the_other_modes() {
+    for args in [
+        &["--max-chars", "5000", "--no-max-chars"][..],
+        &["--check", "--max-chars", "5000"],
+        &["--check", "--no-max-chars"],
+        &["--setup", "--max-chars", "5000"],
+        &["--forget-key", "--no-max-chars"],
     ] {
         let home = home();
         jag_bare(home.path())

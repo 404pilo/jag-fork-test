@@ -68,18 +68,10 @@ impl SnippetLine {
 /// one character, as in the request (`from_utf8_lossy` gives one U+FFFD for
 /// it).
 pub fn cut_line(bytes: &[u8]) -> (&[u8], u64) {
-    let widths = bytes.utf8_chunks().flat_map(|chunk| {
-        let bad = chunk.invalid().len();
-        chunk
-            .valid()
-            .chars()
-            .map(char::len_utf8)
-            .chain((bad > 0).then_some(bad))
-    });
     let mut count = 0usize;
     let mut offset = 0usize;
     let mut kept = 0usize;
-    for width in widths {
+    for width in char_widths(bytes) {
         offset += width;
         count += 1;
         if count == MAX_LINE_CHARS {
@@ -91,6 +83,33 @@ pub fn cut_line(bytes: &[u8]) -> (&[u8], u64) {
     } else {
         (&bytes[..kept], (count - MAX_LINE_CHARS) as u64)
     }
+}
+
+/// The width in bytes of each character of `String::from_utf8_lossy(bytes)`.
+/// Each bad sequence of bytes is one character. The cut and the count of
+/// characters use this one rule.
+fn char_widths(bytes: &[u8]) -> impl Iterator<Item = usize> + '_ {
+    bytes.utf8_chunks().flat_map(|chunk| {
+        let bad = chunk.invalid().len();
+        chunk
+            .valid()
+            .chars()
+            .map(char::len_utf8)
+            .chain((bad > 0).then_some(bad))
+    })
+}
+
+/// The first `chars` characters of `bytes`: a prefix that ends at a character,
+/// never inside one.
+pub fn char_prefix(bytes: &[u8], chars: usize) -> &[u8] {
+    let end: usize = char_widths(bytes).take(chars).sum();
+    &bytes[..end]
+}
+
+/// The count of characters of `String::from_utf8_lossy(bytes)`, with no copy
+/// (the unit of the size limit, decision 2 of FEATURE-09).
+pub fn char_count(bytes: &[u8]) -> usize {
+    char_widths(bytes).count()
 }
 
 /// One result: a match with the lines around it (IF-6).
@@ -698,5 +717,24 @@ mod tests {
             read_snippets(&[window(&path, 7, 13, &[10]), window(&path, 27, 33, &[30])]);
         assert_eq!(snippets.len(), 2);
         assert_eq!(numbers(&snippets[1]).first(), Some(&27));
+    }
+
+    #[test]
+    fn char_count_counts_characters_and_a_bad_sequence_as_one() {
+        assert_eq!(char_count(b""), 0);
+        assert_eq!(char_count(b"abc"), 3);
+        assert_eq!(char_count("é".as_bytes()), 1);
+        assert_eq!(char_count(b"a\xffb"), 3);
+        assert_eq!(char_count(b"\xe2\x82"), 1);
+        assert_eq!(char_count(b"\xe2\x82\n"), 2);
+    }
+
+    #[test]
+    fn the_count_of_joined_lines_is_the_sum_of_their_counts() {
+        let lines: [&[u8]; 3] = [b"a\xe2\x82\n", b"\xffb\n", "é\n".as_bytes()];
+        let joined: Vec<u8> = lines.concat();
+        let sum: usize = lines.iter().map(|line| char_count(line)).sum();
+        assert_eq!(char_count(&joined), sum);
+        assert_eq!(sum, String::from_utf8_lossy(&joined).chars().count());
     }
 }

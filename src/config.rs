@@ -21,8 +21,9 @@ use crate::failure::Failure;
 pub use change::{ChangeState, load_for_change, write_key_file};
 pub use fs::{Fs, OpenFile, RealFs};
 pub use limit::{
-    COST_LIMIT_OPTION, COST_LIMIT_VARIABLE, DEFAULT_COST_LIMIT, MAX_COST_LIMIT, cost_limit,
-    parse_cost_limit,
+    COST_LIMIT_OPTION, COST_LIMIT_VARIABLE, DEFAULT_COST_LIMIT, DEFAULT_SIZE_LIMIT, MAX_COST_LIMIT,
+    MIN_SIZE_LIMIT, SIZE_LIMIT_OFF_OPTION, SIZE_LIMIT_OPTION, SIZE_LIMIT_VARIABLE, SizeLimit,
+    cost_limit, parse_cost_limit, parse_size_limit, size_limit,
 };
 pub use model::{ModelSettings, SettingSource, TimeSetting, Times, model_settings, parse_seconds};
 pub use setup::{Prompter, TtyPrompter, forget_key, setup};
@@ -165,6 +166,11 @@ pub enum ConfigError {
     CostLimitBad {
         source: SettingSource,
     },
+    /// The size limit is not a whole number of 1,000 or more. The text never
+    /// shows the value.
+    SizeLimitBad {
+        source: SettingSource,
+    },
 }
 
 impl From<ConfigError> for Failure {
@@ -295,6 +301,22 @@ impl From<ConfigError> for Failure {
                 SettingSource::Variable => (
                     format!("{COST_LIMIT_VARIABLE} is not a whole number from 1 to 2,000."),
                     format!("Set {COST_LIMIT_VARIABLE} to a number such as 400, or unset it."),
+                    2,
+                ),
+            },
+            ConfigError::SizeLimitBad { source } => match source {
+                SettingSource::Option => (
+                    format!(
+                        "the value of {SIZE_LIMIT_OPTION} is not a whole number of 1,000 or more."
+                    ),
+                    format!(
+                        "Use a number such as {SIZE_LIMIT_OPTION} 40000, or turn the limit off with {SIZE_LIMIT_OFF_OPTION}."
+                    ),
+                    2,
+                ),
+                SettingSource::Variable => (
+                    format!("{SIZE_LIMIT_VARIABLE} is not a whole number of 1,000 or more."),
+                    format!("Set {SIZE_LIMIT_VARIABLE} to a number such as 40000, or unset it."),
                     2,
                 ),
             },

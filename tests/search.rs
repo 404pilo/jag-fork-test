@@ -34,7 +34,9 @@ fn search(
         command.env(name, value);
     }
     let output = command
-        .args(["--ask", QUESTION, term])
+        // These tests are not about the size limit. The long temporary paths of
+        // macOS can make many results larger than the default limit.
+        .args(["--no-max-chars", "--ask", QUESTION, term])
         .arg(root)
         .output()
         .expect("run jag");

@@ -9,9 +9,12 @@ use std::ops::Range;
 
 use serde::Serialize;
 
+#[cfg(test)]
+use crate::config::MIN_SIZE_LIMIT;
+use crate::config::{SIZE_LIMIT_OFF_OPTION, SIZE_LIMIT_OPTION};
 use crate::failure::Failure;
 use crate::scorer::{PROMPT_VERSION, THRESHOLD};
-use crate::search::snippet::{Snippet, SnippetLine, Source};
+use crate::search::snippet::{Snippet, SnippetLine, Source, char_count, char_prefix};
 use crate::search::walk::{SkipCounts, WalkWarning};
 
 /// The first line on standard output when no result answers well.
@@ -206,7 +209,208 @@ fn write_painted(out: &mut dyn Write, text: &[u8], cut: bool, paint: Paint) -> i
     out.write_all(&text[at..])
 }
 
-/// Write the results in rank order. Gives true when the label shows.
+/// What the size limit did to the output of one search.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct SizeReport {
+    /// The results that jag wrote, with a cut top result.
+    pub shown: usize,
+    /// The results that the size limit left out.
+    pub left_out: usize,
+    /// The N of the mark of a cut top result. 0 for no cut.
+    pub top_result_cut: u64,
+}
+
+impl SizeReport {
+    /// True when the size limit left out a result or cut the top result. This
+    /// gives exit 8 (decision 17 of FEATURE-09).
+    pub fn limited(&self) -> bool {
+        self.left_out > 0 || self.top_result_cut > 0
+    }
+}
+
+/// What `write_text` wrote.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct TextReport {
+    pub no_good_answer: bool,
+    pub size: SizeReport,
+}
+
+/// The largest `k` from 0 to `count` with `size(k) <= limit`. `size(k)` must
+/// grow with `k`.
+pub fn fitting_count(count: usize, limit: usize, size: impl Fn(usize) -> usize) -> usize {
+    let (mut low, mut high) = (0, count);
+    while low < high {
+        let middle = low + (high - low).div_ceil(2);
+        if size(middle) <= limit {
+            low = middle;
+        } else {
+            high = middle - 1;
+        }
+    }
+    low
+}
+
+/// The count of characters of a result that a line holds, in the file.
+fn full_chars(line: &SnippetLine) -> u64 {
+    char_count(&line.text) as u64 + line.cut
+}
+
+/// The cut of the top result (STORY-27): the lines that jag keeps, with their
+/// true cuts, and N, the count of the characters of the result that the output
+/// does not show. `fits` says whether a candidate and its N fit. None when not
+/// even the path, the line number, and the mark of the first matching line fit
+/// (decision 14).
+fn cut_top(top: &Snippet, fits: &dyn Fn(&Snippet, u64) -> bool) -> Option<(Snippet, u64)> {
+    let lines = &top.lines;
+    let full: Vec<u64> = lines.iter().map(full_chars).collect();
+    let all: u64 = full.iter().map(|count| count + 1).sum();
+    let matching = lines.iter().position(|line| line.is_match).unwrap_or(0);
+    if lines.is_empty() {
+        return None;
+    }
+    // The lines `start..end`, whole, and the count that the output leaves out.
+    let whole = |start: usize, end: usize| -> (Snippet, u64) {
+        let shown: u64 = full[start..end].iter().map(|count| count + 1).sum();
+        let snippet = Snippet {
+            source: top.source.clone(),
+            lines: lines[start..end].to_vec(),
+        };
+        (snippet, all - shown + lines[end - 1].cut)
+    };
+    // Step 1: leave out lines from the top, but never the first matching line.
+    let start = (0..=matching)
+        .find(|start| {
+            let (candidate, left) = whole(*start, matching + 1);
+            fits(&candidate, left)
+        })
+        .unwrap_or(matching);
+    let (candidate, left) = whole(start, matching + 1);
+    if fits(&candidate, left) {
+        // Step 2: whole lines while they fit.
+        let mut end = matching + 1;
+        while end < lines.len() {
+            let (candidate, left) = whole(start, end + 1);
+            if !fits(&candidate, left) {
+                break;
+            }
+            end += 1;
+        }
+        return Some(whole(start, end));
+    }
+    // Step 3: the first characters of the first matching line.
+    let line = &lines[matching];
+    let others = all - (full[matching] + 1);
+    (0..=char_count(&line.text)).rev().find_map(|chars| {
+        let mut kept = line.clone();
+        kept.text = char_prefix(&line.text, chars).to_vec();
+        kept.cut = full[matching] - chars as u64;
+        let left = others + kept.cut;
+        let candidate = Snippet {
+            source: top.source.clone(),
+            lines: vec![kept],
+        };
+        fits(&candidate, left).then_some((candidate, left))
+    })
+}
+
+/// The bytes of one result: its lines, with `--` before them when `separator`.
+fn block(snippet: &Snippet, separator: bool, paint: Option<Paint>) -> Vec<u8> {
+    let mut bytes = Vec::new();
+    // A write to a `Vec` does not fail.
+    if separator {
+        let _ = item(&mut bytes, paint.is_some(), SEPARATOR, b"--");
+        bytes.push(b'\n');
+    }
+    let label = snippet.source.label();
+    for line in &snippet.lines {
+        let _ = write_line(&mut bytes, label, line, paint);
+    }
+    bytes
+}
+
+/// Write `label`, then the results, inside `limit`. `separator` puts `--`
+/// between two results. The fit, the cut, and the report are the same for
+/// `write_text` and `write_lines`.
+fn write_fitted(
+    out: &mut dyn Write,
+    label: &[u8],
+    results: &[&Snippet],
+    separator: bool,
+    paint: Option<Paint>,
+    limit: Option<usize>,
+) -> io::Result<SizeReport> {
+    let count = results.len();
+    let Some(limit) = limit else {
+        out.write_all(label)?;
+        for (index, snippet) in results.iter().enumerate() {
+            out.write_all(&block(snippet, separator && index > 0, paint))?;
+        }
+        return Ok(SizeReport {
+            shown: count,
+            ..SizeReport::default()
+        });
+    };
+    let Some(room) = limit.checked_sub(char_count(label)) else {
+        return Ok(SizeReport {
+            left_out: count,
+            ..SizeReport::default()
+        });
+    };
+    let blocks: Vec<Vec<u8>> = results
+        .iter()
+        .enumerate()
+        .map(|(index, snippet)| block(snippet, separator && index > 0, paint))
+        .collect();
+    let mut sums = vec![0usize];
+    for bytes in &blocks {
+        sums.push(sums[sums.len() - 1] + char_count(bytes));
+    }
+    let kept = fitting_count(count, room, |k| sums[k]);
+    if kept > 0 {
+        out.write_all(label)?;
+        for bytes in &blocks[..kept] {
+            out.write_all(bytes)?;
+        }
+        return Ok(SizeReport {
+            shown: kept,
+            left_out: count - kept,
+            top_result_cut: 0,
+        });
+    }
+    let Some(top) = results.first() else {
+        return Ok(SizeReport::default());
+    };
+    // The room for the mark uses the digits of the full count (decision 13).
+    let all: u64 = top.lines.iter().map(|line| full_chars(line) + 1).sum();
+    let fits = |candidate: &Snippet, _left: u64| {
+        let mut estimate = candidate.clone();
+        if let Some(last) = estimate.lines.last_mut() {
+            last.cut = all;
+        }
+        char_count(&block(&estimate, false, paint)) <= room
+    };
+    out.write_all(label)?;
+    match cut_top(top, &fits) {
+        Some((mut cut, left)) => {
+            if let Some(last) = cut.lines.last_mut() {
+                last.cut = left;
+            }
+            out.write_all(&block(&cut, false, paint))?;
+            Ok(SizeReport {
+                shown: 1,
+                left_out: count - 1,
+                top_result_cut: left,
+            })
+        }
+        None => Ok(SizeReport {
+            left_out: count,
+            ..SizeReport::default()
+        }),
+    }
+}
+
+/// Write the results in rank order, inside the size limit (`None` for no
+/// limit). The report says if the label shows and what the limit did.
 ///
 /// A result has the form of `grep -n` with lines around the match:
 /// `path:N:text` for a matching line, `path-N-text` for another line, and
@@ -216,45 +420,244 @@ fn write_painted(out: &mut dyn Write, text: &[u8], cut: bool, paint: Paint) -> i
 /// characters.
 ///
 /// With `paint`, the text has the color of `grep --color=always` (decision 7).
-/// With `None`, it has no escape code.
+/// With `None`, it has no escape code. The codes count toward the limit.
 pub fn write_text(
     out: &mut dyn Write,
     ranked: &[(Snippet, f64)],
     paint: Option<Paint>,
-) -> io::Result<bool> {
-    let colored = paint.is_some();
+    limit: Option<usize>,
+) -> io::Result<TextReport> {
     let no_good_answer = is_no_good_answer(ranked);
-    if no_good_answer {
-        writeln!(out, "{NO_GOOD_ANSWER}")?;
-    }
-    for (index, (snippet, _)) in ranked.iter().enumerate() {
-        if index > 0 {
-            item(out, colored, SEPARATOR, b"--")?;
-            out.write_all(b"\n")?;
-        }
-        let label = snippet.source.label();
-        for line in &snippet.lines {
-            write_line(out, label, line, paint)?;
-        }
-    }
-    Ok(no_good_answer)
+    let label = if no_good_answer {
+        format!("{NO_GOOD_ANSWER}\n")
+    } else {
+        String::new()
+    };
+    let results: Vec<&Snippet> = ranked.iter().map(|(snippet, _)| snippet).collect();
+    let size = write_fitted(out, label.as_bytes(), &results, true, paint, limit)?;
+    Ok(TextReport {
+        no_good_answer,
+        size,
+    })
 }
 
 /// Write the lines of a search with no question (FEATURE-12): one
 /// `path:N:text` line for each line of `results`, in that order. No `--` and
-/// no label line, as grep with no context option.
+/// no label line, as grep with no context option. The size limit applies as
+/// for `write_text` (FEATURE-09).
 pub fn write_lines(
     out: &mut dyn Write,
     results: &[Snippet],
     paint: Option<Paint>,
-) -> io::Result<()> {
-    for snippet in results {
-        let label = snippet.source.label();
-        for line in &snippet.lines {
-            write_line(out, label, line, paint)?;
+    limit: Option<usize>,
+) -> io::Result<SizeReport> {
+    let results: Vec<&Snippet> = results.iter().collect();
+    write_fitted(out, b"", &results, false, paint, limit)
+}
+
+/// The second sentence of the size notice, and the field `size_limit_fix`.
+fn size_fix(limit: usize) -> String {
+    format!(
+        "To see more, use {SIZE_LIMIT_OPTION} with a number larger than {limit}, or {SIZE_LIMIT_OFF_OPTION}."
+    )
+}
+
+/// The notice of the size limit, for the error stream. `None` when there is no
+/// limit, or when jag left out no result and cut nothing.
+pub fn size_notice(size: &SizeReport, limit: Option<usize>) -> Option<String> {
+    let limit = limit?;
+    if !size.limited() {
+        return None;
+    }
+    let cut = if size.top_result_cut > 0 {
+        ", and cut the top result"
+    } else {
+        ""
+    };
+    Some(format!(
+        "jag: size limit reached: showed {} of {} results, left out {}{cut}. {}",
+        size.shown,
+        size.shown + size.left_out,
+        size.left_out,
+        size_fix(limit)
+    ))
+}
+
+/// The count of characters of the document that `write_json` gives.
+fn document_chars(summary: &Summary, results: &[&Snippet]) -> usize {
+    let mut buffer = Vec::new();
+    // A write to a `Vec` does not fail.
+    let _ = write_json(&mut buffer, summary, results);
+    char_count(&buffer)
+}
+
+/// The paths in a text: each run that starts with `/` and goes to a space, a
+/// quote, a bracket, or the end, without the dot, comma, or colon at its end.
+fn shorten_paths(text: &str, keep: usize) -> String {
+    let mut shortened = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(start) = rest.find('/') {
+        shortened.push_str(&rest[..start]);
+        let tail = &rest[start..];
+        let end = tail
+            .find(|c: char| c.is_whitespace() || "`'\"()".contains(c))
+            .unwrap_or(tail.len());
+        let run = tail[..end].trim_end_matches(['.', ',', ':', ';']);
+        let length = run.chars().count();
+        if length > keep {
+            shortened.push_str("...");
+            let skip = length - (keep - 3);
+            shortened.extend(run.chars().skip(skip));
+        } else {
+            shortened.push_str(run);
+        }
+        rest = &tail[run.len()..];
+    }
+    shortened.push_str(rest);
+    shortened
+}
+
+/// The longest path in the error texts, in characters.
+fn longest_path(failure: &Failure) -> usize {
+    [&failure.cause, &failure.fix]
+        .iter()
+        .flat_map(|text| text.split(|c: char| c.is_whitespace() || "`'\"()".contains(c)))
+        .filter(|word| word.starts_with('/'))
+        .map(|word| word.trim_end_matches(['.', ',', ':', ';']).chars().count())
+        .max()
+        .unwrap_or(0)
+}
+
+/// Write the document of a search inside the size limit (`None` for no
+/// limit). `summary` holds the counts; this function sets its 4 size-limit
+/// fields, its exit code, and the warnings that stay (STORY-26, STORY-27,
+/// CRITERION-104). `exit_code(limited)` gives the exit code, with `limited`
+/// true when the limit left out a result or cut the top result. The results
+/// fit first, then the warnings. jag never cuts a document, so a document that
+/// does not fit with no result and no warning gets shorter paths in its error
+/// texts.
+pub fn write_document(
+    out: &mut dyn Write,
+    summary: &mut Summary,
+    results: &[&Snippet],
+    limit: Option<usize>,
+    exit_code: &dyn Fn(bool) -> u8,
+) -> io::Result<SizeReport> {
+    let count = results.len();
+    let warnings = std::mem::take(&mut summary.warnings);
+    let total = warnings.len();
+    summary.left_out = 0;
+    summary.top_result_cut = 0;
+    summary.size_limit_fix.clear();
+    summary.warnings_left_out = 0;
+    summary.exit_code = exit_code(false);
+    summary.warnings = warnings.clone();
+    let whole = SizeReport {
+        shown: count,
+        ..SizeReport::default()
+    };
+    let Some(limit) = limit else {
+        write_json(out, summary, results)?;
+        return Ok(whole);
+    };
+    if document_chars(summary, results) <= limit {
+        write_json(out, summary, results)?;
+        return Ok(whole);
+    }
+
+    // Jag leaves out or cuts something. The results fit first, with no warning.
+    summary.size_limit_fix = size_fix(limit);
+    summary.warnings = Vec::new();
+    summary.warnings_left_out = total as u64;
+    let size = |summary: &mut Summary, kept: &[&Snippet]| {
+        summary.left_out = (count - kept.len()) as u64;
+        summary.exit_code = exit_code(summary.left_out > 0);
+        document_chars(summary, kept)
+    };
+    let mut kept = fitting_count(count, limit, |k| size(&mut summary.clone(), &results[..k]));
+    let mut cut_snippet = None;
+    let mut report = SizeReport {
+        shown: kept,
+        left_out: count - kept,
+        top_result_cut: 0,
+    };
+    if kept == 0 && count > 0 {
+        let top = results[0];
+        let fits = |candidate: &Snippet, left: u64| {
+            let mut trial = summary.clone();
+            trial.left_out = (count - 1) as u64;
+            trial.top_result_cut = left;
+            trial.exit_code = exit_code(true);
+            document_chars(&trial, &[candidate]) <= limit
+        };
+        match cut_top(top, &fits) {
+            Some((candidate, left)) => {
+                kept = 1;
+                report = SizeReport {
+                    shown: 1,
+                    left_out: count - 1,
+                    top_result_cut: left,
+                };
+                cut_snippet = Some(candidate);
+            }
+            None => {
+                report = SizeReport {
+                    shown: 0,
+                    left_out: count,
+                    top_result_cut: 0,
+                };
+            }
         }
     }
-    Ok(())
+    summary.left_out = report.left_out as u64;
+    summary.top_result_cut = report.top_result_cut;
+    summary.exit_code = exit_code(report.limited());
+    let shown: Vec<&Snippet> = match &cut_snippet {
+        Some(candidate) => vec![candidate],
+        None => results[..kept].to_vec(),
+    };
+
+    // An error document that does not fit with no warning gets shorter paths.
+    let original = summary.error.clone();
+    if document_chars(summary, &shown) > limit
+        && let Some(failure) = &original
+    {
+        let longest = longest_path(failure);
+        let fits = |keep: usize, summary: &mut Summary| {
+            summary.error = Some(Failure {
+                cause: shorten_paths(&failure.cause, keep),
+                fix: shorten_paths(&failure.fix, keep),
+                exit_code: failure.exit_code,
+            });
+            document_chars(summary, &shown) <= limit
+        };
+        let (mut low, mut high) = (3, longest.max(3));
+        while low < high {
+            // The largest length with which the document fits.
+            let middle = low + (high - low).div_ceil(2);
+            if fits(middle, &mut summary.clone()) {
+                low = middle;
+            } else {
+                high = middle - 1;
+            }
+        }
+        let _ = fits(low, summary);
+    }
+
+    // Then the warnings, in order, while the document fits.
+    let mut added = 0;
+    while added < total {
+        summary.warnings = warnings[..=added].to_vec();
+        summary.warnings_left_out = (total - added - 1) as u64;
+        if document_chars(summary, &shown) > limit {
+            break;
+        }
+        added += 1;
+    }
+    summary.warnings = warnings[..added].to_vec();
+    summary.warnings_left_out = (total - added) as u64;
+    write_json(out, summary, &shown)?;
+    Ok(report)
 }
 
 /// Write one line of a result: `path:N:text` for a matching line, and
@@ -308,7 +711,9 @@ mod tests {
 
     fn write(ranked: &[(Snippet, f64)]) -> (String, bool) {
         let mut out = Vec::new();
-        let label = write_text(&mut out, ranked, None).expect("write");
+        let label = write_text(&mut out, ranked, None, None)
+            .expect("write")
+            .no_good_answer;
         (String::from_utf8(out).expect("text"), label)
     }
 
@@ -367,7 +772,7 @@ mod tests {
         let mut result = snippet("a", &[(1, "x", true)]);
         result.lines[0].text = vec![b'a', 0xff, b'\r'];
         let mut out = Vec::new();
-        write_text(&mut out, &[(result, 0.9)], None).expect("write");
+        write_text(&mut out, &[(result, 0.9)], None, None).expect("write");
         assert_eq!(out, b"a:1:a\xff\r\n");
     }
 
@@ -649,7 +1054,7 @@ mod tests {
             warnings_left_out: u64::MAX,
         };
         let length = json(&summary, &[]).chars().count();
-        assert!(length < 1000, "{length} characters");
+        assert!(length < MIN_SIZE_LIMIT, "{length} characters");
     }
 
     #[test]
@@ -670,7 +1075,7 @@ mod tests {
 
     fn colored(ranked: &[(Snippet, f64)]) -> String {
         let mut out = Vec::new();
-        write_text(&mut out, ranked, Some(&find_needle)).expect("write");
+        write_text(&mut out, ranked, Some(&find_needle), None).expect("write");
         String::from_utf8(out).expect("text")
     }
 
@@ -734,7 +1139,7 @@ mod tests {
         let ranked = [(snippet("a", &[(1, "needle", false), (2, "x", true)]), 0.9)];
         let empty = |_: &[u8]| std::iter::once(0..0).collect::<Vec<_>>();
         let mut out = Vec::new();
-        write_text(&mut out, &ranked, Some(&empty)).expect("write");
+        write_text(&mut out, &ranked, Some(&empty), None).expect("write");
         let text = String::from_utf8(out).expect("text");
         assert!(!text.contains("01;31"));
         // A line around the match is not searched for matches.
@@ -777,7 +1182,7 @@ mod tests {
 
     fn lines_text(results: &[Snippet], paint: Option<Paint>) -> String {
         let mut out = Vec::new();
-        write_lines(&mut out, results, paint).expect("write");
+        write_lines(&mut out, results, paint, None).expect("write");
         String::from_utf8(out).expect("text")
     }
 
@@ -816,7 +1221,7 @@ mod tests {
         };
         let result = snippet("a.txt", &[(1, "axb", true)]);
         let mut text = Vec::new();
-        write_text(&mut text, &[(result.clone(), 0.9)], Some(&find)).expect("write");
+        write_text(&mut text, &[(result.clone(), 0.9)], Some(&find), None).expect("write");
         let lines = lines_text(&[result], Some(&find));
         assert_eq!(lines.as_bytes(), text);
         assert!(lines.contains("\x1b[01;31m"));
@@ -846,5 +1251,427 @@ mod tests {
         }
         assert_eq!(items[1]["first_line"], 3);
         assert_eq!(items[2]["path"], "b.txt");
+    }
+
+    // FEATURE-09: the size limit.
+
+    /// A result of `count` lines, each of `width` characters, with line
+    /// `matching` as the matching line.
+    fn wide(path: &str, count: u64, width: usize, matching: u64) -> Snippet {
+        let lines: Vec<SnippetLine> = (1..=count)
+            .map(|number| SnippetLine {
+                number,
+                text: "x".repeat(width).into_bytes(),
+                is_match: number == matching,
+                cut: 0,
+            })
+            .collect();
+        Snippet {
+            source: Source::File(PathBuf::from(path)),
+            lines,
+        }
+    }
+
+    fn limited(ranked: &[(Snippet, f64)], limit: usize) -> (String, TextReport) {
+        let mut out = Vec::new();
+        let report = write_text(&mut out, ranked, None, Some(limit)).expect("write");
+        // A bad sequence of bytes counts as one character, as U+FFFD does.
+        (String::from_utf8_lossy(&out).into_owned(), report)
+    }
+
+    fn report(shown: usize, left_out: usize, top_result_cut: u64) -> SizeReport {
+        SizeReport {
+            shown,
+            left_out,
+            top_result_cut,
+        }
+    }
+
+    #[test]
+    fn fitting_count_gives_the_largest_count_that_fits() {
+        let size = |k: usize| k * 10;
+        assert_eq!(fitting_count(5, 100, size), 5);
+        assert_eq!(fitting_count(5, 49, size), 4);
+        assert_eq!(fitting_count(5, 50, size), 5);
+        assert_eq!(fitting_count(5, 9, size), 0);
+        assert_eq!(fitting_count(0, 9, size), 0);
+    }
+
+    // The 30 results of 113 characters of CRITERION-36.
+    fn thirty() -> Vec<(Snippet, f64)> {
+        (0..30)
+            .map(|number| {
+                let text = format!("needle {number:02} {}", "x".repeat(90));
+                (
+                    snippet(&format!("d/r{number:02}.txt"), &[(1, &text, true)]),
+                    0.9 - f64::from(number) / 100.0,
+                )
+            })
+            .collect()
+    }
+
+    #[test]
+    fn whole_results_stay_with_the_lowest_rank_left_out_first() {
+        let (text, size) = limited(&thirty(), 1000);
+        assert_eq!(text.chars().count(), 925);
+        assert_eq!(size.size, report(8, 22, 0));
+        assert!(text.contains("d/r07.txt:1:") && !text.contains("d/r08.txt"));
+        let (text, size) = limited(&thirty(), 1041);
+        assert_eq!(text.chars().count(), 1041);
+        assert_eq!(size.size, report(9, 21, 0));
+    }
+
+    #[test]
+    fn a_large_second_result_keeps_a_small_third_result_out() {
+        let ranked = [
+            (snippet("a", &[(1, "x", true)]), 0.9),
+            (wide("b", 1, 300, 1), 0.8),
+            (snippet("c", &[(1, "y", true)]), 0.7),
+        ];
+        let (text, size) = limited(&ranked, 100);
+        assert_eq!(text, "a:1:x\n");
+        assert_eq!(size.size, report(1, 2, 0));
+    }
+
+    #[test]
+    fn the_label_the_separators_and_the_marks_count() {
+        let ranked = [
+            (snippet("a", &[(1, "x", true)]), 0.2),
+            (snippet("b", &[(1, "y", true)]), 0.1),
+        ];
+        let full = format!("{NO_GOOD_ANSWER}\na:1:x\n--\nb:1:y\n");
+        let count = full.chars().count();
+        let (text, size) = limited(&ranked, count);
+        assert_eq!(text, full);
+        assert_eq!(size.size, report(2, 0, 0));
+        // One character less leaves out the second result and its `--`.
+        let (text, size) = limited(&ranked, count - 1);
+        assert_eq!(text, format!("{NO_GOOD_ANSWER}\na:1:x\n"));
+        assert_eq!(size.size, report(1, 1, 0));
+        assert!(size.no_good_answer);
+        // A cut mark counts.
+        let mut cut = snippet("a", &[(1, "x", true)]);
+        cut.lines[0].cut = 5;
+        let (text, _) = limited(&[(cut.clone(), 0.9)], 100);
+        assert_eq!(text, "a:1:x [+5 chars]\n");
+        // The line with its mark does not fit, so jag cuts the top result.
+        let (text, size) = limited(&[(cut, 0.9)], 16);
+        assert_eq!(text, "a:1: [+6 chars]\n");
+        assert_eq!(size.size, report(1, 0, 6));
+    }
+
+    #[test]
+    fn no_limit_and_a_limit_of_the_full_count_give_the_same_output() {
+        let ranked = thirty();
+        let mut free = Vec::new();
+        let report_free = write_text(&mut free, &ranked, None, None).expect("write");
+        assert_eq!(report_free.size, report(30, 0, 0));
+        let count = String::from_utf8_lossy(&free).chars().count();
+        let (text, size) = limited(&ranked, count);
+        assert_eq!(text.as_bytes(), free);
+        assert_eq!(size.size, report(30, 0, 0));
+    }
+
+    #[test]
+    fn the_output_never_has_more_characters_than_the_limit() {
+        let bad = {
+            let mut result = snippet("p/\u{e9}.txt", &[(1, "x", true), (2, "y", false)]);
+            result.lines[0].text = b"a\xffb\xe2\x82 \xc3\xa9\xc3\xa9".to_vec();
+            result.lines[1].cut = 40;
+            result
+        };
+        let lists: [Vec<(Snippet, f64)>; 4] = [
+            thirty(),
+            vec![
+                (bad.clone(), 0.9),
+                (bad.clone(), 0.8),
+                (wide("w", 7, 60, 4), 0.7),
+            ],
+            vec![(wide("w", 7, 200, 4), 0.2), (bad, 0.1)],
+            vec![(snippet("a", &[(1, "x", true)]), 0.1)],
+        ];
+        for ranked in &lists {
+            for limit in 1..=2000 {
+                let (text, size) = limited(ranked, limit);
+                assert!(text.chars().count() <= limit, "{limit}: {text:?}");
+                assert_eq!(
+                    size.size.shown + size.size.left_out,
+                    ranked.len(),
+                    "{limit}"
+                );
+            }
+        }
+    }
+
+    // Example 1 of the spec: lines of 200 characters, line 4 matches.
+    #[test]
+    fn a_cut_top_result_ends_at_the_marked_line_example_1() {
+        let ranked = [
+            (wide("d/top.txt", 7, 200, 4), 0.9),
+            (snippet("low", &[(1, "x", true)]), 0.5),
+        ];
+        let (text, size) = limited(&ranked, 1000);
+        assert_eq!(text.chars().count(), 865);
+        assert_eq!(size.size, report(1, 1, 603));
+        let rows: Vec<&str> = text.lines().collect();
+        assert_eq!(rows.len(), 4);
+        assert!(rows[0].starts_with("d/top.txt-1-"));
+        assert!(rows[3].starts_with("d/top.txt:4:") && rows[3].ends_with(" [+603 chars]"));
+    }
+
+    // Example 2: lines before the match are left out first.
+    #[test]
+    fn a_cut_top_result_leaves_out_lines_before_the_match_example_2() {
+        let ranked = [(wide("d/top.txt", 7, 300, 4), 0.9)];
+        let (text, size) = limited(&ranked, 1000);
+        assert_eq!(text.chars().count(), 953);
+        assert_eq!(size.size, report(1, 0, 1204));
+        let rows: Vec<&str> = text.lines().collect();
+        assert!(rows[0].starts_with("d/top.txt-2-"));
+        assert!(rows[2].starts_with("d/top.txt:4:") && rows[2].ends_with(" [+1204 chars]"));
+    }
+
+    #[test]
+    fn a_matching_line_that_does_not_fit_is_cut_at_a_character() {
+        let mut top = wide("d/t.txt", 1, 0, 1);
+        top.lines[0].text = "é".repeat(300).into_bytes();
+        let (text, size) = limited(&[(top, 0.9)], 150);
+        let row = text.trim_end();
+        assert!(row.starts_with("d/t.txt:1:é"));
+        assert!(text.chars().count() <= 150);
+        let kept = row.matches('é').count();
+        assert!(kept > 100, "{kept}");
+        assert!(row.ends_with(&format!(" [+{} chars]", 300 - kept)));
+        assert_eq!(size.size, report(1, 0, (300 - kept) as u64));
+    }
+
+    #[test]
+    fn the_mark_of_the_cut_takes_the_place_of_the_mark_of_the_last_line() {
+        let mut top = wide("d/t.txt", 3, 200, 1);
+        top.lines[0].cut = 50;
+        let (text, size) = limited(&[(top, 0.9)], 300);
+        // Line 1 with its mark does not fit with the mark of the cut: line 1
+        // is the last line, so its own cut counts in N.
+        let rows: Vec<&str> = text.lines().collect();
+        assert_eq!(rows.len(), 1);
+        assert!(rows[0].ends_with(" chars]"));
+        let n = size.size.top_result_cut;
+        assert!(rows[0].ends_with(&format!(" [+{n} chars]")));
+        assert!(n >= 50 + 2 * 201);
+    }
+
+    #[test]
+    fn a_room_that_is_too_small_for_the_path_and_the_mark_gives_no_output() {
+        let ranked = [
+            (wide("d/a-long-path.txt", 1, 50, 1), 0.9),
+            (wide("b", 1, 5, 1), 0.8),
+        ];
+        let (text, size) = limited(&ranked, 20);
+        assert_eq!(text, "");
+        assert_eq!(size.size, report(0, 2, 0));
+    }
+
+    #[test]
+    fn a_result_that_starts_with_its_matching_line_leaves_out_no_line_before_it() {
+        let ranked = [(wide("d/t.txt", 4, 300, 1), 0.9)];
+        let (text, size) = limited(&ranked, 700);
+        assert!(text.starts_with("d/t.txt:1:"));
+        assert_eq!(size.size.shown, 1);
+        assert!(size.size.top_result_cut > 0);
+    }
+
+    #[test]
+    fn a_limit_of_the_label_alone_leaves_out_each_result() {
+        let ranked = [(snippet("a", &[(1, "x", true)]), 0.2)];
+        let (text, size) = limited(&ranked, 10);
+        assert_eq!(text, "");
+        assert_eq!(size.size, report(0, 1, 0));
+    }
+
+    #[test]
+    fn write_lines_has_the_limit_and_cuts_a_first_line() {
+        let lines: Vec<Snippet> = (0..30)
+            .map(|number| {
+                snippet(
+                    &format!("d/r{number:02}.txt"),
+                    &[(1, &format!("n {}", "x".repeat(97)), true)],
+                )
+            })
+            .collect();
+        let mut out = Vec::new();
+        let size = write_lines(&mut out, &lines, None, Some(1000)).expect("write");
+        assert_eq!(size, report(8, 22, 0));
+        assert_eq!(String::from_utf8_lossy(&out).chars().count(), 896);
+        let mut out = Vec::new();
+        let size = write_lines(&mut out, &lines, None, Some(60)).expect("write");
+        assert_eq!(size.shown, 1);
+        assert_eq!(size.left_out, 29);
+        assert!(size.top_result_cut > 0);
+        assert!(String::from_utf8_lossy(&out).chars().count() <= 60);
+    }
+
+    #[test]
+    fn the_notice_has_each_form() {
+        let fix = "To see more, use --max-chars with a number larger than 1000, or --no-max-chars.";
+        assert_eq!(
+            size_notice(&report(8, 22, 0), Some(1000)),
+            Some(format!(
+                "jag: size limit reached: showed 8 of 30 results, left out 22. {fix}"
+            ))
+        );
+        assert_eq!(
+            size_notice(&report(1, 2, 7), Some(1000)),
+            Some(format!(
+                "jag: size limit reached: showed 1 of 3 results, left out 2, and cut the top result. {fix}"
+            ))
+        );
+        assert_eq!(
+            size_notice(&report(1, 0, 7), Some(1000)),
+            Some(format!(
+                "jag: size limit reached: showed 1 of 1 results, left out 0, and cut the top result. {fix}"
+            ))
+        );
+        assert_eq!(
+            size_notice(&report(0, 3, 0), Some(1000)),
+            Some(format!(
+                "jag: size limit reached: showed 0 of 3 results, left out 3. {fix}"
+            ))
+        );
+        assert_eq!(size_notice(&report(3, 0, 0), Some(1000)), None);
+        assert_eq!(size_notice(&report(1, 2, 0), None), None);
+    }
+
+    // The document.
+
+    fn document_of(
+        summary: &mut Summary,
+        results: &[&Snippet],
+        limit: Option<usize>,
+    ) -> (String, SizeReport) {
+        let mut out = Vec::new();
+        let size = write_document(&mut out, summary, results, limit, &|limited| {
+            if limited { 8 } else { 0 }
+        })
+        .expect("write");
+        (String::from_utf8(out).expect("text"), size)
+    }
+
+    #[test]
+    fn a_document_with_no_limit_or_inside_the_limit_is_whole() {
+        let results = thirty();
+        let refs: Vec<&Snippet> = results.iter().map(|(snippet, _)| snippet).collect();
+        let (free, size) = document_of(&mut Summary::default(), &refs, None);
+        assert_eq!(size, report(30, 0, 0));
+        let (text, size) = document_of(&mut Summary::default(), &refs, Some(free.chars().count()));
+        assert_eq!(text, free);
+        assert_eq!(size, report(30, 0, 0));
+        assert!(text.contains("\"size_limit_fix\":\"\""));
+    }
+
+    #[test]
+    fn a_document_fits_the_limit_and_names_what_it_left_out() {
+        let results = thirty();
+        let refs: Vec<&Snippet> = results.iter().map(|(snippet, _)| snippet).collect();
+        for limit in (1000..7000).step_by(250) {
+            let mut summary = Summary::default();
+            let (text, size) = document_of(&mut summary, &refs, Some(limit));
+            assert!(text.chars().count() <= limit, "{limit}");
+            let value: serde_json::Value = serde_json::from_str(&text).expect("json");
+            assert_eq!(value["results"].as_array().map(Vec::len), Some(size.shown));
+            assert_eq!(value["left_out"], size.left_out);
+            assert_eq!(value["exit_code"], if size.left_out > 0 { 8 } else { 0 });
+        }
+    }
+
+    #[test]
+    fn a_cut_top_result_in_a_document_has_no_mark_and_a_cut_field() {
+        let top = wide("d/t.txt", 7, 200, 4);
+        let low = snippet("low", &[(1, "x", true)]);
+        let mut summary = Summary::default();
+        let (text, size) = document_of(&mut summary, &[&top, &low], Some(1000));
+        assert!(text.chars().count() <= 1000);
+        assert_eq!(size.shown, 1);
+        assert_eq!(size.left_out, 1);
+        assert!(size.top_result_cut > 0);
+        assert!(!text.contains("chars]"));
+        let value: serde_json::Value = serde_json::from_str(&text).expect("json");
+        assert_eq!(value["top_result_cut"], size.top_result_cut);
+        assert_eq!(value["exit_code"], 8);
+    }
+
+    #[test]
+    fn warnings_fit_after_the_results_and_are_never_cut() {
+        let warnings: Vec<WalkWarning> = (0..50)
+            .map(|number| WalkWarning {
+                path: Some(PathBuf::from(format!("d/locked{number:02}.txt"))),
+                kind: WarningKind::Read(io::ErrorKind::PermissionDenied),
+            })
+            .collect();
+        let result = snippet("d/a.txt", &[(1, "needle", true)]);
+        let mut summary = Summary {
+            warnings: warnings.clone(),
+            ..Summary::default()
+        };
+        let (text, size) = document_of(&mut summary, &[&result], Some(1000));
+        assert!(text.chars().count() <= 1000);
+        assert_eq!(size, report(1, 0, 0));
+        let value: serde_json::Value = serde_json::from_str(&text).expect("json");
+        let kept = value["warnings"].as_array().map_or(0, Vec::len);
+        assert!(kept > 0 && kept < 50);
+        assert_eq!(value["warnings_left_out"], 50 - kept);
+        assert_eq!(value["exit_code"], 0, "a warning is not a result");
+        assert!(
+            value["size_limit_fix"]
+                .as_str()
+                .is_some_and(|text| !text.is_empty())
+        );
+        // The kept warnings are the first ones, in order.
+        assert_eq!(value["warnings"][0]["path"], "d/locked00.txt");
+    }
+
+    #[test]
+    fn an_error_document_with_a_long_path_gets_a_shorter_path() {
+        let path = format!("/home/{}/config.yml", "h".repeat(1200));
+        let failure = Failure {
+            cause: format!("{path} can be read by other users (mode 0644)."),
+            fix: format!("Run `chmod 600 {path}`."),
+            exit_code: 3,
+        };
+        let mut summary = Summary {
+            error: Some(failure),
+            ..Summary::default()
+        };
+        let mut out = Vec::new();
+        write_document(&mut out, &mut summary, &[], Some(1000), &|_| 3).expect("write");
+        let text = String::from_utf8(out).expect("text");
+        assert!(text.chars().count() <= 1000, "{}", text.chars().count());
+        let value: serde_json::Value = serde_json::from_str(&text).expect("json");
+        let cause = value["error"]["cause"].as_str().expect("text");
+        assert!(cause.starts_with("...") && cause.contains("config.yml can be read"));
+        assert!(
+            value["error"]["fix"]
+                .as_str()
+                .expect("text")
+                .contains("`chmod 600 ...")
+        );
+        assert_eq!(value["exit_code"], 3);
+        assert!(
+            value["size_limit_fix"]
+                .as_str()
+                .is_some_and(|text| !text.is_empty())
+        );
+    }
+
+    #[test]
+    fn shorten_paths_keeps_the_end_of_each_path_in_the_same_form() {
+        assert_eq!(
+            shorten_paths(
+                "/aaaaaaaaaa/b.yml is bad. Run `chmod 600 /aaaaaaaaaa/b.yml`.",
+                8
+            ),
+            "...b.yml is bad. Run `chmod 600 ...b.yml`."
+        );
+        assert_eq!(shorten_paths("/ab is short.", 8), "/ab is short.");
+        assert_eq!(shorten_paths("no path here", 5), "no path here");
     }
 }

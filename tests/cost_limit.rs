@@ -50,7 +50,10 @@ fn search(server: &FakeServer, dir: &Path, extra: &[&str], environment: &[(&str,
     }
     let output = command
         .args(extra)
-        .args(["--ask", QUESTION, "needle"])
+        // The tests here are about the cost limit, not the size limit: the
+        // long temporary paths of macOS can make 200 results larger than the
+        // default size limit.
+        .args(["--no-max-chars", "--ask", QUESTION, "needle"])
         .arg(dir)
         .output()
         .expect("run jag");

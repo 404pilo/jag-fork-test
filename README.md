@@ -116,6 +116,46 @@ $ jag --ask="-v or --verbose?" verbose src
 - With no question, `--timeout`, `--retry-wait`, and `--max-scored` have no
   effect. jag still checks their values.
 
+## The size limit
+
+jag never writes more characters to standard output than a size limit. The
+default limit is 20,000 characters. The limit also applies to a search with no
+question. To change it:
+
+```
+$ jag --max-chars 40000 --ask "QUESTION" TERM PATH...
+$ jag --no-max-chars TERM PATH...
+```
+
+You can also set the variable `JAG_MAX_CHARS`. The option wins over the
+variable. The smallest limit is 1,000. A value that is not a whole number of
+1,000 or more is a usage error with exit code 2. `--no-max-chars` turns the
+limit off.
+
+- jag counts characters, not bytes. Each character that jag writes to standard
+  output counts: the paths, the line numbers, the `--` lines, the label, and
+  the color codes. The error stream does not count.
+- To stay inside the limit, jag leaves out whole results, with the lowest
+  rank first. It never writes a lower result in place of a higher result that
+  does not fit.
+- When the top result alone is larger than the limit, jag cuts it. It keeps
+  the first matching line, and it ends the last line with ` [+N chars]`,
+  where N is the count of characters that jag does not show.
+- jag then writes one notice on the error stream. It gives the count of the
+  results that jag left out, and how to raise the limit. For example:
+
+```
+jag: size limit reached: showed 8 of 30 results, left out 22. To see more, use --max-chars with a number larger than 1000, or --no-max-chars.
+```
+
+- When jag leaves out a result or cuts the top result, it exits with 8. When
+  the cost limit is also reached, the exit code is 7, and the notice still
+  shows. When no result answers well, the exit code is 1.
+- With `--json`, jag fits the whole document in the limit, and it never cuts a
+  document. The results fit first, then the warnings. The fields
+  `left_out`, `top_result_cut`, `size_limit_fix`, and `warnings_left_out` hold
+  what the limit did. The error stream holds no size notice.
+
 ## Output for an agent
 
 By default, jag writes text, also when the output goes to a pipe. The
@@ -144,7 +184,10 @@ Each document has these fields:
 | `error` | `null`, or an object with `cause` and `fix` |
 | `no_good_answer` | `true` when the text mode shows the no-good-answer label |
 | `results_found`, `results_scored`, `results_skipped` | The three numbers of the cost-limit notice. With no question, `results_found` is the count of matching lines, and the other two are `0` |
-| `left_out`, `top_result_cut`, `size_limit_fix`, `warnings_left_out` | The size limit of the output. They are `0`, `0`, `""`, and `0` until jag has a size limit |
+| `left_out` | The count of results that the size limit left out |
+| `top_result_cut` | The count of characters that the size limit cut from the top result, or `0` |
+| `size_limit_fix` | The text that tells how to raise the limit, or `""` when the limit left out nothing |
+| `warnings_left_out` | The count of warnings that the size limit left out |
 | `files_skipped` | An object with `total`, `binary`, `hidden`, and `ignored` |
 | `warnings` | A list of objects with `path` (text or `null`) and `text` |
 | `results` | A list in rank order |

@@ -16,12 +16,15 @@ use grep_regex::{RegexMatcher, RegexMatcherBuilder};
 
 use crate::check;
 use crate::config::{
-    self, Env, RealFs, SettingSource, TimeSetting, TtyPrompter, cost_limit, find_key,
-    model_settings, parse_cost_limit, parse_seconds,
+    self, DEFAULT_SIZE_LIMIT, Env, RealFs, SettingSource, SizeLimit, TimeSetting, TtyPrompter,
+    cost_limit, find_key, model_settings, parse_cost_limit, parse_seconds, parse_size_limit,
+    size_limit,
 };
 use crate::failure::Failure;
 use crate::output::progress::Progress;
-use crate::output::{Paint, Summary, is_no_good_answer, write_json, write_lines, write_text};
+use crate::output::{
+    Paint, Summary, is_no_good_answer, size_notice, write_document, write_lines, write_text,
+};
 use crate::prerank;
 use crate::scorer::{ScoreError, ScoreSettings, probe, rank, score};
 use crate::search::snippet::{Snippet, line_windows, match_texts, plan_windows, read_snippets};
@@ -85,6 +88,14 @@ struct Cli {
     /// The most results that the model scores, from 1 to 2,000 (default 200)
     #[arg(long = "max-scored", value_name = "COUNT", conflicts_with_all = ["setup", "forget_key"])]
     cost_limit: Option<String>,
+
+    /// The most characters that jag writes to standard output, 1,000 or more (default 20,000)
+    #[arg(long = "max-chars", value_name = "COUNT", conflicts_with_all = ["check", "setup", "forget_key"])]
+    size_limit: Option<String>,
+
+    /// Turn off the size limit on standard output
+    #[arg(long = "no-max-chars", conflicts_with_all = ["size_limit", "check", "setup", "forget_key"])]
+    no_size_limit: bool,
 
     /// What you look for: the model ranks the matches by this question. With no --ask, jag works as grep: no model call, no cost, and no key
     #[arg(long, value_name = "QUESTION")]
@@ -167,6 +178,8 @@ pub fn run() -> ExitCode {
     let mut stderr = io::stderr();
     let mode = if cli.json { Mode::Json } else { Mode::Text };
     let mut summary = Summary::default();
+    // The size limit that jag knows when a failure comes (STORY-26).
+    let mut known_limit = Some(DEFAULT_SIZE_LIMIT);
 
     let result = if cli.setup {
         config::setup(
@@ -201,9 +214,17 @@ pub fn run() -> ExitCode {
         };
         let result = search(&cli, &env, &context, &mut summary, &mut stdout, &mut stderr);
         claim_or_wait(&stop);
+        known_limit = stop.size_limit();
         result
     };
-    finish(result, mode, &mut summary, &mut stdout, &mut stderr)
+    finish(
+        result,
+        mode,
+        &mut summary,
+        known_limit,
+        &mut stdout,
+        &mut stderr,
+    )
 }
 
 /// The form of the output (DECISION-27). Only `--json` gives `Json`.
@@ -231,13 +252,14 @@ fn argument_failure() -> Failure {
     )
 }
 
-/// The document of a failure: the summary has what jag counted before it.
-fn error_document(summary: &mut Summary, failure: Failure) -> Vec<u8> {
-    summary.exit_code = failure.exit_code;
+/// The document of a failure: the summary has what jag counted before it. It
+/// fits in `limit` (STORY-26).
+fn error_document(summary: &mut Summary, failure: Failure, limit: Option<usize>) -> Vec<u8> {
+    let code = failure.exit_code;
     summary.error = Some(failure);
     let mut buffer = Vec::new();
     // A write to a `Vec` does not fail.
-    let _ = write_json(&mut buffer, summary, &[]);
+    let _ = write_document(&mut buffer, summary, &[], limit, &|_| code);
     buffer
 }
 
@@ -255,7 +277,12 @@ fn parse() -> Result<Cli, ExitCode> {
                 Err(ExitCode::from(u8::try_from(error.exit_code()).unwrap_or(2)))
             }
             _ if json_requested(std::env::args_os()) => {
-                let buffer = error_document(&mut Summary::default(), argument_failure());
+                // The document holds only fixed texts, so it fits.
+                let buffer = error_document(
+                    &mut Summary::default(),
+                    argument_failure(),
+                    Some(DEFAULT_SIZE_LIMIT),
+                );
                 // A failed write goes to the error stream (decision 25).
                 let code = emit(&mut io::stdout(), &mut io::stderr(), &buffer, 2);
                 Err(ExitCode::from(code))
@@ -275,6 +302,7 @@ fn finish(
     result: Result<u8, Failure>,
     mode: Mode,
     summary: &mut Summary,
+    limit: Option<usize>,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> ExitCode {
@@ -282,7 +310,7 @@ fn finish(
         Ok(code) => ExitCode::from(code),
         Err(failure) if mode == Mode::Json => {
             let code = failure.exit_code;
-            let buffer = error_document(summary, failure);
+            let buffer = error_document(summary, failure, limit);
             ExitCode::from(emit(stdout, stderr, &buffer, code))
         }
         Err(failure) => {
@@ -330,6 +358,8 @@ struct SearchArgs<'a> {
     times: (Option<Duration>, Option<Duration>),
     /// The parsed `--max-scored`.
     cost_limit: Option<usize>,
+    /// The parsed `--max-chars` or `--no-max-chars`.
+    size_limit: Option<SizeLimit>,
 }
 
 /// Step 1: the arguments of a search. No message shows a value.
@@ -371,12 +401,22 @@ fn search_args(cli: &Cli) -> Result<SearchArgs<'_>, Failure> {
         .map(|text| parse_cost_limit(text, SettingSource::Option))
         .transpose()
         .map_err(Failure::from)?;
+    let size_limit = if cli.no_size_limit {
+        Some(SizeLimit::Off)
+    } else {
+        cli.size_limit
+            .as_deref()
+            .map(|text| parse_size_limit(text, SettingSource::Option).map(SizeLimit::Chars))
+            .transpose()
+            .map_err(Failure::from)?
+    };
     Ok(SearchArgs {
         term,
         question,
         paths: &cli.paths,
         times: (timeout, retry_wait),
         cost_limit,
+        size_limit,
     })
 }
 
@@ -403,6 +443,10 @@ fn search(
         stdout_is_terminal,
     } = *context;
     let args = search_args(cli)?;
+    // The option is known now. The variable comes with the other settings.
+    if let Some(option) = args.size_limit {
+        stop.set_size_limit(option.chars());
+    }
     // With no question, jag works as grep: no key, no model setting, and no
     // model call (FEATURE-12, decision 4).
     let Some(question) = args.question else {
@@ -412,6 +456,10 @@ fn search(
     let (key, _source) = find_key(env, &RealFs).map_err(Failure::from)?;
     let settings = model_settings(env, args.times).map_err(Failure::from)?;
     let limit = cost_limit(env, args.cost_limit).map_err(Failure::from)?;
+    let size = size_limit(env, args.size_limit)
+        .map_err(Failure::from)?
+        .chars();
+    stop.set_size_limit(size);
 
     let matcher = build_matcher(args.term)?;
 
@@ -443,7 +491,7 @@ fn search(
     );
 
     if snippets.is_empty() {
-        return no_result(context, summary, stdout, stderr);
+        return no_result(context, summary, size, stdout, stderr);
     }
     let cost_limit_reached = total > limit;
     if cost_limit_reached && mode == Mode::Text {
@@ -479,28 +527,38 @@ fn search(
     let ranked = rank(snippets, scores);
 
     let no_good_answer = is_no_good_answer(&ranked);
-    let code = search_exit_code(SearchOutcome {
-        no_good_answer,
-        cost_limit_reached,
-        left_out: false,
-    });
+    let exit_code = |left_out: bool| {
+        search_exit_code(SearchOutcome {
+            no_good_answer,
+            cost_limit_reached,
+            left_out,
+        })
+    };
 
     // All output stays in memory until here, so a failure writes no partial
     // result (CV-2).
     let mut buffer = Vec::new();
-    match mode {
+    let code = match mode {
         Mode::Text => {
             let find = |line: &[u8]| find_ranges(&matcher, line);
             let paint = colored(cli, env, stdout_is_terminal).then_some(&find as Paint);
-            write_text(&mut buffer, &ranked, paint).map_err(|_| write_failure())?;
+            let report =
+                write_text(&mut buffer, &ranked, paint, size).map_err(|_| write_failure())?;
+            // The size notice comes after the cost notice, and before the
+            // output, so it shows also when the reader closes the pipe.
+            if let Some(notice) = size_notice(&report.size, size) {
+                stop.notice(stderr, &notice);
+            }
+            exit_code(report.size.limited())
         }
         Mode::Json => {
             summary.no_good_answer = no_good_answer;
-            summary.exit_code = code;
             let results: Vec<&Snippet> = ranked.iter().map(|(snippet, _)| snippet).collect();
-            write_json(&mut buffer, summary, &results).map_err(|_| write_failure())?;
+            let report = write_document(&mut buffer, summary, &results, size, &exit_code)
+                .map_err(|_| write_failure())?;
+            exit_code(report.limited())
         }
-    }
+    };
     // A reader that closed the pipe gives no message and the code of the
     // search (CV-4).
     Ok(emit_claimed(stop, stdout, stderr, &buffer, code))
@@ -523,6 +581,11 @@ fn plain(
         stdout_is_terminal,
         ..
     } = *context;
+    // Plain grep reads no key, so a bad variable gives exit 2 at once.
+    let size = size_limit(env, args.size_limit)
+        .map_err(Failure::from)?
+        .chars();
+    stop.set_size_limit(size);
     let matcher = build_matcher(args.term)?;
     let report = scan(args.paths, &matcher, &ScanOptions::default());
     let windows = line_windows(&report.files);
@@ -537,22 +600,35 @@ fn plain(
     );
 
     if lines.is_empty() {
-        return no_result(context, summary, stdout, stderr);
+        return no_result(context, summary, size, stdout, stderr);
     }
+    let exit_code = |left_out: bool| {
+        search_exit_code(SearchOutcome {
+            no_good_answer: false,
+            cost_limit_reached: false,
+            left_out,
+        })
+    };
     let mut buffer = Vec::new();
-    match mode {
+    let code = match mode {
         Mode::Text => {
             let find = |line: &[u8]| find_ranges(&matcher, line);
             let paint = colored(cli, env, stdout_is_terminal).then_some(&find as Paint);
-            write_lines(&mut buffer, &lines, paint).map_err(|_| write_failure())?;
+            let report =
+                write_lines(&mut buffer, &lines, paint, size).map_err(|_| write_failure())?;
+            if let Some(notice) = size_notice(&report, size) {
+                stop.notice(stderr, &notice);
+            }
+            exit_code(report.limited())
         }
         Mode::Json => {
-            summary.exit_code = 0;
             let results: Vec<&Snippet> = lines.iter().collect();
-            write_json(&mut buffer, summary, &results).map_err(|_| write_failure())?;
+            let report = write_document(&mut buffer, summary, &results, size, &exit_code)
+                .map_err(|_| write_failure())?;
+            exit_code(report.limited())
         }
-    }
-    Ok(emit_claimed(stop, stdout, stderr, &buffer, 0))
+    };
+    Ok(emit_claimed(stop, stdout, stderr, &buffer, code))
 }
 
 fn build_matcher(term: &str) -> Result<RegexMatcher, Failure> {
@@ -623,13 +699,13 @@ fn record(
 fn no_result(
     context: &Context,
     summary: &mut Summary,
+    limit: Option<usize>,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> Result<u8, Failure> {
     if context.mode == Mode::Json {
-        summary.exit_code = 1;
         let mut buffer = Vec::new();
-        write_json(&mut buffer, summary, &[]).map_err(|_| write_failure())?;
+        write_document(&mut buffer, summary, &[], limit, &|_| 1).map_err(|_| write_failure())?;
         return Ok(emit_claimed(context.stop, stdout, stderr, &buffer, 1));
     }
     Ok(1)
@@ -696,7 +772,7 @@ fn check(
 struct SearchOutcome {
     no_good_answer: bool,
     cost_limit_reached: bool,
-    /// FEATURE-09 sets this when the size limit leaves out results.
+    /// The size limit left out a result or cut the top result.
     left_out: bool,
 }
 
