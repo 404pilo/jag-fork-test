@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want jag to cut the top result 
   say so when that result alone is larger than the limit, so that I still get the
   best answer.
 status: draft
-state: ready
+state: backlog
 github:
   number: 88
   node_id: I_kwDOVDCdD88AAAABXCAjBA

@@ -50,10 +50,10 @@ jag never writes more characters than the size limit, leaves out whole results w
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-25: Stay inside a default size limit](../stories/STORY-25.md) | ready | - | - | - | - |
-| [STORY-26: Leave out the lowest-ranked results](../stories/STORY-26.md) | ready | - | - | - | - |
-| [STORY-27: Cut a top result that is larger than the limit](../stories/STORY-27.md) | ready | - | - | - | - |
-| [STORY-28: Reject a size limit that is not valid](../stories/STORY-28.md) | ready | - | - | - | - |
+| [STORY-25: Stay inside a default size limit](../stories/STORY-25.md) | backlog | - | - | - | - |
+| [STORY-26: Leave out the lowest-ranked results](../stories/STORY-26.md) | backlog | - | - | - | - |
+| [STORY-27: Cut a top result that is larger than the limit](../stories/STORY-27.md) | backlog | - | - | - | - |
+| [STORY-28: Reject a size limit that is not valid](../stories/STORY-28.md) | backlog | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

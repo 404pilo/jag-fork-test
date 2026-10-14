@@ -4,7 +4,7 @@ title: Check the full history before jag goes public
 description: As an agent builder (PERSONA-01), I want each commit in the history checked
   for private data before jag goes public, so that no old commit shows it.
 status: draft
-state: ready
+state: backlog
 github:
   number: 109
   node_id: I_kwDOVDCdD88AAAABXCB-TQ

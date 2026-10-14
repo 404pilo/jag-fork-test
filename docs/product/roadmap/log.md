@@ -1,6 +1,18 @@
 # Log
 
 ## 2026-10-14
+* **Plan**: [STORY-47](stories/STORY-47.md) ready -> backlog by rule 11 (docs/adlc.md): it has no merged spec (FEATURE-19 spec PR #154 is open); user approval RULE11-01 ("Always, for each rule change"), by agent:planner, at 2026-10-14T11:57:31Z
+* **State**: [STORY-47](stories/STORY-47.md) ready -> backlog, by human:404pilo, at 2026-10-14T11:57:31Z
+* **Plan**: [STORY-28](stories/STORY-28.md) ready -> backlog by rule 11 (docs/adlc.md): it has no merged spec (FEATURE-09 spec PR #134 is open); user approval RULE11-01 ("Always, for each rule change"), by agent:planner, at 2026-10-14T11:57:31Z
+* **State**: [STORY-28](stories/STORY-28.md) ready -> backlog, by human:404pilo, at 2026-10-14T11:57:31Z
+* **Plan**: [STORY-27](stories/STORY-27.md) ready -> backlog by rule 11 (docs/adlc.md): it has no merged spec (FEATURE-09 spec PR #134 is open); user approval RULE11-01 ("Always, for each rule change"), by agent:planner, at 2026-10-14T11:57:31Z
+* **State**: [STORY-27](stories/STORY-27.md) ready -> backlog, by human:404pilo, at 2026-10-14T11:57:31Z
+* **Plan**: [STORY-26](stories/STORY-26.md) ready -> backlog by rule 11 (docs/adlc.md): it has no merged spec (FEATURE-09 spec PR #134 is open); user approval RULE11-01 ("Always, for each rule change"), by agent:planner, at 2026-10-14T11:57:31Z
+* **State**: [STORY-26](stories/STORY-26.md) ready -> backlog, by human:404pilo, at 2026-10-14T11:57:31Z
+* **Plan**: [STORY-25](stories/STORY-25.md) ready -> backlog by rule 11 (docs/adlc.md): it has no merged spec (FEATURE-09 spec PR #134 is open); user approval RULE11-01 ("Always, for each rule change"), by agent:planner, at 2026-10-14T11:57:31Z
+* **State**: [STORY-25](stories/STORY-25.md) ready -> backlog, by human:404pilo, at 2026-10-14T11:57:31Z
+* **Plan**: [STORY-24](stories/STORY-24.md) ready -> backlog by rule 11 (docs/adlc.md): its feature FEATURE-14 has no merged spec (spec PR #142 is open); user approval RULE11-01 ("Always, for each rule change"), by agent:planner, at 2026-10-14T11:57:31Z
+* **State**: [STORY-24](stories/STORY-24.md) ready -> backlog, by human:404pilo, at 2026-10-14T11:57:31Z
 * **Sync**: [STORY-43](stories/STORY-43.md) pushed to GitHub, by system:github, at 2026-10-14T05:39:33Z
 * **Sync**: [STORY-42](stories/STORY-42.md) pushed to GitHub, by system:github, at 2026-10-14T05:39:33Z
 * **Sync**: [STORY-41](stories/STORY-41.md) pushed to GitHub, by system:github, at 2026-10-14T05:39:33Z

@@ -5,7 +5,7 @@ description: As an agent builder (PERSONA-01), I want jag to leave out the lowes
   results and tell me how many, so that I know the list is not complete and how to
   see more.
 status: draft
-state: ready
+state: backlog
 github:
   number: 87
   node_id: I_kwDOVDCdD88AAAABXCAdog

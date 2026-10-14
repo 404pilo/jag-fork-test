@@ -35,7 +35,7 @@ Decision (DECISION-51): jag goes public as a new public repository with a clean 
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-47: Check the full history before jag goes public](../stories/STORY-47.md) | ready | - | - | - | - |
+| [STORY-47: Check the full history before jag goes public](../stories/STORY-47.md) | backlog | - | - | - | - |
 | [STORY-52: Create the new public repository with a clean history](../stories/STORY-52.md) | backlog | - | - | - | - |
 | [STORY-59: Limit guesses through the check results of fork pull requests](../stories/STORY-59.md) | backlog | - | - | - | - |
 | [STORY-60: Run the private-data check on fork pull requests in the new public repository](../stories/STORY-60.md) | backlog | - | - | - | - |
