@@ -313,13 +313,51 @@ enum Mode {
     Json,
 }
 
-/// True when the command line holds `--json` before the first `--`. After
-/// `--`, `--json` is a term or a path, not the option.
+/// The long options whose value can start with `-` (decisions 10 and 12).
+const HYPHEN_VALUE_OPTIONS: [&str; 4] = [
+    "--regexp",
+    "--after-context",
+    "--before-context",
+    "--context",
+];
+
+/// The letters of the short options whose value can start with `-`.
+const HYPHEN_VALUE_LETTERS: [char; 4] = ['e', 'A', 'B', 'C'];
+
+/// True when clap reads `--json` as the option (FEATURE-13 spec decision 38).
+/// The words go from left to right, as clap reads them. A word that is the
+/// value of `-e`, `-A`, `-B`, `-C`, or their long names is not an option, also
+/// when it is `--json` or `--`. Else, after `--`, `--json` is a term or a
+/// path, not the option.
 fn json_requested(args: impl IntoIterator<Item = OsString>) -> bool {
-    args.into_iter()
-        .skip(1)
-        .take_while(|arg| arg != "--")
-        .any(|arg| arg == "--json")
+    // The next word is the value of the option before it.
+    let mut value_next = false;
+    for arg in args.into_iter().skip(1) {
+        if value_next {
+            value_next = false;
+            continue;
+        }
+        let Some(word) = arg.to_str() else {
+            continue;
+        };
+        if word == "--" {
+            return false;
+        }
+        if word == "--json" {
+            return true;
+        }
+        if HYPHEN_VALUE_OPTIONS.contains(&word) {
+            value_next = true;
+        } else if word.starts_with('-') && !word.starts_with("--") {
+            // A cluster of short options: a letter that takes a value takes
+            // the rest of the word, or the next word when no letter follows.
+            let letters = &word[1..];
+            if let Some(place) = letters.find(HYPHEN_VALUE_LETTERS) {
+                value_next = place + 1 == letters.len();
+            }
+        }
+    }
+    false
 }
 
 /// The failure of an argument error. It holds no value from the command
@@ -1048,6 +1086,74 @@ mod tests {
         assert!(!json_requested(args(&["jag", "--json=1"])));
         assert!(!json_requested(args(&["jag"])));
         assert!(!json_requested(args(&[])));
+    }
+
+    // FEATURE-13, decision 38: a value of an option is not an option.
+    #[test]
+    fn json_requested_does_not_read_the_value_of_an_option() {
+        for list in [
+            &["jag", "-e", "--json", "--nope"][..],
+            &["jag", "--regexp", "--json"],
+            &["jag", "-ie", "--json"],
+            &["jag", "-A", "--json"],
+            &["jag", "-B", "--json"],
+            &["jag", "-C", "--json"],
+            &["jag", "--after-context", "--json"],
+            &["jag", "-e--json"],
+            &["jag", "--regexp=--json"],
+        ] {
+            assert!(!json_requested(args(list)), "{list:?}");
+        }
+        // `-ei`: `-e` takes `i`, so the next word `--json` is the option.
+        assert!(json_requested(args(&["jag", "-ei", "--json"])));
+    }
+
+    #[test]
+    fn json_requested_reads_a_double_dash_that_is_a_value_as_a_value() {
+        assert!(json_requested(args(&[
+            "jag", "-e", "--", "--json", "--nope"
+        ])));
+        assert!(json_requested(args(&["jag", "--regexp", "--", "--json"])));
+        assert!(!json_requested(args(&["jag", "-e", "--", "--", "--json"])));
+        assert!(!json_requested(args(&["jag", "-e", "x", "--", "--json"])));
+    }
+
+    #[test]
+    fn json_requested_reads_json_after_the_other_options_with_a_value() {
+        assert!(json_requested(args(&["jag", "--ask", "--json", "t"])));
+        assert!(json_requested(args(&[
+            "jag",
+            "--include",
+            "*.rs",
+            "--json"
+        ])));
+        assert!(json_requested(args(&["jag", "-e", "a", "--json"])));
+        assert!(json_requested(args(&["jag", "--include", "--json"])));
+        assert!(json_requested(args(&["jag", "--nope", "--json"])));
+        assert!(!json_requested(args(&["jag", "--json=1"])));
+    }
+
+    // Risk 12: the lists of `json_requested` stay the same as `Cli`.
+    #[test]
+    fn the_hyphen_value_lists_agree_with_cli() {
+        let command = Cli::command();
+        let hyphen: Vec<_> = command
+            .get_arguments()
+            .filter(|arg| arg.is_allow_hyphen_values_set())
+            .collect();
+        let mut longs: Vec<String> = hyphen
+            .iter()
+            .filter_map(|arg| arg.get_long().map(|long| format!("--{long}")))
+            .collect();
+        let mut letters: Vec<char> = hyphen.iter().filter_map(|arg| arg.get_short()).collect();
+        longs.sort();
+        letters.sort();
+        let mut want_longs = HYPHEN_VALUE_OPTIONS.map(String::from).to_vec();
+        let mut want_letters = HYPHEN_VALUE_LETTERS.to_vec();
+        want_longs.sort();
+        want_letters.sort();
+        assert_eq!(longs, want_longs);
+        assert_eq!(letters, want_letters);
     }
 
     #[test]

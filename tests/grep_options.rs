@@ -293,6 +293,63 @@ fn criterion_55_the_options_conflict_with_check_setup_and_forget_key() {
     }
 }
 
+// FEATURE-13 decision 37: a short option reads `=` as the separator, as rg
+// does. GNU grep reads it as a part of the value.
+
+#[test]
+fn decision_37_e_equals_gives_the_term_after_the_equals_sign() {
+    let root = folder();
+    write(root.path(), "a.txt", b"foo\n=foo\nbar\n");
+    let run = run_bare(root.path(), &["-e=foo", "a.txt"]);
+    assert_eq!(run.code, Some(0));
+    assert_eq!(run.stdout, "a.txt:1:foo\na.txt:2:=foo\n");
+    let run = run_bare(root.path(), &["-e", "=foo", "a.txt"]);
+    assert_eq!(run.stdout, "a.txt:2:=foo\n");
+    let run = run_bare(root.path(), &["-e=", "a.txt"]);
+    assert_eq!(run.code, Some(0));
+    assert_eq!(run.stdout, "a.txt:1:foo\na.txt:2:=foo\na.txt:3:bar\n");
+    let run = run_bare(root.path(), &["-ie=FOO", "a.txt"]);
+    assert_eq!(run.stdout, "a.txt:1:foo\na.txt:2:=foo\n");
+}
+
+#[test]
+fn decision_37_a_equals_gives_the_number_after_the_equals_sign() {
+    let root = folder();
+    write(root.path(), "f.txt", b"1\n2\n3\nneedle\n5\n6\n7\n8\n");
+    let run = run_bare(root.path(), &["-A=2", "needle", "f.txt"]);
+    assert_eq!(run.code, Some(0));
+    assert_eq!(run.stdout, "f.txt:4:needle\nf.txt-5-5\nf.txt-6-6\n");
+}
+
+// FEATURE-13 decision 38: an argument error writes the error document only
+// when clap reads `--json` as the option.
+
+#[test]
+fn decision_38_json_as_the_value_of_e_gives_the_text_error() {
+    let root = two_files();
+    let run = run_bare(root.path(), &["-e", "--json", "--nope", "a.txt"]);
+    assert_eq!(run.code, Some(2));
+    assert_eq!(run.stdout, "");
+    assert_eq!(
+        run.stderr,
+        "jag: the option --nope is not valid.\nRun jag --help to see the options.\n"
+    );
+}
+
+#[test]
+fn decision_38_a_double_dash_as_the_value_of_e_does_not_end_the_options() {
+    let root = two_files();
+    let run = run_bare(root.path(), &["-e", "--", "--json", "--nope", "a.txt"]);
+    assert_eq!(run.code, Some(2));
+    assert_eq!(run.stderr, "");
+    let document: Value = serde_json::from_str(&run.stdout).expect("a document");
+    assert_eq!(document["exit_code"], 2);
+    assert_eq!(
+        document["error"]["cause"],
+        "the option --nope is not valid."
+    );
+}
+
 // CRITERION-57: an unknown option.
 
 #[test]

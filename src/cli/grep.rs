@@ -364,6 +364,22 @@ mod tests {
         assert_eq!(parsed(&["--regexp=a", "-e", "b", "p"]).terms, ["a", "b"]);
     }
 
+    // Decision 37: a short option reads one `=` after its letter as the
+    // separator, as rg does. GNU grep reads it as a part of the value.
+    #[test]
+    fn a_short_option_reads_an_equals_sign_as_the_separator() {
+        assert_eq!(parsed(&["-e=foo", "p"]).terms, ["foo"]);
+        let cli = parsed(&["-ie=FOO", "p"]);
+        assert!(cli.ignore_case);
+        assert_eq!(cli.terms, ["FOO"]);
+        assert_eq!(parsed(&["-e==foo", "p"]).terms, ["=foo"]);
+        assert_eq!(parsed(&["-e=", "p"]).terms, [""]);
+        assert_eq!(parsed(&["-e", "-e=foo", "p"]).terms, ["-e=foo"]);
+        assert_eq!(parsed(&["-A=2", "t", "p"]).after.as_deref(), Some("2"));
+        assert_eq!(parsed(&["-B=2", "t", "p"]).before.as_deref(), Some("2"));
+        assert_eq!(parsed(&["-C=2", "t", "p"]).context.as_deref(), Some("2"));
+    }
+
     #[test]
     fn the_globs_keep_the_order_of_the_command_line() {
         let cli = parsed(&[

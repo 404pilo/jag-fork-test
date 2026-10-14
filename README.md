@@ -335,6 +335,10 @@ has its long name of GNU grep, for example `--ignore-case`.
   `-h` shows the help, as in `rg`.
 - `-e TERM` gives a term. With more than one `-e`, a line matches one of the
   terms. With `-e`, each word after the options is a path, as in grep.
+- A short option that takes a value reads one `=` after its letter as the
+  separator, as `rg` does: `-e=foo` gives the term `foo`, and `-A=2` gives 2.
+  `grep` reads the `=` as a part of the value: `grep -e=foo` searches `=foo`,
+  and `grep -A=2` is an error. To search `=foo`, type `-e '=foo'`.
 - With `--ask`, `-A`, `-B`, and `-C` take 0 to 12 lines, and a result has at
   most 25 lines. With no option, a result has 3 lines before and 3 lines after
   the match, and at most 12 lines. With no `--ask`, the options take each
