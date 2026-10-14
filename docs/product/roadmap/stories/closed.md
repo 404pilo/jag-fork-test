@@ -27,6 +27,10 @@ generated:
 * [STORY-21: See the file, the line, and the snippet of a result](STORY-21.md) - As a knowledge seeker (PERSONA-03), I want each result to show the file, the line, and the exact source text, so that I can open the source at that line.
 * [STORY-22: See the line range of a joined result](STORY-22.md) - As an agent builder (PERSONA-01), I want a joined result to give its first and last line and to mark each line that matches the term, so that my agent finds the exact match inside the range.
 * [STORY-23: Cut a very long line and mark the cut](STORY-23.md) - As an agent builder (PERSONA-01), I want jag to cut each line that is longer than a fixed length and to mark the cut, so that one long line does not fill the output.
+* [STORY-29: Read text output by default](STORY-29.md) - As a shell power user (PERSONA-04), I want jag to write readable text by default, also in a pipe, with results on standard output and notices on the error stream, so that a pipe receives results only.
+* [STORY-30: Turn on structured output](STORY-30.md) - As an agent builder (PERSONA-01), I want an explicit option for structured output with the same results as the text, so that my agent can parse the results.
+* [STORY-31: Get a complete structured output with notices and errors](STORY-31.md) - As an agent builder (PERSONA-01), I want structured output to hold each notice and each error inside the structure, so that my agent parses every outcome in one form.
+* [STORY-32: Rely on a stable structured form](STORY-32.md) - As an agent builder (PERSONA-01), I want the structured output to show its form version and to only add fields in one major version, so that my agent keeps working when jag updates.
 * [STORY-46: Fail a pull request that adds private data](STORY-46.md) - As an agent builder (PERSONA-01), I want each pull request checked for private data, so that the public repository never holds keys, case content, private evaluation data, or internal project names.
 
 ## MILESTONE-02: Make it good

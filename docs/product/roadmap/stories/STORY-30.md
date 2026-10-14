@@ -4,7 +4,8 @@ title: Turn on structured output
 description: As an agent builder (PERSONA-01), I want an explicit option for structured
   output with the same results as the text, so that my agent can parse the results.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 91
   node_id: I_kwDOVDCdD88AAAABXCAwow

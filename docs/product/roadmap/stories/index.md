@@ -6,10 +6,6 @@
 * [STORY-26: Leave out the lowest-ranked results](STORY-26.md) - As an agent builder (PERSONA-01), I want jag to leave out the lowest-ranked results and tell me how many, so that I know the list is not complete and how to see more.
 * [STORY-27: Cut a top result that is larger than the limit](STORY-27.md) - As an agent builder (PERSONA-01), I want jag to cut the top result and say so when that result alone is larger than the limit, so that I still get the best answer.
 * [STORY-28: Reject a size limit that is not valid](STORY-28.md) - As an agent builder (PERSONA-01), I want a limit of zero, a negative limit, or a value that is not a number to give a usage error, so that a typo does not hide the output.
-* [STORY-29: Read text output by default](STORY-29.md) - As a shell power user (PERSONA-04), I want jag to write readable text by default, also in a pipe, with results on standard output and notices on the error stream, so that a pipe receives results only.
-* [STORY-30: Turn on structured output](STORY-30.md) - As an agent builder (PERSONA-01), I want an explicit option for structured output with the same results as the text, so that my agent can parse the results.
-* [STORY-31: Get a complete structured output with notices and errors](STORY-31.md) - As an agent builder (PERSONA-01), I want structured output to hold each notice and each error inside the structure, so that my agent parses every outcome in one form.
-* [STORY-32: Rely on a stable structured form](STORY-32.md) - As an agent builder (PERSONA-01), I want the structured output to show its form version and to only add fields in one major version, so that my agent keeps working when jag updates.
 
 ## MILESTONE-02: Make it good
 

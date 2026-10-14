@@ -7,8 +7,9 @@ description: An option turns on structured output that an agent can parse, with 
 status: draft
 aliases:
 - FEATURE-10
-state: in_progress
+state: done
 actual_start_date: '2026-10-14'
+actual_end_date: '2026-10-14'
 github:
   number: 51
   node_id: I_kwDOVDCdD88AAAABXB-F-g
@@ -49,10 +50,10 @@ Text is the default output, also in a pipe. In text mode, jag writes results to 
 
 | Item | State | Progress | Owner | Blocked by | Drift |
 | --- | --- | --- | --- | --- | --- |
-| [STORY-29: Read text output by default](../stories/STORY-29.md) | ready | - | - | - | - |
-| [STORY-30: Turn on structured output](../stories/STORY-30.md) | ready | - | - | - | - |
-| [STORY-31: Get a complete structured output with notices and errors](../stories/STORY-31.md) | ready | - | - | - | - |
-| [STORY-32: Rely on a stable structured form](../stories/STORY-32.md) | ready | - | - | - | - |
+| [STORY-29: Read text output by default](../stories/STORY-29.md) | done | - | - | - | - |
+| [STORY-30: Turn on structured output](../stories/STORY-30.md) | done | - | - | - | - |
+| [STORY-31: Get a complete structured output with notices and errors](../stories/STORY-31.md) | done | - | - | - | - |
+| [STORY-32: Rely on a stable structured form](../stories/STORY-32.md) | done | - | - | - | - |
 <!-- STATUS:END -->
 
 <!-- LINKS:START (generated, do not edit) -->

@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want the structured output to s
   its form version and to only add fields in one major version, so that my agent keeps
   working when jag updates.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 93
   node_id: I_kwDOVDCdD88AAAABXCA8Fw

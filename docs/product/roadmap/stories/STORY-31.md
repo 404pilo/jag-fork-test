@@ -5,7 +5,8 @@ description: As an agent builder (PERSONA-01), I want structured output to hold 
   notice and each error inside the structure, so that my agent parses every outcome
   in one form.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 92
   node_id: I_kwDOVDCdD88AAAABXCA1dg

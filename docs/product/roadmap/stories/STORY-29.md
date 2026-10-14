@@ -5,7 +5,8 @@ description: As a shell power user (PERSONA-04), I want jag to write readable te
   by default, also in a pipe, with results on standard output and notices on the error
   stream, so that a pipe receives results only.
 status: draft
-state: ready
+state: done
+actual_end_date: '2026-10-14'
 github:
   number: 90
   node_id: I_kwDOVDCdD88AAAABXCAsCQ
