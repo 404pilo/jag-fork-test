@@ -3,11 +3,20 @@ type: Project
 title: jag roadmap
 description: The one GitHub Project of jag.
 status: draft
+github:
+  owner: ai-ready-future
+  number: 6
 ---
 
 # PROJECT-01: jag roadmap
 
-One roadmap bundle is one GitHub Project. Add the `github` field when the Project exists.
+One roadmap bundle is one GitHub Project. The Project is
+[ai-ready-future project 6](https://github.com/orgs/ai-ready-future/projects/6).
+
+- The organization `ai-ready-future` owns the Project. A repository cannot own a Project.
+- The Project is linked to the repository `ai-ready-future/jag`.
+- The Project is private while the repository is private.
+- The Project becomes public when the new public repository goes public. See FEATURE-19, STORY-61 and CRITERION-100.
 
 <!-- STATUS:START (generated, do not edit) -->
 
