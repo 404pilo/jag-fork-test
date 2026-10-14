@@ -80,7 +80,10 @@ fn criterion_53_the_matching_lines_come_as_grep_gives_them() {
     let run = run(&server, root.path(), &["needle", "dir"]);
     assert_eq!(run.code, Some(0));
     assert_eq!(run.stdout, THREE_LINES);
-    assert_eq!(run.stderr, "");
+    assert_eq!(
+        run.stderr,
+        "jag: cost $0.000000 (no question): scored 0 of 3 results, skipped 0.\n"
+    );
 }
 
 #[test]
@@ -143,7 +146,10 @@ fn criterion_53_no_match_exits_1_and_a_bad_term_exits_2() {
     let run = run_bare(root.path(), &["absent", "dir"]);
     assert_eq!(run.code, Some(1));
     assert_eq!(run.stdout, "");
-    assert_eq!(run.stderr, "");
+    assert_eq!(
+        run.stderr,
+        "jag: cost $0.000000 (no question): scored 0 of 0 results, skipped 0.\n"
+    );
 
     let run = run_bare(root.path(), &["(", "dir"]);
     assert_eq!(run.code, Some(2));
@@ -272,7 +278,10 @@ fn criterion_54_the_options_of_the_model_have_no_effect() {
     );
     assert_eq!(run.code, Some(0));
     assert_eq!(run.stdout, THREE_LINES);
-    assert_eq!(run.stderr, "");
+    assert_eq!(
+        run.stderr,
+        "jag: cost $0.000000 (no question): scored 0 of 3 results, skipped 0.\n"
+    );
 
     let run = self::run(
         &server,
@@ -298,7 +307,10 @@ fn criterion_68_no_key_is_needed_and_none_is_asked_for() {
     let run = run_bare(root.path(), &["needle", "dir"]);
     assert_eq!(run.code, Some(0));
     assert_eq!(run.stdout, THREE_LINES);
-    assert_eq!(run.stderr, "");
+    assert_eq!(
+        run.stderr,
+        "jag: cost $0.000000 (no question): scored 0 of 3 results, skipped 0.\n"
+    );
 
     let run = run_bare(root.path(), &["--json", "needle", "dir"]);
     assert_eq!(run.code, Some(0));

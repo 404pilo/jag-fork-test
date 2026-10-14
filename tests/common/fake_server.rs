@@ -92,6 +92,17 @@ impl Reply {
     /// HTTP 200 with a score for each snippet of the request. `score` gets
     /// the `lines` text of the snippet.
     pub fn scores(request: &Request, score: impl Fn(&str) -> f64) -> Reply {
+        let usage = serde_json::json!({ "input_tokens": 1, "output_tokens": 1 });
+        Reply::scores_with_usage(request, score, Some(usage))
+    }
+
+    /// `scores`, with the value of `usage` that the test gives. `None` leaves
+    /// the field out.
+    pub fn scores_with_usage(
+        request: &Request,
+        score: impl Fn(&str) -> f64,
+        usage: Option<serde_json::Value>,
+    ) -> Reply {
         let mut answers = serde_json::Map::new();
         for (index, text) in request.snippet_texts().iter().enumerate() {
             answers.insert(
@@ -99,11 +110,13 @@ impl Reply {
                 serde_json::json!({ "type": "noul", "noul": score(text) }),
             );
         }
-        let body = serde_json::json!({
+        let mut body = serde_json::json!({
             "model": "jev-1.13.0",
             "answers": answers,
-            "usage": { "input_tokens": 1, "output_tokens": 1 },
         });
+        if let Some(usage) = usage {
+            body["usage"] = usage;
+        }
         Reply {
             status: 200,
             body: body.to_string(),

@@ -102,7 +102,10 @@ fn criterion_63_always_colors_in_a_pipe_as_grep_does() {
     let run = run(&server, &["--color=always"]);
     assert_eq!(run.code, Some(0));
     assert_eq!(run.stdout, COLORED);
-    assert_eq!(run.stderr, "");
+    assert_eq!(
+        run.stderr,
+        "jag: cost $0.000000: scored 1 of 1 results, skipped 0.\n"
+    );
 }
 
 #[test]

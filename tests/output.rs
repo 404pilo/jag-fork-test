@@ -105,7 +105,10 @@ fn criterion_44_text_is_the_default_also_in_a_pipe() {
     assert_eq!(run.code, Some(0));
     assert_eq!(run.stdout, TWO_RESULTS_TEXT);
     assert!(serde_json::from_str::<Value>(&run.stdout).is_err());
-    assert_eq!(run.stderr, "");
+    assert_eq!(
+        run.stderr,
+        "jag: cost $0.000000: scored 2 of 2 results, skipped 0.\n"
+    );
 }
 
 #[test]
@@ -369,6 +372,7 @@ const TOP_LEVEL: &[&str] = &[
     "files_skipped",
     "warnings",
     "warnings_left_out",
+    "cost",
     "results",
 ];
 
@@ -408,11 +412,22 @@ fn criterion_49_no_match_gives_a_complete_document_and_exit_1() {
 }
 
 /// The cause and the fix of the text mode: the first line with no `jag: `,
-/// and the other lines.
+/// and the other lines. The cost line at the end is not part of the failure.
+/// The cost-limit notice starts with `jag: cost limit`, so the check names the
+/// two forms of the cost line.
 fn failure_of(stderr: &str) -> (String, String) {
     let text = stderr.strip_prefix("jag: ").expect("a failure");
+    let text = text.trim_end_matches('\n');
+    let text = match text.rsplit_once('\n') {
+        Some((before, last))
+            if last.starts_with("jag: cost $") || last.starts_with("jag: cost not available") =>
+        {
+            before
+        }
+        _ => text,
+    };
     let (cause, fix) = text.split_once('\n').expect("a fix");
-    (cause.to_owned(), fix.trim_end_matches('\n').to_owned())
+    (cause.to_owned(), fix.to_owned())
 }
 
 fn assert_error_document(run: &Run, code: i32, text_stderr: &str) {
@@ -491,6 +506,12 @@ fn criterion_51_http_401_402_and_500_give_error_documents() {
         let document = json.document();
         assert_eq!(document["results_found"], 2, "{status}");
         assert_eq!(document["results_scored"], 2, "{status}");
+        // No attempt got an answer, so the search paid nothing.
+        assert_eq!(
+            document["cost"],
+            serde_json::json!({"micro_usd": 0, "kind": "billed", "reason": null}),
+            "{status}"
+        );
     }
 }
 
@@ -531,7 +552,7 @@ fn criterion_51_a_document_that_cannot_be_written_gives_the_text_failure_and_exi
     let output = std::process::Command::new(assert_cmd::cargo::cargo_bin!("jag"))
         .env_clear()
         .env("HOME", home.path())
-        .env("JAG_TYPESAFE_API_KEY", KEY)
+        .env("JAG_GATEWAY_API_KEY", KEY)
         .env("JAG_BASE_URL", server.base_url())
         .current_dir(root.path())
         .args(["--json", "--ask", QUESTION, "needle", "dir"])
@@ -542,7 +563,8 @@ fn criterion_51_a_document_that_cannot_be_written_gives_the_text_failure_and_exi
     assert_eq!(run.code, Some(2));
     assert_eq!(
         run.stderr,
-        "jag: jag could not write the results.\nCheck where the output goes.\n"
+        "jag: jag could not write the results.\nCheck where the output goes.\n\
+         jag: cost $0.000000: scored 2 of 2 results, skipped 0.\n"
     );
 }
 

@@ -10,6 +10,7 @@ use serde::Deserialize;
 use ureq::Agent;
 use ureq::tls::{RootCerts, TlsConfig};
 
+use super::cost::Bill;
 use super::{ScoreError, ScoreSettings};
 use crate::config::ApiKey;
 
@@ -71,8 +72,14 @@ impl Client {
         }
     }
 
-    /// One call. `count` is the count of scores that the answer must hold.
-    pub fn call(&self, body: &str, count: usize, timeout: Duration) -> Result<Vec<f64>, Attempt> {
+    /// One call. `count` is the count of scores that the answer must hold. The
+    /// bill is `NoAnswer` for each attempt that gets no HTTP 200.
+    pub fn call(
+        &self,
+        body: &str,
+        count: usize,
+        timeout: Duration,
+    ) -> (Result<Vec<f64>, Attempt>, Bill) {
         let sent = self
             .agent
             .post(&self.url)
@@ -85,23 +92,39 @@ impl Client {
             .send(body);
         let mut response = match sent {
             Ok(response) => response,
-            Err(error) => return Err(Attempt::retry(map_transport_error(&error))),
+            Err(error) => {
+                return (
+                    Err(Attempt::retry(map_transport_error(&error))),
+                    Bill::NoAnswer,
+                );
+            }
         };
         let status = response.status().as_u16();
+        let refused = |attempt| (Err(attempt), Bill::NoAnswer);
         match status {
             200 => {}
-            401 | 403 => return Err(Attempt::stop(ScoreError::KeyNotAccepted { status })),
-            402 => return Err(Attempt::stop(ScoreError::NoCredit)),
-            429 => return Err(Attempt::retry(ScoreError::RateLimited)),
-            500..=599 => return Err(Attempt::retry(ScoreError::ServerFailed { status })),
-            300..=399 => return Err(Attempt::stop(ScoreError::Redirect)),
-            _ => return Err(Attempt::stop(ScoreError::UnexpectedStatus { status })),
+            401 | 403 => return refused(Attempt::stop(ScoreError::KeyNotAccepted { status })),
+            402 => return refused(Attempt::stop(ScoreError::NoCredit)),
+            429 => return refused(Attempt::retry(ScoreError::RateLimited)),
+            500..=599 => return refused(Attempt::retry(ScoreError::ServerFailed { status })),
+            300..=399 => return refused(Attempt::stop(ScoreError::Redirect)),
+            _ => return refused(Attempt::stop(ScoreError::UnexpectedStatus { status })),
         }
-        let bytes = response
-            .body_mut()
-            .read_to_vec()
-            .map_err(|error| Attempt::retry(map_transport_error(&error)))?;
-        parse_scores(&bytes, count).ok_or_else(|| Attempt::stop(ScoreError::BadResponse))
+        // The attempt got an answer, so it counts, also when jag cannot read
+        // the scores (decisions 5 and 8).
+        let bytes = match response.body_mut().read_to_vec() {
+            Ok(bytes) => bytes,
+            Err(error) => {
+                return (
+                    Err(Attempt::retry(map_transport_error(&error))),
+                    Bill::NoCount,
+                );
+            }
+        };
+        let bill = read_input_tokens(&bytes).map_or(Bill::NoCount, Bill::Tokens);
+        let scores =
+            parse_scores(&bytes, count).ok_or_else(|| Attempt::stop(ScoreError::BadResponse));
+        (scores, bill)
     }
 }
 
@@ -110,6 +133,14 @@ fn map_transport_error(error: &ureq::Error) -> ScoreError {
         ureq::Error::Timeout(_) => ScoreError::TimedOut,
         _ => ScoreError::CannotConnect,
     }
+}
+
+/// The count of input tokens in `usage.input_tokens`. `None` when it is
+/// missing, `null`, negative, not a whole number, or text, and when the body is
+/// not JSON (decisions 6 and 8). It is read apart from the answers.
+fn read_input_tokens(bytes: &[u8]) -> Option<u64> {
+    let value: serde_json::Value = serde_json::from_slice(bytes).ok()?;
+    value.get("usage")?.get("input_tokens")?.as_u64()
 }
 
 /// The scores of `s1` to `s<count>`, in order. `None` when an answer is
@@ -146,6 +177,20 @@ mod tests {
         assert_eq!(parse_scores(br#"{"answers":{"s1":{"noul":"x"}}}"#, 1), None);
         assert_eq!(parse_scores(br#"{"answers":{"s1":{}}}"#, 1), None);
         assert_eq!(parse_scores(br#"{"answers":{"s1":{"noul":0.5}}}"#, 2), None);
+    }
+
+    #[test]
+    fn the_count_of_input_tokens_is_a_whole_number() {
+        let read = |text: &str| read_input_tokens(text.as_bytes());
+        assert_eq!(read(r#"{"usage":{"input_tokens":24000}}"#), Some(24000));
+        assert_eq!(read(r#"{"usage":{"input_tokens":0}}"#), Some(0));
+        assert_eq!(read(r#"{"answers":{}}"#), None);
+        assert_eq!(read(r#"{"usage":{}}"#), None);
+        assert_eq!(read(r#"{"usage":{"input_tokens":null}}"#), None);
+        assert_eq!(read(r#"{"usage":{"input_tokens":-1}}"#), None);
+        assert_eq!(read(r#"{"usage":{"input_tokens":2.5}}"#), None);
+        assert_eq!(read(r#"{"usage":{"input_tokens":"12"}}"#), None);
+        assert_eq!(read("not json"), None);
     }
 
     #[test]

@@ -170,6 +170,15 @@ fn names(from: usize, to: usize) -> Vec<String> {
 
 // CRITERION-36, CRITERION-39, CRITERION-41, CRITERION-42: whole results, the
 // lowest rank first, one notice, exit 8.
+/// The cost line of a search with a question. The fake server gives 1 input
+/// token for each call, so the amount is `$0.000000` (FEATURE-20, decision 27).
+fn cost_line(scored: usize, skipped: usize) -> String {
+    format!(
+        "jag: cost $0.000000: scored {scored} of {} results, skipped {skipped}.\n",
+        scored + skipped
+    )
+}
+
 #[test]
 fn criterion_36_39_41_42_the_ranked_folder_with_a_limit_of_1000() {
     let server = ranked_server();
@@ -177,7 +186,10 @@ fn criterion_36_39_41_42_the_ranked_folder_with_a_limit_of_1000() {
     let run = ask(&server, root.path(), &["--max-chars", "1000"], &[]);
     assert_eq!(run.chars(), 925);
     assert_eq!(shown_names(&run.stdout), names(0, 7));
-    assert_eq!(run.stderr, notice(8, 30, "1000"));
+    assert_eq!(
+        run.stderr,
+        format!("{}{}", notice(8, 30, "1000"), cost_line(30, 0))
+    );
     assert_eq!(run.code, Some(8));
     // Each result that shows has all its lines.
     for line in run.stdout.lines().filter(|line| *line != "--") {
@@ -203,7 +215,7 @@ fn criterion_36_the_limit_counts_characters_and_not_bytes() {
     assert_eq!(run.chars(), 1147);
     assert!(run.stdout.len() > 2000);
     assert_eq!(run.stdout.matches(":1:needle").count(), 10);
-    assert_eq!(run.stderr, "");
+    assert_eq!(run.stderr, cost_line(10, 0));
     assert_eq!(run.code, Some(0));
     let run = ask(&server, root.path(), &["--max-chars", "1146"], &[]);
     assert_eq!(run.stdout.matches(":1:needle").count(), 9);
@@ -222,13 +234,13 @@ fn criterion_37_the_default_limit_is_20000() {
         run.chars()
     );
     assert_eq!(run.code, Some(8));
+    // The size-limit notice is the line before the cost line.
+    let (notice, last) = run.stderr.trim_end().rsplit_once('\n').expect("two lines");
     assert!(
-        run.stderr
-            .trim_end()
-            .ends_with("larger than 20000, or --no-max-chars."),
-        "{}",
-        run.stderr
+        notice.ends_with("larger than 20000, or --no-max-chars."),
+        "{notice}"
     );
+    assert_eq!(format!("{last}\n"), cost_line(200, 0));
 }
 
 #[test]
@@ -244,7 +256,7 @@ fn criterion_37_the_user_can_raise_the_limit_or_turn_it_off() {
         let run = ask(&server, root.path(), &args, &env);
         assert_eq!(run.stdout.matches(":1:needle").count(), 200, "{args:?}");
         assert_eq!(run.code, Some(0), "{args:?}");
-        assert_eq!(run.stderr, "", "{args:?}");
+        assert_eq!(run.stderr, cost_line(200, 0), "{args:?}");
     }
 }
 
@@ -262,7 +274,7 @@ fn criterion_37_the_option_wins_over_the_variable_and_a_blank_variable_is_the_de
     let run = ask(&server, root.path(), &[], &[("JAG_MAX_CHARS", "")]);
     assert_eq!(shown_names(&run.stdout).len(), 30);
     assert_eq!(run.code, Some(0));
-    assert_eq!(run.stderr, "");
+    assert_eq!(run.stderr, cost_line(30, 0));
 }
 
 // CRITERION-38: all text on standard output counts, and the error stream does
@@ -297,7 +309,8 @@ fn criterion_40_the_top_result_is_cut_and_the_notice_says_so() {
     assert_eq!(
         run.stderr,
         format!(
-            "jag: size limit reached: showed 1 of 2 results, left out 1, and cut the top result. {FIX_1000}\n"
+            "jag: size limit reached: showed 1 of 2 results, left out 1, and cut the top result. {FIX_1000}\n{}",
+            cost_line(2, 0)
         )
     );
 }
@@ -312,7 +325,8 @@ fn criterion_40_a_cut_with_no_other_result_gives_exit_8() {
     assert_eq!(
         run.stderr,
         format!(
-            "jag: size limit reached: showed 1 of 1 results, left out 0, and cut the top result. {FIX_1000}\n"
+            "jag: size limit reached: showed 1 of 1 results, left out 0, and cut the top result. {FIX_1000}\n{}",
+            cost_line(1, 0)
         )
     );
 }
@@ -323,7 +337,7 @@ fn a_limit_that_the_top_result_fits_in_gives_no_cut() {
     let root = cut_folder(true);
     let run = ask(&server, root.path(), &["--max-chars", "4000"], &[]);
     assert_eq!(run.code, Some(0));
-    assert_eq!(run.stderr, "");
+    assert_eq!(run.stderr, cost_line(2, 0));
     assert!(!run.stdout.contains("chars]"));
 }
 
@@ -337,7 +351,7 @@ fn criterion_41_a_search_inside_the_limit_gives_no_notice() {
     assert_eq!(run.code, Some(0));
     let run = ask(&server, root.path(), &["--max-chars", "4000"], &[]);
     assert_eq!(run.code, Some(0));
-    assert_eq!(run.stderr, "");
+    assert_eq!(run.stderr, cost_line(30, 0));
 }
 
 // CRITERION-66: the cost-limit code wins, and the notice still says so.
@@ -351,8 +365,9 @@ fn criterion_66_the_cost_limit_code_wins_and_both_notices_show() {
     assert_eq!(
         run.stderr,
         format!(
-            "jag: cost limit reached: scored 10 of 30 results, skipped 20.\n{}",
-            notice(8, 10, "1000")
+            "jag: cost limit reached: scored 10 of 30 results, skipped 20.\n{}{}",
+            notice(8, 10, "1000"),
+            cost_line(10, 20)
         )
     );
     assert_eq!(run.stdout.matches(":1:needle").count(), 8);
@@ -399,7 +414,7 @@ fn criterion_104_the_document_has_the_fields_of_the_notice() {
         &[],
     );
     let document = parse_doc(&run);
-    assert_eq!(run.chars(), 823);
+    assert_eq!(run.chars(), 876);
     assert_eq!(result_names(&document), names(0, 1));
     assert_eq!(document["left_out"], 28);
     assert_eq!(document["top_result_cut"], 0);
@@ -416,7 +431,7 @@ fn criterion_104_a_document_inside_the_limit_has_the_values_of_nothing_left_out(
     let root = ranked_folder();
     let run = ask(&server, root.path(), &["--json"], &[]);
     let document = parse_doc(&run);
-    assert_eq!(run.chars(), 6812);
+    assert_eq!(run.chars(), 6865);
     assert_eq!(document["results"].as_array().map(Vec::len), Some(30));
     assert_eq!(document["left_out"], 0);
     assert_eq!(document["top_result_cut"], 0);
@@ -619,7 +634,13 @@ fn plain_grep_has_the_size_limit_and_makes_no_call() {
     assert_eq!(run.chars(), 904);
     assert_eq!(shown_names(&run.stdout), names(0, 7));
     assert!(!run.stdout.contains("--"));
-    assert_eq!(run.stderr, notice(8, 30, "1000"));
+    assert_eq!(
+        run.stderr,
+        format!(
+            "{}jag: cost $0.000000 (no question): scored 0 of 30 results, skipped 0.\n",
+            notice(8, 30, "1000")
+        )
+    );
     assert_eq!(run.code, Some(8));
     assert!(server.requests().is_empty());
 }

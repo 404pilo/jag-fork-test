@@ -181,6 +181,8 @@ $ jag --ask="-v or --verbose?" verbose src
   `--base-url`, and `--model` have no effect on the search, except that
   `--max-chars` still limits the output. jag still checks the values of the
   options.
+- jag still writes the cost line on the error stream, with a cost of zero and
+  the reason `no question`. See "The cost of a search".
 
 ## Where jag searches
 
@@ -261,7 +263,8 @@ $ jag --json --ask "QUESTION" TERM PATH...
 jag then writes one JSON document on one line, with `\n` at the end, on
 standard output. The document holds the results, the counts, the notices, and
 each error. jag writes nothing on the error stream, unless it cannot write the
-document to standard output: then it writes that failure there, as text. Only the option turns on
+document to standard output: then it writes that failure there, as text, and
+then the cost line. Only the option turns on
 this form: no variable and no setting does. `--json` does not work with
 `--setup`, `--forget-key`, or `--check`.
 
@@ -279,9 +282,13 @@ Each document has these fields:
 | `top_result_cut` | The count of characters that the size limit cut from the top result, or `0` |
 | `size_limit_fix` | The text that tells how to raise the limit, or `""` when the limit left out nothing |
 | `warnings_left_out` | The count of warnings that the size limit left out |
+| `cost` | An object with `micro_usd` (the cost in millionths of a US dollar, or `null` when it is not available), `kind` (`billed`, `estimate`, `not_available`, or `no_call`), and `reason` (`null`, or the reason when `kind` is `no_call`: `no_question`, `no_match`, `no_readable_match`, or `not_started`) |
 | `files_skipped` | An object with `total`, `binary`, `hidden`, and `ignored` |
 | `warnings` | A list of objects with `path` (text or `null`) and `text` |
 | `results` | A list in rank order |
+
+A later version can add a kind or a reason to `cost`, so agent code must
+accept a value that it does not know.
 
 Each result has `rank` (1 for the best result), `path` (`null` for standard
 input), `first_line`, `last_line`, and `lines`. Each line has `number`,
@@ -318,7 +325,9 @@ only when a field is removed or renamed.
   results. jag writes `jag: the search was stopped.` and ends by the signal
   SIGINT, as grep does, so a shell shows the exit code 130 and a script
   stops. With `--json`, the output is an error document with `exit_code`
-  130.
+  130. When jag already counted the results, it also writes the cost line
+  after the message, and the document holds the cost of the calls that
+  ended before the stop.
 - When the reader of the output closes the pipe, jag stops at once, starts no
   new model call, and ends by the signal SIGPIPE with no message. A shell
   shows the exit code 141.
@@ -357,6 +366,39 @@ has its long name of GNU grep, for example `--ignore-case`.
 - The exit codes: 0 for a match, 1 for no match (with `--ask`, also for no good
   answer), and 2 for a usage error, as in grep.
 
+
+## The cost of a search
+
+After each search in text mode, jag writes one cost line as the last line on
+the error stream. It does this also when the output goes to a pipe:
+
+```
+jag: cost $0.002016: scored 33 of 33 results, skipped 0.
+```
+
+The line gives the cost in US dollars, the count of results that the model
+scored, and the count that the cost limit skipped. jag adds the input tokens
+that the model service reports for each answered call, at 0.042 US dollars
+for 1 million input tokens, the price of jev-1.13.0. Output tokens are free.
+A call that gets no answer, for example after a timeout, adds nothing.
+Through an AI gateway, the amount is the price of TypeSafe. It does not
+include a fee of the gateway.
+
+- `(estimate)` after the amount: the service did not report the tokens of
+  some calls, so jag estimated them from the size of the request.
+- `not available` in place of the amount: jag does not know the price of the
+  model that `--model`, `JAG_MODEL`, or `config.model` names. The search
+  still works.
+- `$0.000000 (no question)`, `(no match)`, or `(no readable match)`: jag made
+  no model call.
+- When a search fails or you stop it, the cost line comes after the failure
+  text and gives the cost of the calls that the service answered. A search
+  that ends before jag counts the results, and `--check`, write no cost line.
+  When the reader closes the pipe, jag writes no cost line.
+- With no question, jag scores nothing, so the line says
+  `scored 0 of N results, skipped 0`, and N is the count of matching lines.
+- With `--json`, jag writes no cost line. The `cost` field of the document
+  gives the same amount (see "Output for an agent").
 
 ## Speed
 

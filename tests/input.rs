@@ -104,6 +104,17 @@ fn one_file() -> TempDir {
 }
 
 // CRITERION-59: no path and no pipe give the current folder, with no `./`.
+/// The cost line for a search with `args` and no match: with `--ask` it says
+/// `no match`, and with no question it says `no question` (FEATURE-14,
+/// decision 35).
+fn cost_of_args(args: &[&str]) -> &'static str {
+    if args.contains(&"--ask") {
+        "jag: cost $0.000000 (no match): scored 0 of 0 results, skipped 0.\n"
+    } else {
+        "jag: cost $0.000000 (no question): scored 0 of 0 results, skipped 0.\n"
+    }
+}
+
 #[test]
 fn criterion_59_no_path_and_no_pipe_search_the_current_folder() {
     let root = two_files();
@@ -158,7 +169,10 @@ fn decision_3_an_empty_pipe_gives_exit_1_and_no_call() {
     let plain = run(&server, root.path(), &["needle"], None);
     assert_eq!(plain.code, Some(1));
     assert_eq!(plain.stdout, "");
-    assert_eq!(plain.stderr, "");
+    assert_eq!(
+        plain.stderr,
+        "jag: cost $0.000000 (no question): scored 0 of 0 results, skipped 0.\n"
+    );
 
     let asked = run(&server, root.path(), &["--ask", QUESTION, "needle"], None);
     assert_eq!(asked.code, Some(1));
@@ -280,7 +294,7 @@ fn criterion_35_binary_piped_text_gives_no_result_and_the_skip_notice() {
     assert_eq!(run.stdout, "");
     assert_eq!(
         run.stderr,
-        "jag: skipped 1 files and folders (1 binary, 0 hidden, 0 ignored)\n"
+        "jag: skipped 1 files and folders (1 binary, 0 hidden, 0 ignored)\njag: cost $0.000000 (no match): scored 0 of 0 results, skipped 0.\n"
     );
     assert!(server.requests().is_empty());
 }
@@ -322,13 +336,16 @@ fn criterion_61_a_hidden_file_as_a_path_gives_its_result() {
     let named = run(&server, root.path(), &["needle", ".hidden.txt"], None);
     assert_eq!(named.code, Some(0));
     assert_eq!(named.stdout, ".hidden.txt:1:needle\n");
-    assert_eq!(named.stderr, "");
+    assert_eq!(
+        named.stderr,
+        "jag: cost $0.000000 (no question): scored 0 of 1 results, skipped 0.\n"
+    );
 
     let walked = run(&server, root.path(), &["needle", "."], None);
     assert_eq!(walked.stdout, "./a.txt:1:needle\n");
     assert_eq!(
         walked.stderr,
-        "jag: skipped 1 files and folders (0 binary, 1 hidden, 0 ignored)\n"
+        "jag: skipped 1 files and folders (0 binary, 1 hidden, 0 ignored)\njag: cost $0.000000 (no question): scored 0 of 1 results, skipped 0.\n"
     );
 }
 
@@ -360,7 +377,11 @@ fn criterion_70_a_path_that_does_not_exist_gives_exit_2_and_no_call() {
         assert_eq!(run.code, Some(2), "{args:?}");
         assert_eq!(run.stdout, "", "{args:?}");
         assert_eq!(
-            run.stderr, "jag: the path nofile does not exist\n",
+            run.stderr,
+            format!(
+                "jag: the path nofile does not exist\n{}",
+                cost_of_args(args)
+            ),
             "{args:?}"
         );
     }
@@ -374,7 +395,10 @@ fn criterion_70_jag_searches_the_other_paths_and_exits_2() {
     let plain = run(&server, root.path(), &["needle", "a.txt", "nofile"], None);
     assert_eq!(plain.code, Some(2));
     assert_eq!(plain.stdout, "a.txt:1:needle\n");
-    assert_eq!(plain.stderr, "jag: the path nofile does not exist\n");
+    assert_eq!(
+        plain.stderr,
+        "jag: the path nofile does not exist\njag: cost $0.000000 (no question): scored 0 of 1 results, skipped 0.\n"
+    );
     assert!(server.requests().is_empty());
 
     let asked = run(
@@ -408,7 +432,7 @@ fn criterion_70_the_warnings_come_in_the_order_of_the_command_line() {
     assert_eq!(run.code, Some(2));
     assert_eq!(
         run.stderr,
-        "jag: the path nofile2 does not exist\njag: the path nofile1 does not exist\n"
+        "jag: the path nofile2 does not exist\njag: the path nofile1 does not exist\njag: cost $0.000000 (no question): scored 0 of 1 results, skipped 0.\n"
     );
 }
 
@@ -423,7 +447,9 @@ fn criterion_70_a_broken_link_and_a_path_under_a_file_do_not_exist() {
         assert_eq!(run.code, Some(2), "{path}");
         assert_eq!(
             run.stderr,
-            format!("jag: the path {path} does not exist\n"),
+            format!(
+                "jag: the path {path} does not exist\njag: cost $0.000000 (no question): scored 0 of 0 results, skipped 0.\n"
+            ),
             "{path}"
         );
     }
@@ -617,7 +643,10 @@ fn feature_13_q_with_a_match_exits_0_even_with_a_missing_path() {
     );
     assert_eq!(run.code, Some(0));
     assert_eq!(run.stdout, "");
-    assert_eq!(run.stderr, "jag: the path nofile does not exist\n");
+    assert_eq!(
+        run.stderr,
+        "jag: the path nofile does not exist\njag: cost $0.000000 (no question): scored 0 of 1 results, skipped 0.\n"
+    );
     assert!(server.requests().is_empty());
 }
 
@@ -648,7 +677,10 @@ fn feature_13_q_with_no_match_and_a_missing_path_exits_2() {
     );
     assert_eq!(run.code, Some(2));
     assert_eq!(run.stdout, "");
-    assert_eq!(run.stderr, "jag: the path nofile does not exist\n");
+    assert_eq!(
+        run.stderr,
+        "jag: the path nofile does not exist\njag: cost $0.000000 (no question): scored 0 of 0 results, skipped 0.\n"
+    );
 }
 
 #[test]
@@ -663,7 +695,10 @@ fn feature_13_l_and_c_write_the_lines_of_the_other_paths_and_exit_2() {
     );
     assert_eq!(files.code, Some(2));
     assert_eq!(files.stdout, "a.txt\n");
-    assert_eq!(files.stderr, "jag: the path nofile does not exist\n");
+    assert_eq!(
+        files.stderr,
+        "jag: the path nofile does not exist\njag: cost $0.000000 (no question): scored 0 of 1 results, skipped 0.\n"
+    );
     write(root.path(), "b.txt", b"other\n");
     let counts = run(
         &server,
@@ -673,7 +708,10 @@ fn feature_13_l_and_c_write_the_lines_of_the_other_paths_and_exit_2() {
     );
     assert_eq!(counts.code, Some(2));
     assert_eq!(counts.stdout, "a.txt:1\nb.txt:0\n");
-    assert_eq!(counts.stderr, "jag: the path nofile does not exist\n");
+    assert_eq!(
+        counts.stderr,
+        "jag: the path nofile does not exist\njag: cost $0.000000 (no question): scored 0 of 1 results, skipped 0.\n"
+    );
 }
 
 #[test]

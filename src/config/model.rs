@@ -17,6 +17,16 @@ pub const BASE_URL_OPTION: &str = "--base-url";
 pub const MODEL_OPTION: &str = "--model";
 pub const DEFAULT_BASE_URL: &str = "https://api.typesafe.ai/v1";
 pub const DEFAULT_MODEL: &str = "jev-1.13.0";
+/// The price of `DEFAULT_MODEL` for one input token, in billionths of a US
+/// dollar: 0.042 US dollars for 1 million tokens (FEATURE-20, decision 3).
+pub const DEFAULT_MODEL_PRICE: u64 = 42;
+
+/// The price of one input token of `model`, in billionths of a US dollar.
+/// `None` for a model that jag has no price for (decision 3).
+pub fn price_of(model: &str) -> Option<u64> {
+    (model == DEFAULT_MODEL).then_some(DEFAULT_MODEL_PRICE)
+}
+
 pub const TIMEOUT_VARIABLE: &str = "JAG_TIMEOUT";
 pub const RETRY_WAIT_VARIABLE: &str = "JAG_RETRY_WAIT";
 pub const DEFAULT_TIMEOUT: Duration = Duration::from_secs(4);
@@ -333,6 +343,13 @@ fn address_is_allowed(text: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn the_pinned_model_has_a_price_and_other_names_have_none() {
+        assert_eq!(price_of(DEFAULT_MODEL), Some(42));
+        assert_eq!(price_of("jev-1.13"), None);
+        assert_eq!(price_of(""), None);
+    }
+
     use std::ffi::OsString;
     use std::os::unix::ffi::OsStringExt;
     use std::path::Path;

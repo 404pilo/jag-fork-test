@@ -95,6 +95,12 @@ fn texts(server: &FakeServer) -> Vec<String> {
 
 // CRITERION-55: the options, with their grep meaning.
 
+/// The cost line of a search with no question (FEATURE-20, decisions 33 and
+/// 34): the amount is zero, and `found` is the count of results.
+fn no_question_line(found: usize) -> String {
+    format!("jag: cost $0.000000 (no question): scored 0 of {found} results, skipped 0.\n")
+}
+
 #[test]
 fn criterion_55_i_matches_upper_and_lower_case_letters_as_the_same() {
     let root = folder();
@@ -251,7 +257,7 @@ fn criterion_55_a_file_that_a_glob_skips_is_not_in_the_skip_notice() {
     write(root.path(), "dir/b.md", b"needle\n");
     let run = run_bare(root.path(), &["--exclude=*.md", "needle", "dir"]);
     assert_eq!(run.stdout, "dir/a.txt:1:needle\n");
-    assert_eq!(run.stderr, "");
+    assert_eq!(run.stderr, no_question_line(1));
 }
 
 #[test]
@@ -602,7 +608,7 @@ fn criterion_55_q_writes_nothing_and_l_and_c_lose_to_it() {
         let run = run_bare(root.path(), args);
         assert_eq!(run.code, Some(0), "{args:?}");
         assert_eq!(run.stdout, "", "{args:?}");
-        assert_eq!(run.stderr, "", "{args:?}");
+        assert_eq!(run.stderr, no_question_line(1), "{args:?}");
     }
 }
 
@@ -741,7 +747,7 @@ fn criterion_58_l_and_q_with_no_match_write_nothing_and_exit_1() {
         let run = run_bare(root.path(), &[option, "zzz", "a.txt"]);
         assert_eq!(run.code, Some(1), "{option}");
         assert_eq!(run.stdout, "", "{option}");
-        assert_eq!(run.stderr, "", "{option}");
+        assert_eq!(run.stderr, no_question_line(0), "{option}");
     }
 }
 
@@ -815,7 +821,7 @@ fn with_no_size_limit_l_and_c_write_each_line_and_exit_0() {
         let run = run_bare(root.path(), &[option, "--no-max-chars", "needle", "."]);
         assert_eq!(run.code, Some(0), "{option}");
         assert_eq!(run.stdout.lines().count(), 300, "{option}");
-        assert_eq!(run.stderr, "", "{option}");
+        assert_eq!(run.stderr, no_question_line(300), "{option}");
     }
 }
 
@@ -824,5 +830,8 @@ fn the_size_limit_has_no_effect_on_q() {
     let root = many_files();
     let run = run_bare(root.path(), &["-q", "--max-chars", "1000", "needle", "."]);
     assert_eq!(run.code, Some(0));
-    assert_eq!((run.stdout.as_str(), run.stderr.as_str()), ("", ""));
+    assert_eq!(
+        (run.stdout.as_str(), run.stderr.as_str()),
+        ("", no_question_line(300).as_str())
+    );
 }

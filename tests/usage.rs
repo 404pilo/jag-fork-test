@@ -9,6 +9,11 @@ use predicates::prelude::*;
 
 const FIXED_LINE: &str = "jag: the command line is not valid. Run jag --help to see the usage.\n";
 
+/// The cost of a run that ends before jag counts the results (FEATURE-20).
+fn not_started() -> serde_json::Value {
+    serde_json::json!({ "micro_usd": 0, "kind": "no_call", "reason": "not_started" })
+}
+
 fn home() -> tempfile::TempDir {
     tempfile::tempdir().expect("temporary folder")
 }
@@ -611,6 +616,7 @@ fn an_argument_error_with_json_writes_one_document_with_no_value() {
         assert_eq!(document["error"]["cause"], "the command line is not valid.");
         assert_eq!(document["error"]["fix"], "Run jag --help to see the usage.");
         assert_eq!(document["results"], serde_json::json!([]));
+        assert_eq!(document["cost"], not_started(), "{args:?}");
         assert!(!text.contains("SENTINEL"));
     }
 }
@@ -639,6 +645,7 @@ fn an_unknown_option_with_json_writes_one_document_that_names_the_option() {
         "Run jag --help to see the options."
     );
     assert_eq!(document["results"], serde_json::json!([]));
+    assert_eq!(document["cost"], not_started());
     assert!(!text.contains("SENTINEL"));
 }
 

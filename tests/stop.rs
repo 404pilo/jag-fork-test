@@ -103,7 +103,11 @@ fn criterion_64_ctrl_c_stops_jag_at_once_in_text_mode() {
     assert_eq!(output.status.signal(), Some(SIGINT));
     assert_eq!(output.status.code(), None);
     assert_eq!(text(&output.stdout), "");
-    assert_eq!(text(&output.stderr), STOPPED);
+    // No call ended, so the cost is 0 (FEATURE-20, decision 22).
+    assert_eq!(
+        text(&output.stderr),
+        format!("{STOPPED}jag: cost $0.000000: scored 200 of 200 results, skipped 0.\n")
+    );
     std::thread::sleep(Duration::from_secs(1));
     assert_eq!(server.requests().len(), 6);
 }
@@ -130,7 +134,62 @@ fn criterion_64_ctrl_c_gives_the_error_document_in_structured_mode() {
     assert_eq!(document["results"], serde_json::json!([]));
     assert_eq!(document["results_found"], 200);
     assert_eq!(document["results_scored"], 200);
+    assert_eq!(
+        document["cost"],
+        serde_json::json!({"micro_usd": 0, "kind": "billed", "reason": null})
+    );
     assert_eq!(server.requests().len(), 6);
+}
+
+/// A server that answers the first call at once with 24,000 input tokens, and
+/// holds each other call for 30 seconds. The thread of the first call adds its
+/// bill before it starts the seventh call, so a stop after 7 calls counts it
+/// (FEATURE-20, CRITERION-93).
+fn one_fast_server() -> FakeServer {
+    let seen = std::sync::atomic::AtomicUsize::new(0);
+    FakeServer::start(move |request| {
+        if seen.fetch_add(1, std::sync::atomic::Ordering::SeqCst) == 0 {
+            Reply::scores_with_usage(
+                request,
+                |_| 0.9,
+                Some(serde_json::json!({"input_tokens": 24000})),
+            )
+        } else {
+            Reply::scores(request, |_| 0.9).after(Duration::from_secs(30))
+        }
+    })
+}
+
+#[test]
+fn criterion_93_ctrl_c_in_text_mode_gives_the_cost_of_the_calls_that_ended() {
+    let server = one_fast_server();
+    let root = two_hundred_files();
+    let child = start(&server, root.path(), &[]);
+    wait_for_calls(&server, 7);
+    send_sigint(&child);
+    let output = finish(child);
+    assert_eq!(output.status.signal(), Some(SIGINT));
+    assert_eq!(
+        text(&output.stderr),
+        format!("{STOPPED}jag: cost $0.001008: scored 200 of 200 results, skipped 0.\n")
+    );
+}
+
+#[test]
+fn criterion_93_ctrl_c_in_structured_mode_gives_the_cost_in_the_document() {
+    let server = one_fast_server();
+    let root = two_hundred_files();
+    let child = start(&server, root.path(), &["--json"]);
+    wait_for_calls(&server, 7);
+    send_sigint(&child);
+    let output = finish(child);
+    assert_eq!(output.status.signal(), Some(SIGINT));
+    assert_eq!(text(&output.stderr), "");
+    let document: Value = serde_json::from_str(&text(&output.stdout)).expect("one document");
+    assert_eq!(
+        document["cost"],
+        serde_json::json!({"micro_usd": 1008, "kind": "billed", "reason": null})
+    );
 }
 
 #[test]

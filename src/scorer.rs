@@ -4,6 +4,7 @@
 //! less, 6 calls in parallel, and gives one score for each result.
 
 mod client;
+pub mod cost;
 pub mod prompt;
 
 use std::path::PathBuf;
@@ -15,6 +16,7 @@ use crate::config::{ApiKey, KEYS_PAGE, ModelSettings, Origin, Route};
 use crate::failure::Failure;
 use crate::search::snippet::{Snippet, SnippetLine, Source};
 use client::{Attempt, Client};
+use cost::Usage;
 
 /// The version of the scoring prompt (ADR-0004).
 pub const PROMPT_VERSION: &str = "jag-p1";
@@ -270,6 +272,8 @@ struct Run<'a> {
     stop: AtomicBool,
     /// Set by a Ctrl-C or a closed pipe: the same effect as `stop`.
     external_stop: &'a AtomicBool,
+    /// The bill of each answered attempt (FEATURE-20, decision 5).
+    usage: &'a Mutex<Usage>,
 }
 
 impl Run<'_> {
@@ -291,8 +295,15 @@ impl Run<'_> {
                 retry: false,
             });
         };
-        self.client
-            .call(body, count, self.settings.timeout.min(left))
+        let (result, bill) = self
+            .client
+            .call(body, count, self.settings.timeout.min(left));
+        // A thread that panics must not lose the bill of the others.
+        self.usage
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .add(bill, body.len());
+        result
     }
 
     /// One call, with the one retry of CV-5. The result is `None` when the
@@ -364,6 +375,21 @@ pub fn score(
     stop: &AtomicBool,
     on_call_end: &(dyn Fn(usize) + Sync),
 ) -> Result<Vec<f64>, ScoreError> {
+    let usage = Mutex::new(Usage::default());
+    score_with_usage(snippets, question, key, settings, stop, on_call_end, &usage)
+}
+
+/// `score`, and each answered attempt adds its bill to `usage`, also an
+/// attempt that ends after another call failed (FEATURE-20, decision 5).
+pub fn score_with_usage(
+    snippets: &[Snippet],
+    question: &str,
+    key: &ApiKey,
+    settings: &ScoreSettings,
+    stop: &AtomicBool,
+    on_call_end: &(dyn Fn(usize) + Sync),
+    usage: &Mutex<Usage>,
+) -> Result<Vec<f64>, ScoreError> {
     let batches = prompt::split_batches(snippets, question);
     let run = Run {
         client: Client::new(key, settings),
@@ -371,6 +397,7 @@ pub fn score(
         end: Instant::now() + settings.deadline,
         stop: AtomicBool::new(false),
         external_stop: stop,
+        usage,
     };
     let next = AtomicUsize::new(0);
     let slots: Vec<Slot> = batches.iter().map(|_| Mutex::new(None)).collect();

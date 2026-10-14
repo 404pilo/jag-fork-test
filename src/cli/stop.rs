@@ -21,9 +21,10 @@ use signal_hook::low_level::emulate_default_handler;
 
 use super::{Mode, error_document};
 use crate::config::DEFAULT_SIZE_LIMIT;
-use crate::output::Summary;
 use crate::output::progress::Progress;
+use crate::output::{Summary, cost_line};
 use crate::scorer::ScoreError;
+use crate::scorer::cost::{Cost, Usage};
 
 /// How often the watch thread asks the system about the pipe.
 const WATCH_EVERY: Duration = Duration::from_millis(100);
@@ -36,6 +37,19 @@ enum Owner {
     Stop,
 }
 
+/// How the search flow ended its write (FEATURE-20, decision 25). It tells
+/// `finish` whether to write the cost line.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Emitted {
+    /// The write worked.
+    #[default]
+    Written,
+    /// The reader closed the pipe: no cost line.
+    Closed,
+    /// The write failed, and jag wrote the failure as text.
+    Failed,
+}
+
 /// The stop of a search on SIGINT or on a closed pipe (CV-4, DECISION-39).
 pub struct Stop {
     /// Set first by a stop: no model call and no retry starts after it.
@@ -46,6 +60,12 @@ pub struct Stop {
     /// The size limit that jag knows: the default, until it reads the option
     /// and the variable. `None` for no limit.
     size_limit: Mutex<Option<usize>>,
+    /// The bill of each answered attempt, for the cost of a stop.
+    usage: Mutex<Usage>,
+    /// The model of the search, once the search flow knows it.
+    model: Mutex<Option<String>>,
+    /// How the write of the search flow ended.
+    emitted: Mutex<Emitted>,
     mode: Mode,
     progress: Arc<Progress>,
 }
@@ -62,6 +82,9 @@ impl Stop {
             owner: Mutex::new(Owner::Nobody),
             counted: Mutex::new(Summary::default()),
             size_limit: Mutex::new(Some(DEFAULT_SIZE_LIMIT)),
+            usage: Mutex::new(Usage::default()),
+            model: Mutex::new(None),
+            emitted: Mutex::new(Emitted::Written),
             mode,
             progress,
         }
@@ -106,6 +129,34 @@ impl Stop {
         *lock(&self.size_limit)
     }
 
+    /// The usage that `score_with_usage` adds to.
+    pub fn usage(&self) -> &Mutex<Usage> {
+        &self.usage
+    }
+
+    /// The search flow calls it when it knows the model.
+    pub fn set_model(&self, model: &str) {
+        *lock(&self.model) = Some(model.to_owned());
+    }
+
+    /// The cost of what ended so far. With no model, it is the cost in the
+    /// summary of `count`.
+    pub fn cost(&self) -> Cost {
+        match lock(&self.model).as_deref() {
+            Some(model) => Cost::of(&lock(&self.usage), model),
+            None => lock(&self.counted).cost,
+        }
+    }
+
+    /// `emit_claimed` calls it with the end of its write.
+    pub fn set_emitted(&self, emitted: Emitted) {
+        *lock(&self.emitted) = emitted;
+    }
+
+    pub fn emitted(&self) -> Emitted {
+        *lock(&self.emitted)
+    }
+
     /// The search flow calls it after it counts.
     pub fn count(&self, summary: &Summary) {
         lock(&self.counted).clone_from(summary);
@@ -131,14 +182,18 @@ impl Stop {
             return;
         }
         let failure = ScoreError::stopped();
+        let mut summary = lock(&self.counted).clone();
+        summary.cost = self.cost();
         match self.mode {
             Mode::Text => {
                 self.progress.clear_for_stop();
                 let _ = write!(stderr, "{}", failure.render());
+                if let Some(line) = cost_line(&summary) {
+                    let _ = writeln!(stderr, "{line}");
+                }
                 let _ = stderr.flush();
             }
             Mode::Json => {
-                let mut summary = lock(&self.counted).clone();
                 let buffer = error_document(&mut summary, failure, self.size_limit());
                 let _ = stdout.write_all(&buffer).and_then(|()| stdout.flush());
             }
@@ -324,6 +379,40 @@ mod tests {
         assert_eq!(document["results_found"], 200);
         assert_eq!(document["results_scored"], 200);
         assert_eq!(document["results"], serde_json::json!([]));
+    }
+
+    #[test]
+    fn a_signal_after_the_count_gives_the_cost_of_the_calls_that_ended() {
+        use crate::scorer::cost::{Bill, NoCallReason};
+        let counted = Summary {
+            results_found: 200,
+            results_scored: 200,
+            cost: Cost::NoCall(NoCallReason::NoQuestion),
+            ..Summary::default()
+        };
+        let (text, _) = stop(Mode::Text, false);
+        text.count(&counted);
+        assert_eq!(text.cost(), Cost::NoCall(NoCallReason::NoQuestion));
+        text.set_model(crate::config::DEFAULT_MODEL);
+        lock(text.usage()).add(Bill::Tokens(24_000), 0);
+        let mut stderr = Vec::new();
+        text.on_signal(&mut Vec::new(), &mut stderr);
+        assert_eq!(
+            String::from_utf8(stderr).expect("text"),
+            format!("{STOP_TEXT}jag: cost $0.001008: scored 200 of 200 results, skipped 0.\n")
+        );
+
+        let (json, _) = stop(Mode::Json, false);
+        json.count(&counted);
+        json.set_model(crate::config::DEFAULT_MODEL);
+        lock(json.usage()).add(Bill::Tokens(24_000), 0);
+        let mut stdout = Vec::new();
+        json.on_signal(&mut stdout, &mut Vec::new());
+        let document: serde_json::Value = serde_json::from_slice(&stdout).expect("one document");
+        assert_eq!(
+            document["cost"],
+            serde_json::json!({"micro_usd": 1008, "kind": "billed", "reason": null})
+        );
     }
 
     /// A writer that tells the flag of the stop when it gets its first byte.

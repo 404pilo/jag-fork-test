@@ -28,7 +28,7 @@ pub use limit::{
 pub use model::{
     BASE_URL_OPTION, BASE_URL_VARIABLE, DEFAULT_BASE_URL, DEFAULT_MODEL, MODEL_OPTION,
     MODEL_VARIABLE, ModelSettings, Origin, Route, SettingOptions, SettingSource, TimeSetting,
-    Times, model_settings, normalize_base_url, parse_seconds, route_of,
+    Times, model_settings, normalize_base_url, parse_seconds, price_of, route_of,
 };
 pub use setup::{Prompter, TtyPrompter, forget_key, setup};
 

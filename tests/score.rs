@@ -11,7 +11,8 @@ use std::time::{Duration, Instant};
 
 use common::fake_server::{FakeServer, Reply};
 use jag::config::{ApiKey, Origin, Route};
-use jag::scorer::{ScoreError, ScoreSettings, score};
+use jag::scorer::cost::Usage;
+use jag::scorer::{ScoreError, ScoreSettings, score, score_with_usage};
 use jag::search::snippet::{Snippet, SnippetLine, Source};
 
 const KEY: &str = "SENTINEL-SENTINEL-SENTINEL";
@@ -445,6 +446,47 @@ fn a_late_batch_that_fails_ends_the_search_at_the_deadline() {
     assert_eq!(exit_code(error), 6);
     assert!(started.elapsed() < Duration::from_millis(2300));
     assert_eq!(server.requests().len(), 7);
+}
+
+// FEATURE-20, CRITERION-93, decision 5: the usage holds each answered attempt,
+// also an attempt that ends after another call failed. An attempt with
+// another status adds nothing.
+#[test]
+fn the_usage_holds_each_answered_attempt_also_after_a_failure() {
+    // 7 calls and 6 threads. Calls 1 to 6 get 200 with 100 tokens after 1 s.
+    // Call 7 starts when the first call ends, and gets 503 twice (the retry
+    // too), so it adds nothing. The failure ends the search, but the calls in
+    // flight still end and add their bill.
+    let server = FakeServer::start(|request| {
+        let first = request.snippet_texts().into_iter().next();
+        if first.as_deref() == Some("text-192") {
+            Reply::status(503)
+        } else {
+            Reply::scores_with_usage(
+                request,
+                |_| 0.5,
+                Some(serde_json::json!({ "input_tokens": 100 })),
+            )
+            .after(Duration::from_secs(1))
+        }
+    });
+    let key = ApiKey::parse(KEY).expect("a test key");
+    let usage = Mutex::new(Usage::default());
+    let error = score_with_usage(
+        &snippets(224),
+        "which one answers?",
+        &key,
+        &settings(&server),
+        &AtomicBool::new(false),
+        &|_| {},
+        &usage,
+    )
+    .expect_err("a failure");
+    assert_eq!(exit_code(error), 6);
+    let usage = *usage.lock().expect("the usage");
+    assert_eq!(usage.tokens, 600);
+    assert_eq!(usage.estimated_tokens, 0);
+    assert_eq!(usage.no_count, 0);
 }
 
 fn run_with(

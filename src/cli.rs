@@ -25,10 +25,12 @@ use crate::config::{
 use crate::failure::Failure;
 use crate::output::progress::Progress;
 use crate::output::{
-    Paint, Summary, is_no_good_answer, size_notice, write_document, write_lines, write_text,
+    Paint, Summary, cost_line, is_no_good_answer, size_notice, write_document, write_lines,
+    write_text,
 };
 use crate::prerank;
-use crate::scorer::{ScoreError, ScoreSettings, probe, rank, score};
+use crate::scorer::cost::{Cost, NoCallReason};
+use crate::scorer::{ScoreError, ScoreSettings, probe, rank, score_with_usage};
 use crate::search::input::{Input, no_path_input};
 use crate::search::snippet::{
     ContextLines, Snippet, line_windows, match_texts, plan_windows, read_snippets,
@@ -38,7 +40,7 @@ use crate::search::{
     scan_input,
 };
 use grep::{MatchOptions, Report, build_matcher};
-use stop::Stop;
+use stop::{Emitted, Stop};
 
 /// The longest question, in UTF-8 bytes (decision 30).
 const MAX_QUESTION_BYTES: usize = 12_000;
@@ -259,6 +261,8 @@ pub fn run() -> ExitCode {
     let mut summary = Summary::default();
     // The size limit that jag knows when a failure comes (STORY-26).
     let mut known_limit = Some(DEFAULT_SIZE_LIMIT);
+    // How the write of the search flow ended (FEATURE-20, decision 25).
+    let mut emitted = Emitted::Written;
 
     let result = if cli.setup {
         config::setup(
@@ -294,6 +298,7 @@ pub fn run() -> ExitCode {
         let result = search(&cli, &env, &context, &mut summary, &mut stdout, &mut stderr);
         claim_or_wait(&stop);
         known_limit = stop.size_limit();
+        emitted = stop.emitted();
         result
     };
     finish(
@@ -301,6 +306,7 @@ pub fn run() -> ExitCode {
         mode,
         &mut summary,
         known_limit,
+        emitted,
         &mut stdout,
         &mut stderr,
     )
@@ -405,7 +411,7 @@ fn parse() -> Result<Cli, ExitCode> {
                     let buffer =
                         error_document(&mut Summary::default(), failure, Some(DEFAULT_SIZE_LIMIT));
                     // A failed write goes to the error stream (decision 25).
-                    let code = emit(&mut io::stdout(), &mut io::stderr(), &buffer, 2);
+                    let (code, _) = emit(&mut io::stdout(), &mut io::stderr(), &buffer, 2);
                     return Err(ExitCode::from(code));
                 }
                 match named {
@@ -430,26 +436,40 @@ fn parse_from(args: impl IntoIterator<Item = OsString>) -> Result<Cli, clap::Err
 /// Write a failure and give the exit code (CV-1, CV-3). In text mode the
 /// failure goes to the error stream. In JSON mode it goes to standard output,
 /// as one document (decision 21).
+///
+/// Then the cost line goes last on the error stream (FEATURE-20, decisions 12,
+/// 20, and 21). In text mode it goes unless the reader closed the pipe. In
+/// JSON mode it goes only when jag could not write the document. `emitted` is
+/// how the write of the search flow ended.
 fn finish(
     result: Result<u8, Failure>,
     mode: Mode,
     summary: &mut Summary,
     limit: Option<usize>,
+    emitted: Emitted,
     stdout: &mut dyn Write,
     stderr: &mut dyn Write,
 ) -> ExitCode {
-    match result {
-        Ok(code) => ExitCode::from(code),
+    let (code, emitted) = match result {
+        Ok(code) => (code, emitted),
         Err(failure) if mode == Mode::Json => {
             let code = failure.exit_code;
             let buffer = error_document(summary, failure, limit);
-            ExitCode::from(emit(stdout, stderr, &buffer, code))
+            emit(stdout, stderr, &buffer, code)
         }
         Err(failure) => {
             let _ = write!(stderr, "{}", failure.render());
-            ExitCode::from(failure.exit_code)
+            (failure.exit_code, emitted)
         }
+    };
+    let due = match mode {
+        Mode::Text => emitted != Emitted::Closed,
+        Mode::Json => emitted == Emitted::Failed,
+    };
+    if due && let Some(line) = cost_line(summary) {
+        let _ = writeln!(stderr, "{line}");
     }
+    ExitCode::from(code)
 }
 
 /// Write all output in one call. Gives `code` when the write works. A closed
@@ -459,15 +479,15 @@ fn finish(
 /// during this write, jag writes no message and gives `code` (CV-4). Another
 /// write error writes the failure as text on the error
 /// stream, because standard output does not work, and gives exit 2
-/// (decision 25).
-fn emit(stdout: &mut dyn Write, stderr: &mut dyn Write, bytes: &[u8], code: u8) -> u8 {
+/// (decision 25). It gives how the write ended, for the cost line.
+fn emit(stdout: &mut dyn Write, stderr: &mut dyn Write, bytes: &[u8], code: u8) -> (u8, Emitted) {
     match stdout.write_all(bytes).and_then(|()| stdout.flush()) {
-        Ok(()) => code,
-        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => code,
+        Ok(()) => (code, Emitted::Written),
+        Err(error) if error.kind() == io::ErrorKind::BrokenPipe => (code, Emitted::Closed),
         Err(_) => {
             let failure = write_failure();
             let _ = write!(stderr, "{}", failure.render());
-            failure.exit_code
+            (failure.exit_code, Emitted::Failed)
         }
     }
 }
@@ -702,6 +722,14 @@ fn search(
     };
     let (snippets, read_warnings) = read_snippets(&kept, input.as_deref());
 
+    // The cost of a failure after this point is the cost of the attempts that
+    // ended (FEATURE-20, decisions 22 and 25).
+    summary.cost = if snippets.is_empty() {
+        Cost::NoCall(no_call_reason(total))
+    } else {
+        stop.set_model(&settings.model);
+        stop.cost()
+    };
     // A failure after this point finds in the summary what jag counted.
     record(
         summary,
@@ -731,15 +759,17 @@ fn search(
     progress.start(snippets.len());
     let scores = {
         let _clear = ClearOnDrop(progress);
-        score(
+        score_with_usage(
             &snippets,
             question,
             &key,
             &score_settings,
             stop.flag(),
             &|count| progress.advance(count),
+            stop.usage(),
         )
     };
+    summary.cost = stop.cost();
     let scores = match scores {
         Ok(scores) => scores,
         // Only a stop sets the flag, and the stop writes the failure.
@@ -787,6 +817,16 @@ fn search(
     Ok(emit_claimed(stop, stdout, stderr, &buffer, code))
 }
 
+/// Why a search with a question made no call: no match, or no readable
+/// match (FEATURE-20, decision 14). `total` is the count of results found.
+fn no_call_reason(total: usize) -> NoCallReason {
+    if total == 0 {
+        NoCallReason::NoMatch
+    } else {
+        NoCallReason::NoReadableMatch
+    }
+}
+
 /// The flow with no question (FEATURE-12): the matching lines as grep gives
 /// them, with no key, no model setting, and no model call.
 fn plain(
@@ -816,6 +856,7 @@ fn plain(
         ..ScanOptions::default()
     };
     let (report, input) = scan_search(&args.paths, &matcher, &options);
+    summary.cost = Cost::NoCall(NoCallReason::NoQuestion);
     if args.report != Report::Lines {
         let colored = colored(cli, env, stdout_is_terminal);
         return grep::write_report(
@@ -985,7 +1026,9 @@ fn emit_claimed(
     code: u8,
 ) -> u8 {
     claim_or_wait(stop);
-    emit(stdout, stderr, bytes, code)
+    let (code, emitted) = emit(stdout, stderr, bytes, code);
+    stop.set_emitted(emitted);
+    code
 }
 
 /// The search flow takes the output. When a stop owns it, the search flow
@@ -1086,6 +1129,12 @@ mod tests {
         assert!(!json_requested(args(&["jag", "--json=1"])));
         assert!(!json_requested(args(&["jag"])));
         assert!(!json_requested(args(&[])));
+    }
+
+    #[test]
+    fn a_search_with_no_call_gives_its_reason() {
+        assert_eq!(no_call_reason(0), NoCallReason::NoMatch);
+        assert_eq!(no_call_reason(2), NoCallReason::NoReadableMatch);
     }
 
     // FEATURE-13, decision 38: a value of an option is not an option.

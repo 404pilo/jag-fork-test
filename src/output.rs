@@ -13,6 +13,7 @@ use serde::Serialize;
 use crate::config::MIN_SIZE_LIMIT;
 use crate::config::{SIZE_LIMIT_OFF_OPTION, SIZE_LIMIT_OPTION};
 use crate::failure::Failure;
+use crate::scorer::cost::{Cost, NoCallReason};
 use crate::scorer::{PROMPT_VERSION, THRESHOLD};
 use crate::search::snippet::{Snippet, SnippetLine, Source, char_count, char_prefix};
 use crate::search::walk::{FileMatches, SkipCounts, WalkWarning};
@@ -41,6 +42,8 @@ pub struct Summary {
     pub files_skipped: SkipCounts,
     pub warnings: Vec<WalkWarning>,
     pub warnings_left_out: u64,
+    /// What the search paid (FEATURE-20).
+    pub cost: Cost,
 }
 
 /// True when the top score is less than the threshold: the text then shows
@@ -69,7 +72,68 @@ struct Document<'a> {
     files_skipped: FilesSkipped,
     warnings: Vec<WarningField<'a>>,
     warnings_left_out: u64,
+    cost: CostField,
     results: Vec<ResultField<'a>>,
+}
+
+/// The cost of the search (FEATURE-20, decision 17). A later version can add
+/// a kind or a reason.
+#[derive(Serialize)]
+struct CostField {
+    /// Millionths of a US dollar. `null` when the amount is not available.
+    micro_usd: Option<u64>,
+    kind: &'static str,
+    reason: Option<&'static str>,
+}
+
+impl CostField {
+    fn of(cost: Cost) -> Self {
+        let (micro_usd, kind, reason) = match cost {
+            Cost::Billed(micro) => (Some(micro), "billed", None),
+            Cost::Estimate(micro) => (Some(micro), "estimate", None),
+            Cost::NotAvailable => (None, "not_available", None),
+            Cost::NoCall(reason) => (Some(0), "no_call", Some(reason_word(reason, '_'))),
+        };
+        Self {
+            micro_usd,
+            kind,
+            reason,
+        }
+    }
+}
+
+/// The words of a reason, with `separator` between them.
+fn reason_word(reason: NoCallReason, separator: char) -> &'static str {
+    match (reason, separator) {
+        (NoCallReason::NotStarted, _) => "not_started",
+        (NoCallReason::NoQuestion, '_') => "no_question",
+        (NoCallReason::NoQuestion, _) => "no question",
+        (NoCallReason::NoMatch, '_') => "no_match",
+        (NoCallReason::NoMatch, _) => "no match",
+        (NoCallReason::NoReadableMatch, '_') => "no_readable_match",
+        (NoCallReason::NoReadableMatch, _) => "no readable match",
+    }
+}
+
+/// The cost line of the error stream (FEATURE-20, decision 11). `None` for a
+/// search that ended before it had a count.
+pub fn cost_line(summary: &Summary) -> Option<String> {
+    let amount = match summary.cost {
+        Cost::Billed(micro) => dollars(micro),
+        Cost::Estimate(micro) => format!("{} (estimate)", dollars(micro)),
+        Cost::NotAvailable => "not available".to_owned(),
+        Cost::NoCall(NoCallReason::NotStarted) => return None,
+        Cost::NoCall(reason) => format!("{} ({})", dollars(0), reason_word(reason, ' ')),
+    };
+    Some(format!(
+        "jag: cost {amount}: scored {} of {} results, skipped {}.",
+        summary.results_scored, summary.results_found, summary.results_skipped
+    ))
+}
+
+/// An amount of millionths of a US dollar, with 6 decimals.
+fn dollars(micro: u64) -> String {
+    format!("${}.{:06}", micro / 1_000_000, micro % 1_000_000)
 }
 
 #[derive(Serialize)]
@@ -165,6 +229,7 @@ pub fn write_json(out: &mut dyn Write, summary: &Summary, results: &[&Snippet]) 
             })
             .collect(),
         warnings_left_out: summary.warnings_left_out,
+        cost: CostField::of(summary.cost),
         results,
     };
     serde_json::to_writer(&mut *out, &document)?;
@@ -927,7 +992,9 @@ mod tests {
              \"no_good_answer\":false,\"results_found\":0,\"results_scored\":0,\
              \"results_skipped\":0,\"left_out\":0,\"top_result_cut\":0,\"size_limit_fix\":\"\",\
              \"files_skipped\":{\"total\":0,\"binary\":0,\"hidden\":0,\"ignored\":0},\
-             \"warnings\":[],\"warnings_left_out\":0,\"results\":[]}\n"
+             \"warnings\":[],\"warnings_left_out\":0,\
+             \"cost\":{\"micro_usd\":0,\"kind\":\"no_call\",\"reason\":\"not_started\"},\
+             \"results\":[]}\n"
         );
     }
 
@@ -1038,8 +1105,10 @@ mod tests {
         "files_skipped",
         "warnings",
         "warnings_left_out",
+        "cost",
         "results",
     ];
+    const COST: &[&str] = &["micro_usd", "kind", "reason"];
     const ERROR: &[&str] = &["cause", "fix"];
     const FILES_SKIPPED: &[&str] = &["total", "binary", "hidden", "ignored"];
     const WARNING: &[&str] = &["path", "text"];
@@ -1051,6 +1120,7 @@ mod tests {
         let with_result = value(&full_summary(), &[(snippet("a", &[(1, "x", true)]), 0.9)]);
         assert_eq!(keys(&with_result), sorted(TOP_LEVEL));
         assert_eq!(keys(&with_result["error"]), sorted(ERROR));
+        assert_eq!(keys(&with_result["cost"]), sorted(COST));
         assert_eq!(keys(&with_result["files_skipped"]), sorted(FILES_SKIPPED));
         assert_eq!(keys(&with_result["warnings"][0]), sorted(WARNING));
         assert_eq!(keys(&with_result["results"][0]), sorted(RESULT));
@@ -1060,6 +1130,87 @@ mod tests {
         assert_eq!(keys(&with_error), sorted(TOP_LEVEL));
         assert_eq!(keys(&with_error["error"]), sorted(ERROR));
         assert_eq!(with_error["results"], serde_json::json!([]));
+    }
+
+    fn summary_with(cost: Cost) -> Summary {
+        Summary {
+            results_found: 200,
+            results_scored: 150,
+            results_skipped: 50,
+            cost,
+            ..Summary::default()
+        }
+    }
+
+    #[test]
+    fn the_cost_field_has_one_form_for_each_cost() {
+        let field = |cost| value(&summary_with(cost), &[])["cost"].clone();
+        assert_eq!(
+            field(Cost::Billed(2016)),
+            serde_json::json!({"micro_usd": 2016, "kind": "billed", "reason": null})
+        );
+        assert_eq!(
+            field(Cost::Estimate(7)),
+            serde_json::json!({"micro_usd": 7, "kind": "estimate", "reason": null})
+        );
+        assert_eq!(
+            field(Cost::NotAvailable),
+            serde_json::json!({"micro_usd": null, "kind": "not_available", "reason": null})
+        );
+        for (reason, word) in [
+            (NoCallReason::NotStarted, "not_started"),
+            (NoCallReason::NoQuestion, "no_question"),
+            (NoCallReason::NoMatch, "no_match"),
+            (NoCallReason::NoReadableMatch, "no_readable_match"),
+        ] {
+            assert_eq!(
+                field(Cost::NoCall(reason)),
+                serde_json::json!({"micro_usd": 0, "kind": "no_call", "reason": word})
+            );
+        }
+    }
+
+    #[test]
+    fn the_cost_line_has_one_form_for_each_cost() {
+        let line = |cost| cost_line(&summary_with(cost));
+        let counts = "scored 150 of 200 results, skipped 50.";
+        assert_eq!(
+            line(Cost::Billed(2016)),
+            Some(format!("jag: cost $0.002016: {counts}"))
+        );
+        assert_eq!(
+            line(Cost::Billed(0)),
+            Some(format!("jag: cost $0.000000: {counts}"))
+        );
+        assert_eq!(
+            line(Cost::Billed(12_345_678)),
+            Some(format!("jag: cost $12.345678: {counts}"))
+        );
+        assert_eq!(
+            line(Cost::Estimate(2016)),
+            Some(format!("jag: cost $0.002016 (estimate): {counts}"))
+        );
+        assert_eq!(
+            line(Cost::NotAvailable),
+            Some(format!("jag: cost not available: {counts}"))
+        );
+        assert_eq!(
+            line(Cost::NoCall(NoCallReason::NoQuestion)),
+            Some(format!("jag: cost $0.000000 (no question): {counts}"))
+        );
+        assert_eq!(
+            line(Cost::NoCall(NoCallReason::NoMatch)),
+            Some(format!("jag: cost $0.000000 (no match): {counts}"))
+        );
+        assert_eq!(
+            line(Cost::NoCall(NoCallReason::NoReadableMatch)),
+            Some(format!("jag: cost $0.000000 (no readable match): {counts}"))
+        );
+        assert_eq!(line(Cost::NoCall(NoCallReason::NotStarted)), None);
+        assert_eq!(cost_line(&Summary::default()), None);
+        for cost in [Cost::Billed(5), Cost::NotAvailable, Cost::Estimate(5)] {
+            assert!(!line(cost).expect("line").contains("cost limit"));
+        }
     }
 
     #[test]
@@ -1136,6 +1287,7 @@ mod tests {
             },
             warnings: Vec::new(),
             warnings_left_out: u64::MAX,
+            cost: Cost::Estimate(u64::MAX),
         };
         let length = json(&summary, &[]).chars().count();
         assert!(length < MIN_SIZE_LIMIT, "{length} characters");

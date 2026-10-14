@@ -60,12 +60,30 @@ fn stderr(output: &Output) -> String {
     String::from_utf8_lossy(&output.stderr).into_owned()
 }
 
-/// A failure has the exit code, no output, and exactly the cause and the
-/// fix on the error stream (CRITERION-13, 14, 15).
-fn assert_failure(output: &Output, code: i32, cause: &str, fix: &str) {
-    assert_eq!(stderr(output), format!("jag: {cause}\n{fix}\n"));
+/// A failure has the exit code, no output, and exactly the cause, the fix, and
+/// the cost line on the error stream (CRITERION-13, 14, 15; FEATURE-20). `cost`
+/// is `None` for a run that ends before the count.
+fn assert_failure(output: &Output, code: i32, cause: &str, fix: &str, cost: Option<&str>) {
+    let line = cost.map(|line| format!("{line}\n")).unwrap_or_default();
+    assert_eq!(stderr(output), format!("jag: {cause}\n{fix}\n{line}"));
     assert_eq!(output.status.code(), Some(code));
     assert!(stdout(output).is_empty());
+}
+
+/// The cost line of a search with one answered call that gives no count: the
+/// estimate is the bytes of the one request, divided by 3 (rounded down), at
+/// 42 billionths of a dollar for each token, rounded to millionths
+/// (FEATURE-20, decisions 6 and 10).
+fn estimate_line(server: &FakeServer) -> String {
+    let requests = server.requests();
+    assert_eq!(requests.len(), 1);
+    let billionths = requests[0].body_text().len() as u64 / 3 * 42;
+    let millionths = (billionths + 500) / 1000;
+    format!(
+        "jag: cost ${}.{:06} (estimate): scored 1 of 1 results, skipped 0.",
+        millionths / 1_000_000,
+        millionths % 1_000_000
+    )
 }
 
 /// A server that gives the same status and a body with a secret to each call.
@@ -88,6 +106,7 @@ fn no_key_gives_exit_3_and_the_setup_fix() {
         3,
         "no TypeSafe API key found.",
         &format!("Get a key at {KEYS}, then run `jag --setup`,\nor set JAG_TYPESAFE_API_KEY."),
+        None,
     );
 }
 
@@ -102,6 +121,7 @@ fn http_401_and_403_give_exit_4() {
             4,
             &format!("the gateway did not accept the key (HTTP {status})."),
             "Check that the key is a key of the gateway, then run jag --setup.",
+            Some("jag: cost $0.000000: scored 1 of 1 results, skipped 0."),
         );
         assert_eq!(server.requests().len(), 1);
     }
@@ -117,6 +137,7 @@ fn http_402_gives_exit_5() {
         5,
         "the gateway account has no credit (HTTP 402).",
         "Add credit at the gateway, then try again.",
+        Some("jag: cost $0.000000: scored 1 of 1 results, skipped 0."),
     );
     assert_eq!(server.requests().len(), 1);
 }
@@ -131,6 +152,7 @@ fn a_timeout_gives_exit_6_after_one_retry() {
         6,
         "the gateway did not answer in time.",
         "Try again later, or give each call more time with --timeout.",
+        Some("jag: cost $0.000000: scored 1 of 1 results, skipped 0."),
     );
     assert_eq!(server.requests().len(), 2);
 }
@@ -149,6 +171,7 @@ fn no_connection_gives_exit_6() {
         6,
         "jag cannot connect to the gateway.",
         "Check the network connection and JAG_BASE_URL, then try again.",
+        Some("jag: cost $0.000000: scored 1 of 1 results, skipped 0."),
     );
 }
 
@@ -162,6 +185,7 @@ fn http_429_gives_exit_6_after_one_retry() {
         6,
         "the gateway refused more calls (HTTP 429).",
         "Wait one minute, then try again.",
+        Some("jag: cost $0.000000: scored 1 of 1 results, skipped 0."),
     );
     assert_eq!(server.requests().len(), 2);
 }
@@ -176,6 +200,7 @@ fn http_5xx_gives_exit_6_after_one_retry() {
         6,
         "the gateway failed (HTTP 503).",
         "Try again later.",
+        Some("jag: cost $0.000000: scored 1 of 1 results, skipped 0."),
     );
     assert_eq!(server.requests().len(), 2);
 }
@@ -190,6 +215,7 @@ fn a_redirect_gives_exit_6() {
         6,
         "the gateway sent a redirect.",
         "Check JAG_BASE_URL.",
+        Some("jag: cost $0.000000: scored 1 of 1 results, skipped 0."),
     );
     assert_eq!(server.requests().len(), 1);
 }
@@ -204,6 +230,7 @@ fn another_status_gives_exit_6() {
         6,
         "the gateway gave HTTP 422.",
         "Check JAG_BASE_URL, and set the model name of the gateway with --model, JAG_MODEL, or config.model.",
+        Some("jag: cost $0.000000: scored 1 of 1 results, skipped 0."),
     );
     assert_eq!(server.requests().len(), 1);
 }
@@ -218,6 +245,7 @@ fn a_body_that_jag_cannot_read_gives_exit_6() {
         6,
         "the gateway gave a response that jag cannot read.",
         "Check JAG_BASE_URL.",
+        Some(&estimate_line(&server)),
     );
 }
 
@@ -419,6 +447,7 @@ fn a_402_during_the_search_fails_the_full_search() {
         5,
         "the gateway account has no credit (HTTP 402).",
         "Add credit at the gateway, then try again.",
+        Some("jag: cost $0.000000: scored 40 of 40 results, skipped 0."),
     );
     assert!(server.requests().len() >= 2);
 }
@@ -433,5 +462,6 @@ fn a_500_during_the_search_fails_the_full_search() {
         6,
         "the gateway failed (HTTP 500).",
         "Try again later.",
+        Some("jag: cost $0.000000: scored 40 of 40 results, skipped 0."),
     );
 }
