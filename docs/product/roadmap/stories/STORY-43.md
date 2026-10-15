@@ -7,9 +7,9 @@ status: draft
 state: done
 actual_end_date: '2026-10-14'
 github:
-  number: 104
-  node_id: I_kwDOVDCdD88AAAABXCBtLw
-  url: https://github.com/ai-ready-future/jag/issues/104
+  number: 68
+  node_id: I_kwDOVKMnL88AAAABXTMkiw
+  url: https://github.com/ai-ready-future/jag/issues/68
   pushed_hash: 37537d
   synced:
     state: done

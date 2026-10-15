@@ -7,9 +7,9 @@ description: As an agent builder (PERSONA-01), I want the private-data check to 
 status: draft
 state: ready
 github:
-  number: 122
-  node_id: I_kwDOVDCdD88AAAABXCC3Ig
-  url: https://github.com/ai-ready-future/jag/issues/122
+  number: 85
+  node_id: I_kwDOVKMnL88AAAABXTM-FA
+  url: https://github.com/ai-ready-future/jag/issues/85
   pushed_hash: 76a4dc
   synced:
     state: ready

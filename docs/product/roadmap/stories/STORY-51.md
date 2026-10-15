@@ -7,9 +7,9 @@ description: As an agent builder (PERSONA-01), I want one version tag to publish
 status: draft
 state: backlog
 github:
-  number: 113
-  node_id: I_kwDOVDCdD88AAAABXCCQOg
-  url: https://github.com/ai-ready-future/jag/issues/113
+  number: 76
+  node_id: I_kwDOVKMnL88AAAABXTMxNQ
+  url: https://github.com/ai-ready-future/jag/issues/76
   pushed_hash: fa2a66
   synced:
     state: backlog

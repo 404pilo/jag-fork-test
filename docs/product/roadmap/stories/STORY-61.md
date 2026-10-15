@@ -7,9 +7,9 @@ description: As an agent builder (PERSONA-01), I want the board and all issues o
 status: draft
 state: ready
 github:
-  number: 123
-  node_id: I_kwDOVDCdD88AAAABXCC7Yg
-  url: https://github.com/ai-ready-future/jag/issues/123
+  number: 86
+  node_id: I_kwDOVKMnL88AAAABXTM_jQ
+  url: https://github.com/ai-ready-future/jag/issues/86
   pushed_hash: 20e7cb
   synced:
     state: ready

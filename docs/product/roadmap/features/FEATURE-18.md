@@ -6,9 +6,9 @@ description: One version tag builds the jag binary for four platforms and publis
 status: draft
 state: backlog
 github:
-  number: 58
-  node_id: I_kwDOVDCdD88AAAABXB-iFg
-  url: https://github.com/ai-ready-future/jag/issues/58
+  number: 22
+  node_id: I_kwDOVKMnL88AAAABXTLcKQ
+  url: https://github.com/ai-ready-future/jag/issues/22
   synced:
     state: backlog
   pushed_hash: fe45a8

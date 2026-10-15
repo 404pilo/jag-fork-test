@@ -7,9 +7,9 @@ description: As an agent builder (PERSONA-01), I want a guard against guesses th
 status: deprecated
 state: cancelled
 github:
-  number: 121
-  node_id: I_kwDOVDCdD88AAAABXCCyPA
-  url: https://github.com/ai-ready-future/jag/issues/121
+  number: 84
+  node_id: I_kwDOVKMnL88AAAABXTM8rA
+  url: https://github.com/ai-ready-future/jag/issues/84
   pushed_hash: 54e23e
   synced:
     state: cancelled

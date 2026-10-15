@@ -10,9 +10,9 @@ aliases:
 state: done
 actual_end_date: '2026-10-14'
 github:
-  number: 45
-  node_id: I_kwDOVDCdD88AAAABXB9dWg
-  url: https://github.com/ai-ready-future/jag/issues/45
+  number: 10
+  node_id: I_kwDOVKMnL88AAAABXTLLSg
+  url: https://github.com/ai-ready-future/jag/issues/10
   synced:
     state: done
   pushed_hash: a2c2bc

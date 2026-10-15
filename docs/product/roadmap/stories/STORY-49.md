@@ -6,9 +6,9 @@ description: As a shell power user (PERSONA-04), I want to install jag with carg
 status: draft
 state: backlog
 github:
-  number: 111
-  node_id: I_kwDOVDCdD88AAAABXCCHmg
-  url: https://github.com/ai-ready-future/jag/issues/111
+  number: 74
+  node_id: I_kwDOVKMnL88AAAABXTMuHw
+  url: https://github.com/ai-ready-future/jag/issues/74
   pushed_hash: 5339e2
   synced:
     state: backlog

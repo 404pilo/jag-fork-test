@@ -6,9 +6,9 @@ description: The repository and the packages hold no private data, and the user 
 status: draft
 state: ready
 github:
-  number: 41
-  node_id: I_kwDOVDCdD88AAAABXB87cw
-  url: https://github.com/ai-ready-future/jag/issues/41
+  number: 6
+  node_id: I_kwDOVKMnL88AAAABXTLFGw
+  url: https://github.com/ai-ready-future/jag/issues/6
   pushed_hash: 904c4a
   synced:
     state: ready

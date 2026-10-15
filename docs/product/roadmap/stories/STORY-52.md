@@ -7,9 +7,9 @@ description: As an agent builder (PERSONA-01), I want a new public repository wi
 status: draft
 state: ready
 github:
-  number: 114
-  node_id: I_kwDOVDCdD88AAAABXCCT-Q
-  url: https://github.com/ai-ready-future/jag/issues/114
+  number: 77
+  node_id: I_kwDOVKMnL88AAAABXTMyjQ
+  url: https://github.com/ai-ready-future/jag/issues/77
   pushed_hash: 41c585
   synced:
     state: ready

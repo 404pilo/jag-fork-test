@@ -7,9 +7,9 @@ description: A scan lists the private data in the history. A new public reposito
 status: draft
 state: backlog
 github:
-  number: 59
-  node_id: I_kwDOVDCdD88AAAABXB-m8A
-  url: https://github.com/ai-ready-future/jag/issues/59
+  number: 23
+  node_id: I_kwDOVKMnL88AAAABXTLdpA
+  url: https://github.com/ai-ready-future/jag/issues/23
   pushed_hash: 5a484d
   synced:
     state: backlog

@@ -6,9 +6,9 @@ description: As an agent builder (PERSONA-01), I want to install jag with npm or
 status: draft
 state: backlog
 github:
-  number: 112
-  node_id: I_kwDOVDCdD88AAAABXCCL2Q
-  url: https://github.com/ai-ready-future/jag/issues/112
+  number: 75
+  node_id: I_kwDOVKMnL88AAAABXTMvjA
+  url: https://github.com/ai-ready-future/jag/issues/75
   pushed_hash: 7f3727
   synced:
     state: backlog

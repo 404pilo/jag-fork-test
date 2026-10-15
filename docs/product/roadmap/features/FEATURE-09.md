@@ -9,9 +9,9 @@ state: done
 actual_start_date: '2026-10-14'
 actual_end_date: '2026-10-14'
 github:
-  number: 50
-  node_id: I_kwDOVDCdD88AAAABXB-Blw
-  url: https://github.com/ai-ready-future/jag/issues/50
+  number: 14
+  node_id: I_kwDOVKMnL88AAAABXTLRDg
+  url: https://github.com/ai-ready-future/jag/issues/14
   pushed_hash: 0fa67b
   synced:
     state: done

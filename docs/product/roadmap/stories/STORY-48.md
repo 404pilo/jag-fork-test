@@ -6,9 +6,9 @@ description: As a shell power user (PERSONA-04), I want a prebuilt binary for my
 status: draft
 state: backlog
 github:
-  number: 110
-  node_id: I_kwDOVDCdD88AAAABXCCC0Q
-  url: https://github.com/ai-ready-future/jag/issues/110
+  number: 73
+  node_id: I_kwDOVKMnL88AAAABXTMsJQ
+  url: https://github.com/ai-ready-future/jag/issues/73
   pushed_hash: 632d12
   synced:
     state: backlog

@@ -6,9 +6,9 @@ description: The user gives a folder, a term, and a question, and gets ranked li
 status: draft
 state: ready
 github:
-  number: 38
-  node_id: I_kwDOVDCdD88AAAABXB8wsg
-  url: https://github.com/ai-ready-future/jag/issues/38
+  number: 3
+  node_id: I_kwDOVKMnL88AAAABXTLAgg
+  url: https://github.com/ai-ready-future/jag/issues/3
   pushed_hash: fc4e7d
   synced:
     state: ready
