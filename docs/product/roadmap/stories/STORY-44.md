@@ -12,7 +12,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/105
   pushed_hash: 1a756c
   synced:
-    state: ready
+    state: done
 spec: docs/superpowers/specs/2026-10-14-STORY-44-a-typical-search-in-under-5-seconds-design.md
 parent: /features/FEATURE-16.md
 milestone: /milestones/MILESTONE-03.md

@@ -12,7 +12,7 @@ github:
   url: https://github.com/ai-ready-future/jag/issues/40
   pushed_hash: 1dd90c
   synced:
-    state: backlog
+    state: done
 milestone: /milestones/MILESTONE-02.md
 traces:
 - to: prd:/capabilities/CAPABILITY-06.md
