@@ -11,7 +11,7 @@ github:
   number: 33
   node_id: I_kwDOVKMnL88AAAABXTLsgg
   url: https://github.com/ai-ready-future/jag/issues/33
-  pushed_hash: 5ae687
+  pushed_hash: '726903'
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-06-readiness-check-design.md

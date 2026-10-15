@@ -10,7 +10,7 @@ github:
   number: 69
   node_id: I_kwDOVKMnL88AAAABXTMmCw
   url: https://github.com/ai-ready-future/jag/issues/69
-  pushed_hash: 1a756c
+  pushed_hash: 7c3d02
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-14-STORY-44-a-typical-search-in-under-5-seconds-design.md

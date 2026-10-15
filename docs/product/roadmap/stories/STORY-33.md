@@ -11,7 +11,7 @@ github:
   number: 58
   node_id: I_kwDOVKMnL88AAAABXTMTZQ
   url: https://github.com/ai-ready-future/jag/issues/58
-  pushed_hash: 6bf2fd
+  pushed_hash: ff4ed7
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-14-STORY-33-plain-grep-with-no-question-design.md

@@ -10,7 +10,7 @@ github:
   number: 81
   node_id: I_kwDOVKMnL88AAAABXTM4QQ
   url: https://github.com/ai-ready-future/jag/issues/81
-  pushed_hash: f085eb
+  pushed_hash: 42cace
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-14-STORY-53-show-the-cost-of-a-search-design.md

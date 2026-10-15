@@ -11,7 +11,7 @@ github:
   number: 48
   node_id: I_kwDOVKMnL88AAAABXTMFeA
   url: https://github.com/ai-ready-future/jag/issues/48
-  pushed_hash: 09b8c7
+  pushed_hash: 389c31
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-21-file-line-and-snippet-for-each-result-design.md

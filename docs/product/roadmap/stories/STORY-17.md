@@ -11,7 +11,7 @@ github:
   number: 42
   node_id: I_kwDOVKMnL88AAAABXTL7Fg
   url: https://github.com/ai-ready-future/jag/issues/42
-  pushed_hash: 9b95ad
+  pushed_hash: 763ea1
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-16-search-a-folder-as-grep-r-design.md

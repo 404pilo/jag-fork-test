@@ -11,7 +11,7 @@ github:
   number: 51
   node_id: I_kwDOVKMnL88AAAABXTMJfQ
   url: https://github.com/ai-ready-future/jag/issues/51
-  pushed_hash: 31996f
+  pushed_hash: 789e87
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-25-size-limit-on-the-text-that-jag-returns-design.md

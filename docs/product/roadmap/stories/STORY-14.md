@@ -10,7 +10,7 @@ github:
   number: 39
   node_id: I_kwDOVKMnL88AAAABXTL1rg
   url: https://github.com/ai-ready-future/jag/issues/39
-  pushed_hash: '911910'
+  pushed_hash: 2c39a6
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-13-rank-matching-lines-by-a-question-design.md

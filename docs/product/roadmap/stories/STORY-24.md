@@ -10,7 +10,7 @@ github:
   number: 49
   node_id: I_kwDOVKMnL88AAAABXTMGzw
   url: https://github.com/ai-ready-future/jag/issues/49
-  pushed_hash: 07d8e5
+  pushed_hash: b79369
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-24-files-folders-and-piped-text-design.md

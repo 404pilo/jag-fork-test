@@ -11,7 +11,7 @@ github:
   number: 54
   node_id: I_kwDOVKMnL88AAAABXTMN0A
   url: https://github.com/ai-ready-future/jag/issues/54
-  pushed_hash: 02da4f
+  pushed_hash: c51d32
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-29-text-and-structured-output-design.md

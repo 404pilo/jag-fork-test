@@ -12,7 +12,7 @@ github:
   number: 14
   node_id: I_kwDOVKMnL88AAAABXTLRDg
   url: https://github.com/ai-ready-future/jag/issues/14
-  pushed_hash: 0fa67b
+  pushed_hash: 18c4b4
   synced:
     state: done
 parent: /epics/EPIC-03.md

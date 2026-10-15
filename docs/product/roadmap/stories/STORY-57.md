@@ -11,7 +11,7 @@ github:
   number: 82
   node_id: I_kwDOVKMnL88AAAABXTM5yQ
   url: https://github.com/ai-ready-future/jag/issues/82
-  pushed_hash: df3282
+  pushed_hash: d935fb
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-57-send-the-model-calls-through-an-ai-gateway-design.md

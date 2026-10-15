@@ -10,7 +10,7 @@ github:
   number: 68
   node_id: I_kwDOVKMnL88AAAABXTMkiw
   url: https://github.com/ai-ready-future/jag/issues/68
-  pushed_hash: 37537d
+  pushed_hash: 1abc2f
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-14-STORY-41-good-behavior-in-a-terminal-and-in-a-pipe-design.md

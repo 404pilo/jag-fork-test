@@ -11,7 +11,7 @@ github:
   number: 37
   node_id: I_kwDOVKMnL88AAAABXTLyeA
   url: https://github.com/ai-ready-future/jag/issues/37
-  pushed_hash: 4ed21b
+  pushed_hash: 436ab0
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-09-clear-failure-when-the-model-is-not-available-design.md

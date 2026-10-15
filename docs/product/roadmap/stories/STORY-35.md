@@ -11,7 +11,7 @@ github:
   number: 60
   node_id: I_kwDOVKMnL88AAAABXTMWHg
   url: https://github.com/ai-ready-future/jag/issues/60
-  pushed_hash: ab2618
+  pushed_hash: d25941
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-14-STORY-35-common-grep-options-and-exit-codes-design.md

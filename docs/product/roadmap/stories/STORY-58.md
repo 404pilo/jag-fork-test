@@ -11,7 +11,7 @@ github:
   number: 83
   node_id: I_kwDOVKMnL88AAAABXTM7CQ
   url: https://github.com/ai-ready-future/jag/issues/83
-  pushed_hash: a22009
+  pushed_hash: e8d373
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-57-send-the-model-calls-through-an-ai-gateway-design.md

@@ -10,7 +10,7 @@ github:
   number: 72
   node_id: I_kwDOVKMnL88AAAABXTMqxQ
   url: https://github.com/ai-ready-future/jag/issues/72
-  pushed_hash: cc138e
+  pushed_hash: 45bf43
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-14-STORY-47-go-public-with-a-clean-history-design.md

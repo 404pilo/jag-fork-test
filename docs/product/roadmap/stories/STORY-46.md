@@ -11,7 +11,7 @@ github:
   number: 71
   node_id: I_kwDOVKMnL88AAAABXTMpKg
   url: https://github.com/ai-ready-future/jag/issues/71
-  pushed_hash: 9fd492
+  pushed_hash: 29c371
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-46-block-private-data-in-pull-requests-design.md

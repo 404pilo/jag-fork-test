@@ -10,7 +10,7 @@ github:
   number: 26
   node_id: I_kwDOVKMnL88AAAABXTLh-Q
   url: https://github.com/ai-ready-future/jag/issues/26
-  pushed_hash: cd44fd
+  pushed_hash: c804df
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-01-store-a-key-one-time-design.md

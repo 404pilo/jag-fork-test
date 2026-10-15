@@ -10,7 +10,7 @@ github:
   number: 44
   node_id: I_kwDOVKMnL88AAAABXTL-VA
   url: https://github.com/ai-ready-future/jag/issues/44
-  pushed_hash: 1387a1
+  pushed_hash: 5f824c
   synced:
     state: done
 spec: docs/superpowers/specs/2026-10-13-STORY-18-cost-limit-on-scoring-design.md
