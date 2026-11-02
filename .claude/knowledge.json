@@ -1,0 +1,13 @@
+{
+  "graphs": {
+    "prd": {
+      "path": "docs/product/prd"
+    },
+    "roadmap": {
+      "path": "docs/product/roadmap"
+    },
+    "adr": {
+      "path": "docs/adr"
+    }
+  }
+}
