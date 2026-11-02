@@ -8,3 +8,21 @@ Read `docs/adr/README.md` before you change an architectural boundary. Open only
 When you make a decision that is expensive to undo, write an ADR with `status: proposed`.
 Do not stop to ask.
 <!-- adr:router end -->
+
+## Build, test and verify
+
+jag is one Rust binary (ADR-0005). The toolchain is pinned in `rust-toolchain.toml`.
+On a machine without `cargo`, use Docker with the image `rust:1.99`.
+
+- Build: `cargo build --locked` (release: `cargo build --release --locked`)
+- Run: `cargo run --locked -- <args>`, or `target/release/jag <args>`
+- Verify before a PR. These are the same checks as `.github/workflows/ci.yml`:
+  - `cargo fmt --check`
+  - `cargo clippy --locked --all-features -- -D warnings`
+  - `cargo test --locked --all-features`. The rg parity test needs `JAG_PARITY_RG`. Get it with `scripts/parity/install-rg.sh <folder>`.
+  - `cargo test --locked --release --test speed`
+  - `python3 -I -m unittest discover -s scripts/release -p 'test_*.py'`
+  - `node --test npm/jag/test/launcher.test.js tests/agent_skill/install.test.js`
+  - ADR changes: `python3 scripts/adr/adr_index.py --check`
+
+Each code folder has a short `CLAUDE.md` that tells what is in it.
