@@ -826,10 +826,12 @@ class ExistsTests(unittest.TestCase):
         self.assertTrue(release.version_exists("crates", "jag-cli", VERSION, self.opener(200, seen=seen)))
         self.assertIn("User-Agent", {k.title() if k.lower() == "user-agent" else k for k in seen[0].headers})
         not_found = urllib.error.HTTPError("u", 404, "Not Found", {}, None)
+        self.addCleanup(not_found.close)
         self.assertFalse(release.version_exists("npm", "@airf/jag", VERSION, self.opener(error=not_found)))
 
     def test_another_answer_is_an_error_and_never_a_skip(self):
         server_error = urllib.error.HTTPError("u", 500, "Error", {}, None)
+        self.addCleanup(server_error.close)
         with self.assertRaises(release.ReleaseError):
             release.version_exists("npm", "@airf/jag", VERSION, self.opener(error=server_error))
         with self.assertRaises(release.ReleaseError):
