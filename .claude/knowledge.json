@@ -8,6 +8,9 @@
     },
     "adr": {
       "path": "docs/adr"
+    },
+    "knowledge": {
+      "path": "docs/wiki/bundle"
     }
   }
 }

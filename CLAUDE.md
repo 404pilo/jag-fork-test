@@ -26,3 +26,19 @@ On a machine without `cargo`, use Docker with the image `rust:1.99`.
   - ADR changes: `python3 scripts/adr/adr_index.py --check`
 
 Each code folder has a short `CLAUDE.md` that tells what is in it.
+
+<!-- knowledge:router start -->
+## Knowledge graph
+
+The generic knowledge graph of this repository is `docs/wiki/bundle/`.
+[AGENTS.md](./docs/wiki/AGENTS.md) holds its rules.
+
+- Run `/knowledge:ask <question>` to ask a question. It reads each graph in
+  `.claude/knowledge.json`, one step at a time.
+- Run `/knowledge:learn <path or URL>` to add a source or an answer.
+- Run `/knowledge:forget <graph>:/<path>` to remove a page and each reference
+  to it.
+
+Do not edit the generated files: each `index.md`, each `LINKS` block, and
+`links.tsv`. Write pages only through `knowledge_graph.py`.
+<!-- knowledge:router end -->
