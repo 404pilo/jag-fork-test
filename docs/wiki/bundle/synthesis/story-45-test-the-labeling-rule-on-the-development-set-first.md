@@ -39,6 +39,35 @@ The rule under test:
 - answer lines = the lines of the expected documents that hold the expected value or a `mustContain` entry.
 - grade = 1.
 
+## Update 2026-11-03: the term for a question with no required words
+
+Question: what is the search term of a question with no `checks.mustContain` entry? This follows the answer "Test the rule first".
+
+Facts:
+
+- Of the 83 development questions, 36 have no `checks.mustContain` entry and 9 have no expected document.
+- The private questions have the same gap.
+- No page recorded the term rule of the old bench. Its code is not on this machine.
+
+Answer: use the expected value as the term.
+
+- A question with no `mustContain` entry gets the text of its first expected value as its term.
+- Its answer lines are the lines of the expected documents that hold that text.
+- A question with no expected document has no answer lines.
+- A question with a `mustContain` entry keeps the rule above.
+- The rule is tested on the development set first. It is frozen before any score is seen.
+
+Decided by: human `404pilo`, through hitl, on 2026-11-03 (veracity 90). Card from decision-judge: level direction, confidence medium, hard to reverse, hidden, band strict.
+
+## Decision D-004 (2026-11-03): two edge cases of the development test
+
+Decided by decision-judge (level detail, confidence medium, reversible, hidden, band normal), not by a human. Veracity 70.
+
+- A question whose first `checks.mustContain` entry is a list takes the first string of that list as its term.
+- A question with no `mustContain` entry and no expected value is a case with no answer.
+- All 83 development questions go into the case file.
+- Why: this keeps the count of 83. jag-bench leaves a case with no answer out of the mean. The private run is not affected.
+
 ## Provenance
 
 - Decided by: human `404pilo`, through hitl, on 2026-11-03 (veracity 90).
