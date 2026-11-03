@@ -1,5 +1,6 @@
 source	relation	target
 /entities/pilo.md	sources	/sources/the-human-team-of-jag.md
+/synthesis/story-45-test-the-labeling-rule-on-the-development-set-first.md	sources	/concepts/evaluation-method-of-the-earlier-search-tool.md
 /synthesis/story-45-test-the-labeling-rule-on-the-development-set-first.md	sources	prd:/decisions/DECISION-70.md
 /synthesis/story-45-test-the-labeling-rule-on-the-development-set-first.md	sources	prd:/metrics/METRIC-01.md
 /synthesis/story-45-test-the-labeling-rule-on-the-development-set-first.md	sources	roadmap:/stories/STORY-45.md
