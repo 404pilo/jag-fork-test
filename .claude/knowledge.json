@@ -11,6 +11,9 @@
     },
     "knowledge": {
       "path": "docs/wiki/bundle"
+    },
+    "system-design": {
+      "path": "docs/system-design"
     }
   }
 }
