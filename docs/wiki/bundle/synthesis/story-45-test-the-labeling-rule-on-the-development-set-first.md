@@ -68,6 +68,23 @@ Decided by decision-judge (level detail, confidence medium, reversible, hidden, 
 - All 83 development questions go into the case file.
 - Why: this keeps the count of 83. jag-bench leaves a case with no answer out of the mean. The private run is not affected.
 
+## Result 2026-11-03: the development test failed the D-001 check
+
+The development test of the labeling rule did not meet the D-001 check, so the private run did not start.
+
+- Rule hash: `12835555c12f`. Cases: 83. Cases with no answer: 48.
+- Development scores of the new labels: jag 0.870, grep 0.455.
+- Earlier development scores: jag about 0.72, grep about 0.06.
+- The scores are not near the earlier scores, so the rule is not accepted. The rule stays frozen and no private set was converted.
+- Root cause: step 4 of the STORY-45 spec expected labeled lines in the old set. The old set has none.
+
+Answer (human `404pilo`, through hitl, 2026-11-03, veracity 90): find how the old test scored. Decision: D-005.
+
+1. The human tells whether the old tool scored whole documents or single lines. The human gives its code or its answer lines if possible.
+2. Then the planner chooses 1 path: convert with the old method, make labels by hand, or write a new story that scores whole documents.
+
+This page holds no per-case result.
+
 ## Provenance
 
 - Decided by: human `404pilo`, through hitl, on 2026-11-03 (veracity 90).
