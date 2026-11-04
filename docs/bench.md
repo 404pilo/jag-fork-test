@@ -162,3 +162,4 @@ got credit for the labeled line. They are `null` when no result in the first
 When a failure stops the run, the tool prints no score.
 
 This line is a test of the fork pull request approval (STORY-77, step L3). Do not merge.
+Second test line (STORY-77 L5). Do not merge.
